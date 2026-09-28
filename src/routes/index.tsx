@@ -61,6 +61,9 @@ function StoryCard({ story, large = false }: { story: Story; large?: boolean }) 
 function Index() {
   const { data: stories } = useSuspenseQuery(storiesQueryOptions);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [liveOpen, setLiveOpen] = useState(false);
   const lead = stories.find((story) => story.featured) ?? stories[0];
   const latest = stories.filter((story) => story.id !== lead?.id).slice(0, 3);
   const top = stories.slice(1, 5);
@@ -69,6 +72,9 @@ function Index() {
   const show = stories.find((story) => story.category === "Shows");
   const tourism = stories.find((story) => story.category === "Tourism");
   const sports = stories.find((story) => story.category === "Sports");
+  const matches = query.trim()
+    ? stories.filter((story) => `${story.title} ${story.summary} ${story.category}`.toLowerCase().includes(query.toLowerCase())).slice(0, 5)
+    : [];
 
   if (!lead) return <main className="grid min-h-screen place-items-center">No stories published yet.</main>;
 
@@ -84,11 +90,12 @@ function Index() {
               <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground sm:text-[11px] sm:tracking-[0.34em]">Kashmir. Connected to the World.</p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
-              <button aria-label="Search" className="grid size-10 place-items-center border border-foreground transition-colors hover:bg-foreground hover:text-background"><Search className="size-4" /></button>
+              <button aria-label="Search" onClick={() => setSearchOpen((open) => !open)} className="grid size-10 place-items-center border border-foreground transition-colors hover:bg-foreground hover:text-background"><Search className="size-4" /></button>
               <button aria-label={menuOpen ? "Close menu" : "Open menu"} onClick={() => setMenuOpen((open) => !open)} className="grid size-10 place-items-center bg-foreground text-background lg:hidden">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
               <a href="#live" className="hidden items-center gap-2 bg-primary px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-primary-foreground sm:flex"><span className="signal-pulse size-2 rounded-full bg-primary-foreground" /> Watch live</a>
             </div>
           </div>
+          {searchOpen && <div className="border-b-2 border-foreground py-4"><label className="sr-only" htmlFor="story-search">Search stories</label><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3"><input id="story-search" autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search Kashmir, world, culture…" className="min-w-0 border border-foreground bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary"/><button onClick={() => setSearchOpen(false)} className="grid size-12 place-items-center bg-foreground text-background" aria-label="Close search"><X className="size-5"/></button></div>{query.trim() && <div className="grid gap-0 border-x border-b border-border bg-card">{matches.length ? matches.map((story) => <a key={story.id} href="#top-stories" onClick={() => setSearchOpen(false)} className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 border-t border-border p-3 hover:bg-muted"><span className="text-[10px] font-black uppercase text-primary">{story.category}</span><span className="min-w-0 truncate font-display text-lg font-bold">{story.title}</span></a>) : <p className="p-4 text-sm text-muted-foreground">No stories found.</p>}</div>}</div>}
           <nav className="hidden items-center justify-between border-b border-border py-3 lg:flex" aria-label="Main navigation">
             {navItems.map((item) => <a key={item} href={`#${item.toLowerCase()}`} className={`text-[11px] font-bold uppercase tracking-[0.1em] transition-colors hover:text-primary ${item === "Live" ? "text-primary" : ""}`}>{item}</a>)}
           </nav>
@@ -129,7 +136,7 @@ function Index() {
             <div id="live" className="mt-auto bg-foreground p-8 text-center text-background">
               <p className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-primary"><span className="signal-pulse size-2 rounded-full bg-primary" />Live now</p>
               <blockquote className="mt-5 font-display text-3xl italic leading-tight">“Watch Global Kashmir TV — live from the valley.”</blockquote>
-              <button className="mt-7 inline-flex items-center gap-2 border border-background px-5 py-3 text-xs font-black uppercase tracking-[0.12em]"><Play className="size-4 fill-current" /> Open broadcast</button>
+              <button onClick={() => setLiveOpen(true)} className="mt-7 inline-flex items-center gap-2 border border-background px-5 py-3 text-xs font-black uppercase tracking-[0.12em]"><Play className="size-4 fill-current" /> Open broadcast</button>
             </div>
           </aside>
         </section>
@@ -164,6 +171,7 @@ function Index() {
           <p className="mt-8 text-xs font-black uppercase tracking-[.22em]">Global Kashmir TV</p>
         </section>
       </main>
+      {liveOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/90 p-4" role="dialog" aria-modal="true" aria-label="Live broadcast"><div className="w-full max-w-4xl bg-background p-3 sm:p-5"><div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border pb-3"><div className="min-w-0"><p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[.18em] text-primary"><span className="signal-pulse size-2 rounded-full bg-primary"/>Live now</p><h2 className="truncate font-display text-3xl font-bold">The Valley Report</h2></div><button onClick={() => setLiveOpen(false)} className="grid size-10 shrink-0 place-items-center bg-foreground text-background" aria-label="Close broadcast"><X className="size-5"/></button></div><div className="relative mt-3 aspect-video overflow-hidden bg-foreground"><img src={leadImage} width={1536} height={1024} alt="Live view across the Kashmir valley" className="h-full w-full object-cover opacity-70"/><div className="absolute inset-0 grid place-items-center"><div className="text-center text-background"><span className="mx-auto grid size-16 place-items-center rounded-full bg-primary"><Play className="size-6 fill-current"/></span><p className="mt-4 text-xs font-black uppercase tracking-[.18em]">Broadcast preview</p></div></div></div></div></div>}
       <footer className="bg-foreground px-4 py-8 text-background"><div className="mx-auto grid max-w-[1440px] gap-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"><p className="font-display text-3xl">Global Kashmir <span className="text-primary">TV</span></p><p className="text-[10px] uppercase tracking-[.16em] text-background/60">Independent voices · Global perspective · © 2026</p></div></footer>
     </div>
   );
