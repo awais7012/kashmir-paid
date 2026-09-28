@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      stories: {
+        Row: {
+          author: string
+          category: string
+          created_at: string
+          display_order: number
+          featured: boolean
+          id: string
+          image_key: string
+          published_at: string
+          slug: string
+          summary: string
+          title: string
+        }
+        Insert: {
+          author: string
+          category: string
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          image_key: string
+          published_at?: string
+          slug: string
+          summary: string
+          title: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          created_at?: string
+          display_order?: number
+          featured?: boolean
+          id?: string
+          image_key?: string
+          published_at?: string
+          slug?: string
+          summary?: string
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
