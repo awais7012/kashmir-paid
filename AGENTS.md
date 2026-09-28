@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Initial site architecture: public story content is stored in Lovable Cloud and loaded through a route loader for fast first render.
