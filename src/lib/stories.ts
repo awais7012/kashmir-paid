@@ -1,5 +1,4 @@
 import { queryOptions } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export type Story = {
   id: string;
@@ -14,15 +13,36 @@ export type Story = {
   display_order: number;
 };
 
+type StoriesResponse = {
+  data: Story[];
+  meta: { total: number; limit: number; offset: number };
+};
+
+function readEnv(key: string): string | undefined {
+  const viteEnv = import.meta.env as Record<string, string | undefined>;
+  if (viteEnv[key]) return viteEnv[key];
+
+  // SSR only: lets the built server be pointed at an API at runtime.
+  const nodeProcess = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process;
+  return nodeProcess?.env?.[key];
+}
+
+export const API_BASE_URL = (readEnv("VITE_API_URL") ?? "http://localhost:4000").replace(
+  /\/+$/,
+  "",
+);
+
 export const storiesQueryOptions = queryOptions({
   queryKey: ["stories", "published"],
   queryFn: async (): Promise<Story[]> => {
-    const { data, error } = await supabase
-      .from("stories")
-      .select("id, slug, category, title, summary, author, published_at, image_key, featured, display_order")
-      .order("display_order", { ascending: true });
+    const response = await fetch(`${API_BASE_URL}/api/stories`);
 
-    if (error) throw error;
-    return data;
+    if (!response.ok) {
+      throw new Error(`Failed to load stories (HTTP ${response.status})`);
+    }
+
+    const payload = (await response.json()) as StoriesResponse;
+    return payload.data;
   },
 });

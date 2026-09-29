@@ -62,6 +62,25 @@ Global Kashmir TV
 
 See Kashmir. Hear Kashmir. Understand Kashmir.
 
+## Backend
+
+The site is served by a standalone **Express + MySQL** API that lives in [`server/`](./server).
+See [`server/README.md`](./server/README.md) for the full API reference.
+
+```sh
+npm run server:install                                  # install backend dependencies
+cp server/.env.example server/.env                      # set DATABASE_URL + JWT_SECRET
+
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS kashmir_connect CHARACTER SET utf8mb4;"
+npm --prefix server run db:push                         # or: mysql -u root kashmir_connect < server/drizzle/0000_init.sql
+npm run server:seed
+
+npm run server:dev                                      # API on http://localhost:4000
+npm run dev                                             # frontend on http://localhost:8080
+```
+
+The frontend reads the API base URL from `VITE_API_URL` (see [`.env.example`](./.env.example)).
+
 This project was built with [Lovable](https://lovable.dev).
 
 ## Build with Lovable
