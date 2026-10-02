@@ -7,6 +7,10 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Build a plain Node server (`.output/server/index.mjs`) for a VPS instead of
+  // the Cloudflare Workers default. Inside Lovable's own build this is ignored
+  // and forced back to cloudflare-module, so the editor stays unaffected.
+  nitro: { preset: "node-server" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
