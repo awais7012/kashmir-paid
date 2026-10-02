@@ -21,6 +21,8 @@
 @theme inline {
   --font-display: "Instrument Serif", Georgia, serif;
   --font-sans: "Work Sans", Arial, sans-serif;
+  /* Nastaliq is the expected face for Urdu; Naskh is the fallback. */
+  --font-urdu: var(--urdu-font);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -65,6 +67,8 @@
 
 :root {
   --radius: 0.125rem;
+  /* Shared by the font-urdu utility and the right-to-left rules further down. */
+  --urdu-font: "Noto Nastaliq Urdu", "Noto Naskh Arabic", "Segoe UI", serif;
   --background: oklch(0.965 0.009 84);
   --foreground: oklch(0.105 0.008 70);
   --card: oklch(0.99 0.004 84);
@@ -163,4 +167,24 @@
 @media (prefers-reduced-motion: reduce) {
   .ticker-track, .signal-pulse, .editorial-rise { animation: none; }
   .story-image { transition: none; }
+}
+
+/*
+ * Urdu text, marked by dir="rtl" on the element that holds it.
+ *
+ * Headings and pull quotes carry font utilities that set font-family directly,
+ * so a rule that only set the face on a container would lose inside it. These
+ * rules therefore sit outside the cascade layers, where they outrank utilities.
+ * Each glyph still falls through the stack in order, so Latin text inside an
+ * Urdu story keeps a Latin face and only the Urdu glyphs take Nastaliq.
+ *
+ * Nastaliq has no italic, and the browser's synthesised slant looks broken, so
+ * the design's italics are dropped for Urdu.
+ */
+[dir="rtl"] :is(h1, h2, h3, h4, h5, h6, blockquote) {
+  font-family: var(--urdu-font);
+}
+
+[dir="rtl"] :is(em, blockquote) {
+  font-style: normal;
 }

@@ -10,33 +10,193 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LiveRouteImport } from './routes/live'
+import { Route as NewsRouteImport } from './routes/news'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminIdRouteImport } from './routes/admin/$id'
+import { Route as AdminAccountRouteImport } from './routes/admin/account'
+import { Route as AdminLiveRouteImport } from './routes/admin/live'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminMediaRouteImport } from './routes/admin/media'
+import { Route as AdminNewRouteImport } from './routes/admin/new'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as SectionCategoryRouteImport } from './routes/section/$category'
+import { Route as StorySlugRouteImport } from './routes/story/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIdRoute = AdminIdRouteImport.update({
+  id: '/admin/$id',
+  path: '/admin/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAccountRoute = AdminAccountRouteImport.update({
+  id: '/admin/account',
+  path: '/admin/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLiveRoute = AdminLiveRouteImport.update({
+  id: '/admin/live',
+  path: '/admin/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMediaRoute = AdminMediaRouteImport.update({
+  id: '/admin/media',
+  path: '/admin/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNewRoute = AdminNewRouteImport.update({
+  id: '/admin/new',
+  path: '/admin/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SectionCategoryRoute = SectionCategoryRouteImport.update({
+  id: '/section/$category',
+  path: '/section/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StorySlugRoute = StorySlugRouteImport.update({
+  id: '/story/$slug',
+  path: '/story/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
+  '/news': typeof NewsRoute
+  '/admin/$id': typeof AdminIdRoute
+  '/admin/account': typeof AdminAccountRoute
+  '/admin/live': typeof AdminLiveRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/new': typeof AdminNewRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/section/$category': typeof SectionCategoryRoute
+  '/story/$slug': typeof StorySlugRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
+  '/news': typeof NewsRoute
+  '/admin/$id': typeof AdminIdRoute
+  '/admin/account': typeof AdminAccountRoute
+  '/admin/live': typeof AdminLiveRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/new': typeof AdminNewRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/section/$category': typeof SectionCategoryRoute
+  '/story/$slug': typeof StorySlugRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/live': typeof LiveRoute
+  '/news': typeof NewsRoute
+  '/admin/$id': typeof AdminIdRoute
+  '/admin/account': typeof AdminAccountRoute
+  '/admin/live': typeof AdminLiveRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/media': typeof AdminMediaRoute
+  '/admin/new': typeof AdminNewRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/section/$category': typeof SectionCategoryRoute
+  '/story/$slug': typeof StorySlugRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/live'
+    | '/news'
+    | '/admin/$id'
+    | '/admin/account'
+    | '/admin/live'
+    | '/admin/login'
+    | '/admin/media'
+    | '/admin/new'
+    | '/admin/settings'
+    | '/section/$category'
+    | '/story/$slug'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/live'
+    | '/news'
+    | '/admin/$id'
+    | '/admin/account'
+    | '/admin/live'
+    | '/admin/login'
+    | '/admin/media'
+    | '/admin/new'
+    | '/admin/settings'
+    | '/section/$category'
+    | '/story/$slug'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/live'
+    | '/news'
+    | '/admin/$id'
+    | '/admin/account'
+    | '/admin/live'
+    | '/admin/login'
+    | '/admin/media'
+    | '/admin/new'
+    | '/admin/settings'
+    | '/section/$category'
+    | '/story/$slug'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LiveRoute: typeof LiveRoute
+  NewsRoute: typeof NewsRoute
+  AdminIdRoute: typeof AdminIdRoute
+  AdminAccountRoute: typeof AdminAccountRoute
+  AdminLiveRoute: typeof AdminLiveRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminMediaRoute: typeof AdminMediaRoute
+  AdminNewRoute: typeof AdminNewRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  SectionCategoryRoute: typeof SectionCategoryRoute
+  StorySlugRoute: typeof StorySlugRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +208,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/live': {
+      id: '/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof LiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/$id': {
+      id: '/admin/$id'
+      path: '/admin/$id'
+      fullPath: '/admin/$id'
+      preLoaderRoute: typeof AdminIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/account': {
+      id: '/admin/account'
+      path: '/admin/account'
+      fullPath: '/admin/account'
+      preLoaderRoute: typeof AdminAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/live': {
+      id: '/admin/live'
+      path: '/admin/live'
+      fullPath: '/admin/live'
+      preLoaderRoute: typeof AdminLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/media': {
+      id: '/admin/media'
+      path: '/admin/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AdminMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/new': {
+      id: '/admin/new'
+      path: '/admin/new'
+      fullPath: '/admin/new'
+      preLoaderRoute: typeof AdminNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/section/$category': {
+      id: '/section/$category'
+      path: '/section/$category'
+      fullPath: '/section/$category'
+      preLoaderRoute: typeof SectionCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/story/$slug': {
+      id: '/story/$slug'
+      path: '/story/$slug'
+      fullPath: '/story/$slug'
+      preLoaderRoute: typeof StorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LiveRoute: LiveRoute,
+  NewsRoute: NewsRoute,
+  AdminIdRoute: AdminIdRoute,
+  AdminAccountRoute: AdminAccountRoute,
+  AdminLiveRoute: AdminLiveRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminMediaRoute: AdminMediaRoute,
+  AdminNewRoute: AdminNewRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  SectionCategoryRoute: SectionCategoryRoute,
+  StorySlugRoute: StorySlugRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

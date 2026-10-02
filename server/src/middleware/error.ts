@@ -12,6 +12,18 @@ function isDuplicateKeyError(error: unknown): boolean {
   );
 }
 
+function isMulterError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { name?: unknown }).name === "MulterError"
+  );
+}
+
+function isMulterLimitError(error: unknown): boolean {
+  return isMulterError(error) && (error as { code?: unknown }).code === "LIMIT_FILE_SIZE";
+}
+
 export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({
     error: { message: `Route ${req.method} ${req.originalUrl} not found` },
@@ -44,6 +56,12 @@ export function errorHandler(
   } else if (isDuplicateKeyError(error)) {
     status = 409;
     message = "A record with that value already exists";
+  } else if (isMulterLimitError(error)) {
+    status = 413;
+    message = `That file is larger than the ${env.MAX_VIDEO_MB} MB upload limit`;
+  } else if (isMulterError(error)) {
+    status = 400;
+    message = "That upload could not be read";
   } else if (error instanceof Error) {
     message = env.isProduction ? "Internal server error" : error.message;
   }

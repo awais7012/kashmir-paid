@@ -129,6 +129,19 @@ curl -X POST http://localhost:4000/api/admin/stories \
   -d '{"slug":"new-dispatch","category":"Kashmir","title":"A new dispatch","summary":"Short standfirst.","author":"Aamir Sofi","image_key":"lead","featured":false,"display_order":13}'
 ```
 
+## Studio (admin UI)
+
+The editor interface lives in the main app at `/admin`, and talks to the admin
+endpoints above with a token kept in `localStorage`.
+
+- `/admin` lists every story, live and scheduled, with search and filters.
+- `/admin/new` creates a story. `/admin/:id` edits or deletes one.
+- Sign in with an account created by `npm run db:seed`.
+
+There is no public link to `/admin`; navigate to it directly. A story's status is
+derived from `published_at`: a future date keeps it hidden from the public API
+until that time, which is why the UI says "Scheduled" rather than "Draft".
+
 ## Project layout
 
 ```
@@ -148,8 +161,9 @@ server/
 
 ## Notes
 
-- `image_key` is a key the frontend maps to a bundled image (`lead`, `artisan`,
-  `lake`, `sport`). It is stored as a short string, not a URL.
+- `image_key` selects one of the four bundled photographs and is validated as an
+  enum: `lead`, `artisan`, `lake`, `sport`. Uploads are not supported yet, so an
+  unknown key is rejected with a 422 instead of rendering the wrong photo.
 - Timestamps are stored and returned as UTC. The MySQL pool runs with
   `timezone: "Z"` so `published_at` round-trips cleanly.
 - To add a module, mirror `modules/stories/`: a Zod schema, a service for

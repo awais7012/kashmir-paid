@@ -11,3 +11,7 @@ export async function findAdminById(id: string): Promise<AdminRow | null> {
   const rows = await db.select().from(admins).where(eq(admins.id, id)).limit(1);
   return rows[0] ?? null;
 }
+
+export async function updateAdminPassword(id: string, passwordHash: string): Promise<void> {
+  await db.update(admins).set({ passwordHash }).where(eq(admins.id, id));
+}

@@ -11,6 +11,9 @@ const envSchema = z.object({
     .string()
     .default("http://localhost:5173,http://localhost:8080,http://localhost:3000"),
   BCRYPT_ROUNDS: z.coerce.number().int().min(8).max(15).default(10),
+  UPLOAD_DIR: z.string().min(1).default("./uploads"),
+  MAX_IMAGE_MB: z.coerce.number().positive().max(100).default(8),
+  MAX_VIDEO_MB: z.coerce.number().positive().max(4096).default(200),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -33,4 +36,6 @@ export const env = {
     .filter(Boolean),
   isProduction: raw.NODE_ENV === "production",
   isTest: raw.NODE_ENV === "test",
+  maxImageBytes: Math.round(raw.MAX_IMAGE_MB * 1024 * 1024),
+  maxVideoBytes: Math.round(raw.MAX_VIDEO_MB * 1024 * 1024),
 };

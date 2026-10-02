@@ -35,6 +35,7 @@ export async function listCategories(_req: Request, res: Response): Promise<void
   res.json({ data: await service.listCategories() });
 }
 
+// Public article read: the full shape, including the body.
 export async function getBySlug(req: Request, res: Response): Promise<void> {
   const { slug } = req.validated.params as { slug: string };
 
@@ -43,9 +44,10 @@ export async function getBySlug(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDto(row) });
+  res.json({ data: service.toStoryDetailDto(row) });
 }
 
+// Admin read for the edit form, which also needs the body and video.
 export async function getById(req: Request, res: Response): Promise<void> {
   const { id } = req.validated.params as { id: string };
 
@@ -54,7 +56,7 @@ export async function getById(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDto(row) });
+  res.json({ data: service.toStoryDetailDto(row) });
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
@@ -66,7 +68,7 @@ export async function create(req: Request, res: Response): Promise<void> {
   }
 
   const row = await service.createStory(input);
-  res.status(201).json({ data: service.toStoryDto(row) });
+  res.status(201).json({ data: service.toStoryDetailDto(row) });
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
@@ -78,7 +80,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDto(row) });
+  res.json({ data: service.toStoryDetailDto(row) });
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {
