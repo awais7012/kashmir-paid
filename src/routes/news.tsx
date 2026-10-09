@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
-import { allStoriesQueryOptions } from "@/lib/stories";
+import { allStoriesQueryOptions, primeQuery } from "@/lib/stories";
 
 export const Route = createFileRoute("/news")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(siteSettingsQueryOptions);
-    await context.queryClient.ensureQueryData(allStoriesQueryOptions);
+    await primeQuery(context.queryClient, siteSettingsQueryOptions);
+    await primeQuery(context.queryClient, allStoriesQueryOptions);
   },
   head: () => ({
     meta: [
@@ -24,8 +25,10 @@ export const Route = createFileRoute("/news")({
 });
 
 function NewsIndex() {
-  const { data: settings } = useSuspenseQuery(siteSettingsQueryOptions);
-  const { data: page } = useSuspenseQuery(allStoriesQueryOptions);
+  const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const { data: page } = useQuery(allStoriesQueryOptions);
+
+  if (!settings || !page) return <PageShimmer />;
 
   return (
     <div className="min-h-screen bg-background text-foreground">

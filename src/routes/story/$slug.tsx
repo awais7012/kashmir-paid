@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
@@ -11,6 +12,7 @@ import { mediaUrl, storyCoverUrl } from "@/lib/media";
 import { siteSettingsQueryOptions, slugifyLabel } from "@/lib/site-settings";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import {
+  primeQuery,
   storiesByCategoryQueryOptions,
   storyQueryOptions,
   StoryFetchError,
@@ -20,10 +22,10 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/story/$slug")({
   loader: async ({ context, params }) => {
-    await context.queryClient.ensureQueryData(siteSettingsQueryOptions);
+    await primeQuery(context.queryClient, siteSettingsQueryOptions);
 
     try {
-      return await context.queryClient.ensureQueryData(storyQueryOptions(params.slug));
+      return await primeQuery(context.queryClient, storyQueryOptions(params.slug));
     } catch (error) {
       // A missing story must be a real 404, not a thrown 500.
       if (error instanceof StoryFetchError && error.status === 404) {
@@ -55,9 +57,16 @@ export const Route = createFileRoute("/story/$slug")({
 
 function StoryPage() {
   const { slug } = Route.useParams();
-  const { data: settings } = useSuspenseQuery(siteSettingsQueryOptions);
-  const { data: story } = useSuspenseQuery(storyQueryOptions(slug));
-  const { data: categoryPage } = useQuery(storiesByCategoryQueryOptions(story.category));
+  const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const { data: story, isError } = useQuery(storyQueryOptions(slug));
+  const { data: categoryPage } = useQuery({
+    ...storiesByCategoryQueryOptions(story?.category ?? ""),
+    enabled: Boolean(story),
+  });
+
+  // Only a final answer from the API (the story is gone) ends the waiting.
+  if (!story && isError) return <StoryNotFound />;
+  if (!settings || !story) return <PageShimmer />;
 
   const cover = storyCoverUrl(story);
   const sectionSlug = slugifyLabel(story.category);

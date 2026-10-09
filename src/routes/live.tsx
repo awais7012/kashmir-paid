@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Radio } from "lucide-react";
+import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { VideoPlayer } from "@/components/story/video-player";
 import { formatTime } from "@/lib/format";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
+import { primeQuery } from "@/lib/stories";
 
 export const Route = createFileRoute("/live")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(siteSettingsQueryOptions),
+  loader: async ({ context }) => {
+    await primeQuery(context.queryClient, siteSettingsQueryOptions);
+  },
   head: () => ({
     meta: [
       { title: "Watch live · Global Kashmir TV" },
@@ -22,7 +26,9 @@ export const Route = createFileRoute("/live")({
 });
 
 function LivePage() {
-  const { data: settings } = useSuspenseQuery(siteSettingsQueryOptions);
+  const { data: settings } = useQuery(siteSettingsQueryOptions);
+  if (!settings) return <PageShimmer />;
+
   const { live } = settings;
   const startedAt = live.startedAt ? formatTime(live.startedAt) : "";
 

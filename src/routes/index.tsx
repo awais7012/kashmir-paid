@@ -1,20 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Play } from "lucide-react";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { HeroMedia } from "@/components/site/hero-media";
+import { PageShimmer } from "@/components/site/page-shimmer";
 import { StoryCard } from "@/components/story/story-card";
 import { mediaUrl, storyCoverUrl } from "@/lib/media";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
-import { storiesQueryOptions } from "@/lib/stories";
+import { primeQuery, storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(siteSettingsQueryOptions);
-    await context.queryClient.ensureQueryData(storiesQueryOptions);
+    await primeQuery(context.queryClient, siteSettingsQueryOptions);
+    await primeQuery(context.queryClient, storiesQueryOptions);
   },
   head: () => ({
     meta: [
@@ -56,8 +57,10 @@ function SectionHeader({
 }
 
 function Index() {
-  const { data: settings } = useSuspenseQuery(siteSettingsQueryOptions);
-  const { data: stories } = useSuspenseQuery(storiesQueryOptions);
+  const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const { data: stories } = useQuery(storiesQueryOptions);
+
+  if (!settings || !stories) return <PageShimmer />;
 
   const lead = stories.find((story) => story.featured) ?? stories[0];
   const latest = stories.filter((story) => story.id !== lead?.id).slice(0, 3);
