@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
@@ -9,14 +10,17 @@ import {
   siteSettingsQueryOptions,
 } from "@/lib/site-settings";
 import { looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
-import { storiesByCategoryQueryOptions } from "@/lib/stories";
+import { primeQuery, storiesByCategoryQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/section/$category")({
   loader: async ({ context, params }) => {
-    const settings = await context.queryClient.ensureQueryData(siteSettingsQueryOptions);
+    const settings = await primeQuery(context.queryClient, siteSettingsQueryOptions);
+    // Without the nav settings the slug cannot be resolved; the page does it once they load.
+    if (!settings) return undefined;
+
     const category = categoryForSlug(settings, params.category);
-    await context.queryClient.ensureQueryData(storiesByCategoryQueryOptions(category));
+    await primeQuery(context.queryClient, storiesByCategoryQueryOptions(category));
     return { category, label: sectionLabelForSlug(settings, params.category) };
   },
   head: ({ loaderData }) => ({
@@ -33,11 +37,17 @@ export const Route = createFileRoute("/section/$category")({
 
 function SectionPage() {
   const { category } = Route.useParams();
-  const { data: settings } = useSuspenseQuery(siteSettingsQueryOptions);
+  const { data: settings } = useQuery(siteSettingsQueryOptions);
 
-  const resolved = categoryForSlug(settings, category);
+  const resolved = settings ? categoryForSlug(settings, category) : "";
+  const { data: page } = useQuery({
+    ...storiesByCategoryQueryOptions(resolved),
+    enabled: Boolean(settings),
+  });
+
+  if (!settings || !page) return <PageShimmer />;
+
   const label = sectionLabelForSlug(settings, category);
-  const { data: page } = useSuspenseQuery(storiesByCategoryQueryOptions(resolved));
   // A section label is a category name the editor chose, so it may be Urdu.
   const urduLabel = looksUrdu(label);
 

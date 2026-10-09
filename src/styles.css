@@ -164,8 +164,14 @@
 @utility editorial-rise { animation: editorial-rise .7s cubic-bezier(.2,.7,.2,1) both; }
 @utility story-image { transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .7s ease; }
 
+@keyframes shimmer { to { background-position: -200% 0; } }
+@utility shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%) 0 0 / 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ticker-track, .signal-pulse, .editorial-rise { animation: none; }
+  .ticker-track, .signal-pulse, .editorial-rise, .shimmer { animation: none; }
   .story-image { transition: none; }
 }
 

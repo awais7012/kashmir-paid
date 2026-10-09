@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { API_BASE_URL } from "@/lib/stories";
+import { getJson, waitForApi } from "@/lib/stories";
 
 export type NavSectionKind = "home" | "index" | "live" | "category";
 
@@ -50,17 +50,13 @@ export type VideoDto = {
 };
 
 export async function fetchSettings(): Promise<SiteSettings> {
-  const response = await fetch(`${API_BASE_URL}/api/settings`);
-  if (!response.ok) {
-    throw new Error(`Failed to load site settings (HTTP ${response.status})`);
-  }
-  const payload = (await response.json()) as { data: SiteSettings };
-  return payload.data;
+  return (await getJson<{ data: SiteSettings }>("/api/settings")).data;
 }
 
 export const siteSettingsQueryOptions = queryOptions({
   queryKey: ["site-settings"],
   queryFn: fetchSettings,
+  ...waitForApi,
   staleTime: 60_000,
 });
 
