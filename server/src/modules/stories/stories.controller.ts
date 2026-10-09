@@ -16,9 +16,12 @@ async function respondWithList(
     service.listStories(query, { includeUnpublished }),
     service.countStories(query, { includeUnpublished }),
   ]);
+  const thumbs = await service.getHeroThumbUrls(rows);
 
   res.json({
-    data: rows.map(service.toStoryDto),
+    data: rows.map((row) =>
+      service.toStoryDto(row, row.heroImageUrl ? (thumbs.get(row.heroImageUrl) ?? null) : null),
+    ),
     meta: { total, limit: query.limit, offset: query.offset },
   });
 }
@@ -44,7 +47,9 @@ export async function getBySlug(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDetailDto(row) });
+  res.json({
+    data: service.toStoryDetailDto(row, await service.getHeroThumbUrl(row.heroImageUrl)),
+  });
 }
 
 // Admin read for the edit form, which also needs the body and video.
@@ -56,7 +61,9 @@ export async function getById(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDetailDto(row) });
+  res.json({
+    data: service.toStoryDetailDto(row, await service.getHeroThumbUrl(row.heroImageUrl)),
+  });
 }
 
 export async function create(req: Request, res: Response): Promise<void> {
@@ -68,7 +75,9 @@ export async function create(req: Request, res: Response): Promise<void> {
   }
 
   const row = await service.createStory(input);
-  res.status(201).json({ data: service.toStoryDetailDto(row) });
+  res.status(201).json({
+    data: service.toStoryDetailDto(row, await service.getHeroThumbUrl(row.heroImageUrl)),
+  });
 }
 
 export async function update(req: Request, res: Response): Promise<void> {
@@ -80,7 +89,9 @@ export async function update(req: Request, res: Response): Promise<void> {
     throw new HttpError(404, "Story not found");
   }
 
-  res.json({ data: service.toStoryDetailDto(row) });
+  res.json({
+    data: service.toStoryDetailDto(row, await service.getHeroThumbUrl(row.heroImageUrl)),
+  });
 }
 
 export async function remove(req: Request, res: Response): Promise<void> {

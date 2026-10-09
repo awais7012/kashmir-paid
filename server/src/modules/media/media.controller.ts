@@ -1,9 +1,11 @@
+import { rename } from "node:fs/promises";
 import path from "node:path";
 import type { Request, Response } from "express";
 import { env } from "../../env.js";
-import { detectMime, kindForMime } from "../../lib/file-signature.js";
+import { detectMime, EXTENSION_BY_MIME, kindForMime } from "../../lib/file-signature.js";
 import { HttpError } from "../../lib/http-error.js";
-import { readFileHead, removeStoredFile, UPLOAD_ROOT } from "../../lib/storage.js";
+import { processImage } from "../../lib/image-processing.js";
+import { publicUrlFor, readFileHead, removeStoredFile, UPLOAD_ROOT } from "../../lib/storage.js";
 import { uploadFieldsSchema } from "./media.schema.js";
 import * as service from "./media.service.js";
 
@@ -14,11 +16,13 @@ export async function upload(req: Request, res: Response): Promise<void> {
     throw new HttpError(400, "Attach a file in the 'file' field");
   }
 
-  const relativePath = path.relative(UPLOAD_ROOT, file.path);
+  let storedPath = file.path;
+  let relativePath = path.relative(UPLOAD_ROOT, storedPath);
+  let thumbRelativePath: string | null = null;
 
   try {
     // Trust the bytes, not the label. A text file renamed .jpg dies here.
-    const head = await readFileHead(file.path, 32);
+    const head = await readFileHead(storedPath, 32);
     const detected = detectMime(head);
 
     if (!detected) {
@@ -36,15 +40,46 @@ export async function upload(req: Request, res: Response): Promise<void> {
       throw new HttpError(413, `That ${kind} is larger than the ${limitMb} MB limit`);
     }
 
+    // multer names the file from the declared mime; when the sniffed bytes
+    // disagree, rename so extension, Content-Type and content all match.
+    const detectedExtension = EXTENSION_BY_MIME[detected];
+    const declaredExtension = path.extname(storedPath).toLowerCase();
+    if (detectedExtension && detectedExtension !== declaredExtension) {
+      const correctedPath = `${storedPath.slice(0, -declaredExtension.length)}${detectedExtension}`;
+      await rename(storedPath, correctedPath);
+      storedPath = correctedPath;
+      relativePath = path.relative(UPLOAD_ROOT, storedPath);
+    }
+
     const fields = uploadFieldsSchema.safeParse(req.body);
+
+    let width = fields.success ? (fields.data.width ?? null) : null;
+    let height = fields.success ? (fields.data.height ?? null) : null;
+    let sizeBytes = file.size;
+
+    // GIFs keep their bytes: re-encoding would flatten an animation.
+    if (kind === "image" && detected !== "image/gif") {
+      const processed = await processImage(storedPath, detected).catch((error: unknown) => {
+        console.error("[media] image processing failed:", error);
+        throw new HttpError(422, "That image could not be processed. Try a different file.");
+      });
+
+      width = processed.width;
+      height = processed.height;
+      sizeBytes = processed.sizeBytes;
+      if (processed.thumbFilePath) {
+        thumbRelativePath = path.relative(UPLOAD_ROOT, processed.thumbFilePath);
+      }
+    }
 
     const row = await service.createMedia({
       filename: relativePath,
       originalName: file.originalname,
       mime: detected,
-      sizeBytes: file.size,
-      width: fields.success ? (fields.data.width ?? null) : null,
-      height: fields.success ? (fields.data.height ?? null) : null,
+      sizeBytes,
+      width,
+      height,
+      thumbUrl: thumbRelativePath ? publicUrlFor(thumbRelativePath) : null,
       createdBy: req.admin?.id ?? null,
     });
 
@@ -52,6 +87,9 @@ export async function upload(req: Request, res: Response): Promise<void> {
   } catch (error) {
     // Never leave a stray file behind when validation rejects the upload.
     await removeStoredFile(relativePath).catch(() => undefined);
+    if (thumbRelativePath) {
+      await removeStoredFile(thumbRelativePath).catch(() => undefined);
+    }
     throw error;
   }
 }
@@ -79,10 +117,7 @@ export async function remove(req: Request, res: Response): Promise<void> {
   }
 
   if (outcome.status === "in_use") {
-    throw new HttpError(
-      409,
-      `Still used by “${outcome.storyTitle}”. Remove it from that story first.`,
-    );
+    throw new HttpError(409, outcome.message);
   }
 
   res.status(204).send();

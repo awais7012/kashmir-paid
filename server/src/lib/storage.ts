@@ -27,6 +27,12 @@ export function publicUrlFor(relativePath: string): string {
   return `/uploads/${relativePath.split(path.sep).join("/")}`;
 }
 
+/** Inverse of publicUrlFor, for rows that only store the public URL. */
+export function relativePathFromPublicUrl(url: string): string | null {
+  const prefix = "/uploads/";
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+}
+
 export function absolutePathFor(relativePath: string): string {
   const full = path.resolve(UPLOAD_ROOT, relativePath);
   if (full !== UPLOAD_ROOT && !full.startsWith(UPLOAD_ROOT + path.sep)) {

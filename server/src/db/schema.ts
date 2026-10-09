@@ -70,6 +70,8 @@ export const media = mysqlTable(
     width: int("width"),
     height: int("height"),
     url: varchar("url", { length: 512 }).notNull(),
+    // Smaller copy of an uploaded image; null for videos, GIFs and small images.
+    thumbUrl: varchar("thumb_url", { length: 512 }),
     createdBy: char("created_by", { length: 36 }),
     createdAt: datetime("created_at", { fsp: 3 })
       .notNull()

@@ -63,8 +63,8 @@ export function DeleteMediaButton({
             Delete “{item.original_name}”?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-sm leading-relaxed text-muted-foreground">
-            This removes the file from disk permanently. If a story still uses it, the delete is
-            refused so you can detach it first.
+            This removes the file from disk permanently. If a story or the site settings still use
+            it, the delete is refused so you can detach it first.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

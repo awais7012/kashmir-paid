@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { BodyField } from "@/components/admin/body-field";
 import {
@@ -13,7 +13,13 @@ import {
 import { MediaField } from "@/components/admin/media-field";
 import { VideoField } from "@/components/admin/video-field";
 import {
+  LeaveGuardDialog,
+  RecoveredDraftNotice,
+  useLeaveGuard,
+} from "@/components/admin/studio-guards";
+import {
   ApiError,
+  clearSession,
   createStory,
   updateStory,
   type AdminStory,
@@ -22,6 +28,7 @@ import {
 } from "@/lib/admin-api";
 import { STORY_IMAGE_KEYS, STORY_IMAGE_LABELS } from "@/lib/story-images";
 import { SUGGESTED_CATEGORIES } from "@/lib/site-settings";
+import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { STORY_LANGUAGE_OPTIONS, type StoryLanguage } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
 
@@ -105,26 +112,99 @@ export function StoryForm({
   onSaved: (saved: AdminStory) => void;
 }) {
   const isEdit = Boolean(story);
+  const navigate = useNavigate();
+  const storageKey = draftKey(story ? story.id : "new");
 
-  const [title, setTitle] = useState(story?.title ?? "");
-  const [slug, setSlug] = useState(story?.slug ?? "");
+  // A draft stashed after a 401 is restored on the next visit, so a long
+  // article is never typed twice.
+  const [recovered] = useState<StoryDraft | null>(() => readDraft<StoryDraft>(storageKey));
+  const [recoveredNotice, setRecoveredNotice] = useState(Boolean(recovered));
+
+  const [title, setTitle] = useState(recovered?.title ?? story?.title ?? "");
+  const [slug, setSlug] = useState(recovered?.slug ?? story?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(isEdit);
-  const [category, setCategory] = useState(story?.category ?? "");
-  const [summary, setSummary] = useState(story?.summary ?? "");
-  const [language, setLanguage] = useState<StoryLanguage>(story?.language ?? "en");
-  const [author, setAuthor] = useState(story?.author ?? "");
-  const [body, setBody] = useState(story?.body ?? "");
-  const [imageKey, setImageKey] = useState(story?.image_key ?? STORY_IMAGE_KEYS[0]);
-  const [heroImageUrl, setHeroImageUrl] = useState(story?.hero_image_url ?? "");
-  const [videoUrl, setVideoUrl] = useState(story?.video?.url ?? "");
-  const [videoTitle, setVideoTitle] = useState(story?.video?.title ?? "");
-  const [featured, setFeatured] = useState(story?.featured ?? false);
-  const [displayOrder, setDisplayOrder] = useState(String(story?.display_order ?? 0));
-  const [publishedAt, setPublishedAt] = useState(story ? toLocalInput(story.published_at) : "");
+  const [category, setCategory] = useState(recovered?.category ?? story?.category ?? "");
+  const [summary, setSummary] = useState(recovered?.summary ?? story?.summary ?? "");
+  const [language, setLanguage] = useState<StoryLanguage>(
+    recovered?.language ?? story?.language ?? "en",
+  );
+  const [author, setAuthor] = useState(recovered?.author ?? story?.author ?? "");
+  const [body, setBody] = useState(recovered?.body ?? story?.body ?? "");
+  const [imageKey, setImageKey] = useState(
+    recovered?.image_key ?? story?.image_key ?? STORY_IMAGE_KEYS[0],
+  );
+  const [heroImageUrl, setHeroImageUrl] = useState(
+    recovered?.hero_image_url ?? story?.hero_image_url ?? "",
+  );
+  const [videoUrl, setVideoUrl] = useState(recovered?.video_url ?? story?.video?.url ?? "");
+  const [videoTitle, setVideoTitle] = useState(recovered?.video_title ?? story?.video?.title ?? "");
+  const [featured, setFeatured] = useState(recovered?.featured ?? story?.featured ?? false);
+  const [displayOrder, setDisplayOrder] = useState(
+    String(recovered?.display_order ?? story?.display_order ?? 0),
+  );
+  const [publishedAt, setPublishedAt] = useState(
+    recovered?.published_at
+      ? toLocalInput(recovered.published_at)
+      : story
+        ? toLocalInput(story.published_at)
+        : "",
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Compared against the story as loaded (never the recovered draft), so a
+  // recovered draft counts as unsaved work, which is exactly what it is.
+  const baseline = useMemo(
+    () => ({
+      title: story?.title ?? "",
+      slug: story?.slug ?? "",
+      category: story?.category ?? "",
+      summary: story?.summary ?? "",
+      language: story?.language ?? "en",
+      author: story?.author ?? "",
+      body: story?.body ?? "",
+      imageKey: story?.image_key ?? STORY_IMAGE_KEYS[0],
+      heroImageUrl: story?.hero_image_url ?? "",
+      videoUrl: story?.video?.url ?? "",
+      videoTitle: story?.video?.title ?? "",
+      featured: story?.featured ?? false,
+      displayOrder: String(story?.display_order ?? 0),
+      publishedAt: story ? toLocalInput(story.published_at) : "",
+    }),
+    [story],
+  );
+  const dirty =
+    JSON.stringify({
+      title,
+      slug,
+      category,
+      summary,
+      language,
+      author,
+      body,
+      imageKey,
+      heroImageUrl,
+      videoUrl,
+      videoTitle,
+      featured,
+      displayOrder,
+      publishedAt,
+    }) !== JSON.stringify(baseline);
+
+  // A ref lets success and sign-out paths release the leave guard immediately,
+  // before React has re-rendered with the new state.
+  const leaveBypassRef = useRef(false);
+  const guard = useLeaveGuard(() => dirty && !leaveBypassRef.current, dirty);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      leaveBypassRef.current = true;
+      void navigate({ to: "/admin/login", replace: true });
+    }
+  }, [sessionExpired, navigate]);
 
   const hasFieldErrors = Object.keys(fieldErrors).length > 0;
   const status = publishState(publishedAt, isEdit);
@@ -140,6 +220,25 @@ export function StoryForm({
   function handleTitleChange(next: string) {
     setTitle(next);
     if (!slugTouched) setSlug(slugify(next));
+  }
+
+  function discardRecovered() {
+    clearDraft(storageKey);
+    setTitle(baseline.title);
+    setSlug(baseline.slug);
+    setCategory(baseline.category);
+    setSummary(baseline.summary);
+    setLanguage(baseline.language);
+    setAuthor(baseline.author);
+    setBody(baseline.body);
+    setImageKey(baseline.imageKey);
+    setHeroImageUrl(baseline.heroImageUrl);
+    setVideoUrl(baseline.videoUrl);
+    setVideoTitle(baseline.videoTitle);
+    setFeatured(baseline.featured);
+    setDisplayOrder(baseline.displayOrder);
+    setPublishedAt(baseline.publishedAt);
+    setRecoveredNotice(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -164,16 +263,31 @@ export function StoryForm({
       video_title: videoTitle.trim(),
     };
 
-    if (publishedAt) {
+    // Only send the publish time when the editor changed it. The form keeps
+    // minute precision, so resending an untouched value would shave the
+    // seconds off an old story's publish time on every save.
+    if (publishedAt && publishedAt !== baseline.publishedAt) {
       const parsed = new Date(publishedAt);
       if (!Number.isNaN(parsed.getTime())) draft.published_at = parsed.toISOString();
     }
 
     try {
       const saved = story ? await updateStory(story.id, draft) : await createStory(draft);
+      clearDraft(storageKey);
+      setRecoveredNotice(false);
       toast.success(isEdit ? "Story saved" : "Story created");
+      leaveBypassRef.current = true;
       onSaved(saved);
     } catch (caught) {
+      // The session can expire mid-edit. Stash the draft and hand the editor
+      // the sign-in screen instead of an error they cannot act on.
+      if (caught instanceof ApiError && caught.status === 401) {
+        saveDraft(storageKey, draft);
+        clearSession();
+        setSessionExpired(true);
+        return;
+      }
+
       if (caught instanceof ApiError) {
         setFieldErrors(caught.fieldErrors);
         setFormError(caught.message);
@@ -196,6 +310,8 @@ export function StoryForm({
           ) : null}
         </FormAlert>
       ) : null}
+
+      {recoveredNotice ? <RecoveredDraftNotice onDiscard={discardRecovered} /> : null}
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <section className="grid gap-6">
@@ -382,6 +498,8 @@ export function StoryForm({
           {submitting ? "Saving this story." : ""}
         </p>
       </div>
+
+      <LeaveGuardDialog open={guard.blocked} onStay={guard.stay} onLeave={guard.leave} />
     </form>
   );
 }

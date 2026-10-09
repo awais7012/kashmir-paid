@@ -33,6 +33,7 @@ export type AdminStory = {
   published_at: string;
   image_key: string;
   hero_image_url: string | null;
+  hero_thumb_url: string | null;
   has_video: boolean;
   video: AdminStoryVideo | null;
   body: string | null;
@@ -61,6 +62,7 @@ export type MediaItem = {
   id: string;
   kind: "image" | "video";
   url: string;
+  thumb_url: string | null;
   original_name: string;
   mime: string;
   size_bytes: number;

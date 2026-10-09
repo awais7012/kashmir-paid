@@ -18,6 +18,8 @@ export type Story = {
   published_at: string;
   image_key: string;
   hero_image_url: string | null;
+  /** Smaller copy of an uploaded cover, when one exists. */
+  hero_thumb_url: string | null;
   has_video: boolean;
   featured: boolean;
   display_order: number;

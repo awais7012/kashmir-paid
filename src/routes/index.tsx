@@ -62,9 +62,16 @@ function Index() {
 
   if (!settings || !stories) return <PageShimmer />;
 
-  const lead = stories.find((story) => story.featured) ?? stories[0];
+  // A scheduled story can carry the featured flag before it is public. When
+  // several featured stories are live at once, the newest one is the hero.
+  const featured = stories.filter((story) => story.featured);
+  const lead = featured.length
+    ? featured.reduce((newest, story) =>
+        story.published_at > newest.published_at ? story : newest,
+      )
+    : stories[0];
   const latest = stories.filter((story) => story.id !== lead?.id).slice(0, 3);
-  const top = stories.slice(1, 5);
+  const top = stories.filter((story) => story.id !== lead?.id).slice(0, 4);
   const culture = stories
     .filter((story) => ["Kashmir", "Heritage"].includes(story.category))
     .slice(0, 3);

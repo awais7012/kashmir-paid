@@ -1,15 +1,27 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Radio } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, StudioSplash } from "@/components/admin/admin-shell";
 import { adminButton, FormAlert, TextAreaField, TextField } from "@/components/admin/controls";
+import {
+  LeaveGuardDialog,
+  RecoveredDraftNotice,
+  useLeaveGuard,
+} from "@/components/admin/studio-guards";
 import { VideoPlayer } from "@/components/story/video-player";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
-import { ApiError, fetchAdminSettings, saveSettings, type FieldErrors } from "@/lib/admin-api";
+import {
+  ApiError,
+  clearSession,
+  fetchAdminSettings,
+  saveSettings,
+  type FieldErrors,
+} from "@/lib/admin-api";
 import { formatTime } from "@/lib/format";
 import type { SiteSettings } from "@/lib/site-settings";
+import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 
 export const Route = createFileRoute("/admin/live")({
   head: () => ({
@@ -106,17 +118,33 @@ const TONE_STYLES: Record<LiveStatus["tone"], string> = {
   warn: "border-destructive bg-destructive/10 text-destructive",
 };
 
+type LiveDraft = {
+  streamUrl: string;
+  title: string;
+  description: string;
+};
+
+const LIVE_DRAFT_KEY = draftKey("live");
+
 function LivePanel({ settings }: { settings: SiteSettings }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const [streamUrl, setStreamUrl] = useState(settings.live.streamUrl);
-  const [title, setTitle] = useState(settings.live.title);
-  const [description, setDescription] = useState(settings.live.description);
+  // A draft stashed after a 401 is restored on the next visit.
+  const [recovered] = useState<LiveDraft | null>(() => readDraft<LiveDraft>(LIVE_DRAFT_KEY));
+  const [recoveredNotice, setRecoveredNotice] = useState(Boolean(recovered));
+
+  const [streamUrl, setStreamUrl] = useState(recovered?.streamUrl ?? settings.live.streamUrl);
+  const [title, setTitle] = useState(recovered?.title ?? settings.live.title);
+  const [description, setDescription] = useState(
+    recovered?.description ?? settings.live.description,
+  );
 
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const status = liveStatus(settings);
   const isLive = settings.live.isLive;
@@ -127,17 +155,42 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
     title !== settings.live.title ||
     description !== settings.live.description;
 
-  function refresh() {
-    void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+  const leaveBypassRef = useRef(false);
+  const guard = useLeaveGuard(() => dirty && !leaveBypassRef.current, dirty);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      leaveBypassRef.current = true;
+      void navigate({ to: "/admin/login", replace: true });
+    }
+  }, [sessionExpired, navigate]);
+
+  function cacheSaved(saved: SiteSettings) {
+    queryClient.setQueryData(["admin", "settings"], saved);
     // The public site reads the same settings, so it has to refetch too.
     void queryClient.invalidateQueries({ queryKey: ["site-settings"] });
   }
 
   async function handleError(caught: unknown, fallback: string) {
+    if (caught instanceof ApiError && caught.status === 401) {
+      saveDraft(LIVE_DRAFT_KEY, { streamUrl, title, description });
+      clearSession();
+      setSessionExpired(true);
+      return;
+    }
+
     const message = caught instanceof ApiError ? caught.message : fallback;
     setError(message);
     setFieldErrors(caught instanceof ApiError ? caught.fieldErrors : {});
     toast.error(message);
+  }
+
+  function discardRecovered() {
+    clearDraft(LIVE_DRAFT_KEY);
+    setRecoveredNotice(false);
+    setStreamUrl(settings.live.streamUrl);
+    setTitle(settings.live.title);
+    setDescription(settings.live.description);
   }
 
   async function saveDetails() {
@@ -145,9 +198,21 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
     setError(null);
     setFieldErrors({});
     try {
-      await saveSettings({ live: { streamUrl: streamUrl.trim(), title, description } });
+      const saved = await saveSettings({
+        live: {
+          streamUrl: streamUrl.trim(),
+          title: title.trim(),
+          description: description.trim(),
+        },
+      });
+      clearDraft(LIVE_DRAFT_KEY);
+      setRecoveredNotice(false);
+      // Adopt the trimmed values so the form does not stay dirty over whitespace.
+      setStreamUrl(saved.live.streamUrl);
+      setTitle(saved.live.title);
+      setDescription(saved.live.description);
+      cacheSaved(saved);
       toast.success("Broadcast details saved");
-      refresh();
     } catch (caught) {
       await handleError(caught, "Could not save. Check the fields and retry.");
     } finally {
@@ -159,9 +224,9 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
     setToggling(true);
     setError(null);
     try {
-      await saveSettings({ live: { isLive: next } });
+      const saved = await saveSettings({ live: { isLive: next } });
+      cacheSaved(saved);
       toast.success(next ? "You are live" : "Broadcast ended");
-      refresh();
     } catch (caught) {
       await handleError(caught, "Could not change the broadcast state.");
     } finally {
@@ -194,6 +259,8 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
           ) : null}
         </FormAlert>
       ) : null}
+
+      {recoveredNotice ? <RecoveredDraftNotice onDiscard={discardRecovered} /> : null}
 
       <section className="grid gap-4">
         <div className={`grid gap-2 border-2 px-4 py-4 ${TONE_STYLES[status.tone]}`}>
@@ -327,6 +394,8 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
           This preview reflects the saved link, so save your changes to see a new one.
         </p>
       </section>
+
+      <LeaveGuardDialog open={guard.blocked} onStay={guard.stay} onLeave={guard.leave} />
     </div>
   );
 }

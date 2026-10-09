@@ -202,7 +202,7 @@ export function MediaField({
               >
                 {item.kind === "image" ? (
                   <img
-                    src={mediaUrl(item.url) ?? ""}
+                    src={mediaUrl(item.thumb_url ?? item.url) ?? ""}
                     alt={item.original_name}
                     className="aspect-square w-full object-cover"
                   />

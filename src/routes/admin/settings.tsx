@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,15 +13,22 @@ import {
 } from "@/components/admin/controls";
 import { MediaField } from "@/components/admin/media-field";
 import { VideoField } from "@/components/admin/video-field";
+import {
+  LeaveGuardDialog,
+  RecoveredDraftNotice,
+  useLeaveGuard,
+} from "@/components/admin/studio-guards";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 import {
   ApiError,
+  clearSession,
   fetchAdminSettings,
   saveSettings,
   type FieldErrors,
   type SettingsPatch,
 } from "@/lib/admin-api";
 import { SUGGESTED_CATEGORIES, type NavSection, type SiteSettings } from "@/lib/site-settings";
+import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -223,17 +230,36 @@ function NavEditor({
   );
 }
 
+type SettingsDraft = {
+  hero: SiteSettings["hero"];
+  ticker: SiteSettings["ticker"];
+  sections: NavSection[];
+  footer: SiteSettings["footer"];
+};
+
+const SETTINGS_DRAFT_KEY = draftKey("settings");
+
 function SettingsForm({ initial }: { initial: SiteSettings }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
-  const [hero, setHero] = useState(initial.hero);
-  const [ticker, setTicker] = useState(initial.ticker);
-  const [sections, setSections] = useState<NavSection[]>(initial.nav.sections);
-  const [footer, setFooter] = useState(initial.footer);
+  // A draft stashed after a 401 is restored on the next visit.
+  const [recovered] = useState<SettingsDraft | null>(() =>
+    readDraft<SettingsDraft>(SETTINGS_DRAFT_KEY),
+  );
+  const [recoveredNotice, setRecoveredNotice] = useState(Boolean(recovered));
+
+  const [hero, setHero] = useState(recovered?.hero ?? initial.hero);
+  const [ticker, setTicker] = useState(recovered?.ticker ?? initial.ticker);
+  const [sections, setSections] = useState<NavSection[]>(
+    recovered?.sections ?? initial.nav.sections,
+  );
+  const [footer, setFooter] = useState(recovered?.footer ?? initial.footer);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const dirty =
     JSON.stringify({ hero, ticker, sections, footer }) !==
@@ -244,7 +270,19 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
       footer: initial.footer,
     });
 
+  const leaveBypassRef = useRef(false);
+  const guard = useLeaveGuard(() => dirty && !leaveBypassRef.current, dirty);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      leaveBypassRef.current = true;
+      void navigate({ to: "/admin/login", replace: true });
+    }
+  }, [sessionExpired, navigate]);
+
   function discard() {
+    clearDraft(SETTINGS_DRAFT_KEY);
+    setRecoveredNotice(false);
     setHero(initial.hero);
     setTicker(initial.ticker);
     setSections(initial.nav.sections);
@@ -266,12 +304,27 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
     };
 
     try {
-      await saveSettings(patch);
+      const saved = await saveSettings(patch);
+      clearDraft(SETTINGS_DRAFT_KEY);
+      setRecoveredNotice(false);
+      // The response is the trimmed, merged truth, so adopting it stops the
+      // form from staying "dirty" over whitespace or a stale derived video.
+      setHero(saved.hero);
+      setTicker(saved.ticker);
+      setSections(saved.nav.sections);
+      setFooter(saved.footer);
       toast.success("Settings saved");
       // Public pages read the same settings, so they need refetching.
+      queryClient.setQueryData(["admin", "settings"], saved);
       void queryClient.invalidateQueries({ queryKey: ["site-settings"] });
-      void queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
     } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 401) {
+        saveDraft(SETTINGS_DRAFT_KEY, { hero, ticker, sections, footer });
+        clearSession();
+        setSessionExpired(true);
+        return;
+      }
+
       const message =
         caught instanceof ApiError ? caught.message : "Could not save. Check the fields and retry.";
       setError(message);
@@ -309,6 +362,8 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
           ) : null}
         </FormAlert>
       ) : null}
+
+      {recoveredNotice ? <RecoveredDraftNotice onDiscard={discard} /> : null}
 
       <section className="grid gap-6">
         <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Hero</h2>
@@ -429,6 +484,8 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
           {saving ? "Saving settings." : dirty ? "Unsaved changes." : "Everything is saved."}
         </p>
       </div>
+
+      <LeaveGuardDialog open={guard.blocked} onStay={guard.stay} onLeave={guard.leave} />
     </div>
   );
 }

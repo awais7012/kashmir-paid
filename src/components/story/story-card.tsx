@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 import { timeAgo } from "@/lib/format";
-import { storyCoverUrl } from "@/lib/media";
+import { mediaUrl, storyCoverUrl } from "@/lib/media";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 export function StoryCard({ story, large = false }: { story: Story; large?: boolean }) {
   const urdu = isUrdu(story.language);
   const textAttrs = storyTextAttrs(story.language);
+  const cover = storyCoverUrl(story);
+  const thumb = mediaUrl(story.hero_thumb_url);
 
   return (
     <Link
@@ -27,7 +29,9 @@ export function StoryCard({ story, large = false }: { story: Story; large?: bool
           loading="lazy"
           width={1024}
           height={768}
-          src={storyCoverUrl(story)}
+          src={cover}
+          srcSet={thumb ? `${thumb} 800w, ${cover} 1600w` : undefined}
+          sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 95vw"
           alt={story.title}
           className="story-image h-full w-full object-cover grayscale-[18%] group-hover:scale-[1.025] group-hover:grayscale-0"
         />

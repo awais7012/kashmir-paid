@@ -1,12 +1,14 @@
 import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "../../db/client.js";
 import { type MediaRow, media, stories } from "../../db/schema.js";
-import { publicUrlFor, removeStoredFile } from "../../lib/storage.js";
+import { publicUrlFor, relativePathFromPublicUrl, removeStoredFile } from "../../lib/storage.js";
+import { getSettings } from "../settings/settings.service.js";
 
 export type MediaDto = {
   id: string;
   kind: "image" | "video";
   url: string;
+  thumb_url: string | null;
   original_name: string;
   mime: string;
   size_bytes: number;
@@ -20,6 +22,7 @@ export function toMediaDto(row: MediaRow): MediaDto {
     id: row.id,
     kind: row.kind === "video" ? "video" : "image",
     url: row.url,
+    thumb_url: row.thumbUrl,
     original_name: row.originalName,
     mime: row.mime,
     size_bytes: row.sizeBytes,
@@ -36,6 +39,7 @@ export type CreateMediaInput = {
   sizeBytes: number;
   width: number | null;
   height: number | null;
+  thumbUrl: string | null;
   createdBy: string | null;
 };
 
@@ -52,6 +56,7 @@ export async function createMedia(input: CreateMediaInput): Promise<MediaRow> {
     width: input.width,
     height: input.height,
     url: publicUrlFor(input.filename),
+    thumbUrl: input.thumbUrl,
     createdBy: input.createdBy,
   });
 
@@ -93,7 +98,7 @@ export async function getMediaById(id: string): Promise<MediaRow | null> {
 }
 
 export type DeleteMediaOutcome =
-  { status: "deleted" } | { status: "not_found" } | { status: "in_use"; storyTitle: string };
+  { status: "deleted" } | { status: "not_found" } | { status: "in_use"; message: string };
 
 export async function deleteMedia(id: string): Promise<DeleteMediaOutcome> {
   const row = await getMediaById(id);
@@ -112,11 +117,37 @@ export async function deleteMedia(id: string): Promise<DeleteMediaOutcome> {
     .where(eq(stories.videoUrl, row.url))
     .limit(1);
 
-  const inUse = imageUse[0] ?? videoUse[0];
-  if (inUse) return { status: "in_use", storyTitle: inUse.title };
+  const storyUse = imageUse[0] ?? videoUse[0];
+  if (storyUse) {
+    return {
+      status: "in_use",
+      message: `Still used by “${storyUse.title}”. Remove it from that story first.`,
+    };
+  }
+
+  // Site settings can point at uploaded files too (hero artwork, hero video,
+  // live stream), so those references have to keep the file alive as well.
+  const settings = await getSettings();
+  const settingsUses: [boolean, string][] = [
+    [settings.hero.image === row.url, "the homepage hero image"],
+    [settings.hero.videoUrl === row.url, "the homepage hero video"],
+    [settings.live.streamUrl === row.url, "the live broadcast"],
+  ];
+  const settingsUse = settingsUses.find(([used]) => used);
+  if (settingsUse) {
+    return {
+      status: "in_use",
+      message: `Still used as ${settingsUse[1]} in site settings. Replace it there first.`,
+    };
+  }
 
   await db.delete(media).where(eq(media.id, id));
   await removeStoredFile(row.filename);
+
+  if (row.thumbUrl) {
+    const thumbPath = relativePathFromPublicUrl(row.thumbUrl);
+    if (thumbPath) await removeStoredFile(thumbPath);
+  }
 
   return { status: "deleted" };
 }

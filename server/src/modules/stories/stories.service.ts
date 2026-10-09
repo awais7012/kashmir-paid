@@ -1,6 +1,19 @@
-import { and, asc, count, desc, eq, isNotNull, like, lte, ne, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  like,
+  lte,
+  ne,
+  or,
+  type SQL,
+} from "drizzle-orm";
 import { db } from "../../db/client.js";
-import { type NewStoryRow, type StoryRow, stories } from "../../db/schema.js";
+import { media, type NewStoryRow, type StoryRow, stories } from "../../db/schema.js";
 import { parseVideoUrl } from "../../lib/video-url.js";
 import type { CreateStoryInput, ListStoriesQuery, UpdateStoryInput } from "./stories.schema.js";
 
@@ -27,6 +40,8 @@ export type StoryDto = {
   published_at: string;
   image_key: string;
   hero_image_url: string | null;
+  /** Smaller copy of an uploaded cover, when one exists. */
+  hero_thumb_url: string | null;
   has_video: boolean;
   featured: boolean;
   display_order: number;
@@ -55,7 +70,7 @@ function buildVideo(row: StoryRow): StoryVideoDto | null {
   };
 }
 
-export function toStoryDto(row: StoryRow): StoryDto {
+export function toStoryDto(row: StoryRow, heroThumbUrl: string | null = null): StoryDto {
   return {
     id: row.id,
     slug: row.slug,
@@ -67,18 +82,53 @@ export function toStoryDto(row: StoryRow): StoryDto {
     published_at: row.publishedAt.toISOString(),
     image_key: row.imageKey,
     hero_image_url: row.heroImageUrl,
+    hero_thumb_url: heroThumbUrl,
     has_video: Boolean(row.videoUrl),
     featured: row.featured,
     display_order: row.displayOrder,
   };
 }
 
-export function toStoryDetailDto(row: StoryRow): StoryDetailDto {
+export function toStoryDetailDto(
+  row: StoryRow,
+  heroThumbUrl: string | null = null,
+): StoryDetailDto {
   return {
-    ...toStoryDto(row),
+    ...toStoryDto(row, heroThumbUrl),
     body: row.body,
     video: buildVideo(row),
   };
+}
+
+/** Looks up the card-sized cover for a page of stories in one query. */
+export async function getHeroThumbUrls(rows: StoryRow[]): Promise<Map<string, string>> {
+  const urls = [
+    ...new Set(rows.map((row) => row.heroImageUrl).filter((url): url is string => Boolean(url))),
+  ];
+  if (urls.length === 0) return new Map();
+
+  const found = await db
+    .select({ url: media.url, thumbUrl: media.thumbUrl })
+    .from(media)
+    .where(inArray(media.url, urls));
+
+  const thumbs = new Map<string, string>();
+  for (const item of found) {
+    if (item.thumbUrl) thumbs.set(item.url, item.thumbUrl);
+  }
+  return thumbs;
+}
+
+export async function getHeroThumbUrl(url: string | null): Promise<string | null> {
+  if (!url) return null;
+
+  const rows = await db
+    .select({ thumbUrl: media.thumbUrl })
+    .from(media)
+    .where(eq(media.url, url))
+    .limit(1);
+
+  return rows[0]?.thumbUrl ?? null;
 }
 
 type ListOptions = {
@@ -197,13 +247,23 @@ function textOrNull(value: string): string | null {
 
 /**
  * The homepage hero is a single story, so featuring one has to clear the rest.
- * Without this, ticking "Featured" on two stories silently keeps only the first.
+ * Only published stories are cleared: ticking "Featured" on a story scheduled
+ * for later must not take the hero flag off whatever is live right now. When
+ * the schedule arrives, the newer story wins the hero on its published date.
  */
-async function clearOtherFeatured(keepId: string): Promise<void> {
+async function clearOtherFeaturedPublished(keepId: string): Promise<void> {
   await db
     .update(stories)
     .set({ featured: false })
-    .where(and(eq(stories.featured, true), ne(stories.id, keepId)));
+    .where(
+      and(eq(stories.featured, true), ne(stories.id, keepId), lte(stories.publishedAt, new Date())),
+    );
+}
+
+async function keepFeaturedExclusive(row: StoryRow): Promise<void> {
+  if (row.featured && row.publishedAt.getTime() <= Date.now()) {
+    await clearOtherFeaturedPublished(row.id);
+  }
 }
 
 export async function createStory(input: CreateStoryInput): Promise<StoryRow> {
@@ -229,14 +289,12 @@ export async function createStory(input: CreateStoryInput): Promise<StoryRow> {
 
   await db.insert(stories).values(values);
 
-  if (input.featured) {
-    await clearOtherFeatured(id);
-  }
-
   const row = await getStoryById(id);
   if (!row) {
     throw new Error("Story insert succeeded but the row could not be reloaded");
   }
+
+  await keepFeaturedExclusive(row);
 
   return row;
 }
@@ -271,11 +329,12 @@ export async function updateStory(id: string, input: UpdateStoryInput): Promise<
   patch.updatedAt = new Date();
   await db.update(stories).set(patch).where(eq(stories.id, id));
 
-  if (input.featured === true) {
-    await clearOtherFeatured(id);
+  const row = await getStoryById(id);
+  if (row) {
+    await keepFeaturedExclusive(row);
   }
 
-  return getStoryById(id);
+  return row;
 }
 
 export async function deleteStory(id: string): Promise<boolean> {

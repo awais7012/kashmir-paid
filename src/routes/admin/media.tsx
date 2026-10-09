@@ -178,7 +178,7 @@ function MediaLibrary() {
               <li key={item.id} className="grid gap-3 border-2 border-foreground bg-card p-3">
                 {item.kind === "image" ? (
                   <img
-                    src={mediaUrl(item.url) ?? ""}
+                    src={mediaUrl(item.thumb_url ?? item.url) ?? ""}
                     alt={item.original_name}
                     className="aspect-[16/10] w-full border-2 border-border object-cover"
                   />
