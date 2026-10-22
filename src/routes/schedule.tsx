@@ -58,12 +58,14 @@ function SchedulePage() {
               rel="noreferrer"
               className="block border-2 border-foreground bg-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >
+              {/* Capped to the viewport so a tall schedule does not force a long
+                  scroll; the whole picture still opens at full size on tap. */}
               <img
                 src={image}
                 alt={`Programme schedule for Global Kashmir TV${
                   schedule.caption ? `, ${schedule.caption}` : ""
                 }`}
-                className="h-auto w-full"
+                className="mx-auto block max-h-[75vh] w-full object-contain"
               />
             </a>
             <p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">

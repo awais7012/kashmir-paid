@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { BodyField } from "@/components/admin/body-field";
 import {
@@ -21,6 +23,7 @@ import {
   ApiError,
   clearSession,
   createStory,
+  fetchStoryCategories,
   updateStory,
   type AdminStory,
   type FieldErrors,
@@ -29,8 +32,32 @@ import {
 import { STORY_IMAGE_KEYS, STORY_IMAGE_LABELS } from "@/lib/story-images";
 import { SUGGESTED_CATEGORIES } from "@/lib/site-settings";
 import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
+import { readStudioPrefs, saveStudioPrefs } from "@/lib/studio-prefs";
 import { STORY_LANGUAGE_OPTIONS, type StoryLanguage } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
+
+const DEFAULT_AUTHOR = "GKTV Desk";
+const DEFAULT_CATEGORY = "Kashmir";
+/** Sentinel option that switches the section picker into free-text mode. */
+const NEW_SECTION = "__new_section__";
+
+/** Every control on the form, in the shape the form works with. */
+type FormValues = {
+  title: string;
+  slug: string;
+  category: string;
+  summary: string;
+  language: StoryLanguage;
+  author: string;
+  body: string;
+  imageKey: string;
+  heroImageUrl: string;
+  videoUrl: string;
+  videoTitle: string;
+  featured: boolean;
+  displayOrder: string;
+  publishedAt: string;
+};
 
 function slugify(value: string): string {
   return value
@@ -59,6 +86,44 @@ function readable(date: Date): string {
   );
 }
 
+function valuesFromStory(story: AdminStory): FormValues {
+  return {
+    title: story.title,
+    slug: story.slug,
+    category: story.category,
+    summary: story.summary,
+    language: story.language,
+    author: story.author,
+    body: story.body ?? "",
+    imageKey: story.image_key,
+    heroImageUrl: story.hero_image_url ?? "",
+    videoUrl: story.video?.url ?? "",
+    videoTitle: story.video?.title ?? "",
+    featured: story.featured,
+    displayOrder: String(story.display_order),
+    publishedAt: toLocalInput(story.published_at),
+  };
+}
+
+function valuesFromDraft(draft: StoryDraft): FormValues {
+  return {
+    title: draft.title,
+    slug: draft.slug,
+    category: draft.category,
+    summary: draft.summary,
+    language: draft.language,
+    author: draft.author,
+    body: draft.body,
+    imageKey: draft.image_key,
+    heroImageUrl: draft.hero_image_url,
+    videoUrl: draft.video_url,
+    videoTitle: draft.video_title,
+    featured: draft.featured,
+    displayOrder: String(draft.display_order),
+    publishedAt: draft.published_at ? toLocalInput(draft.published_at) : "",
+  };
+}
+
 type PublishState = {
   label: string;
   message: string;
@@ -70,12 +135,12 @@ function publishState(value: string, isEdit: boolean): PublishState {
     return isEdit
       ? {
           label: "Keeps current date",
-          message: "Leave this empty to keep the publish time the story already has.",
+          message: "The story keeps the publish time it already has.",
           swatch: "border-2 border-foreground",
         }
       : {
           label: "Publishes on save",
-          message: "No date set, so this story goes live the moment you create it.",
+          message: "No date set, so this story goes live the moment you save it.",
           swatch: "border-2 border-foreground",
         };
   }
@@ -119,80 +184,78 @@ export function StoryForm({
   // article is never typed twice.
   const [recovered] = useState<StoryDraft | null>(() => readDraft<StoryDraft>(storageKey));
   const [recoveredNotice, setRecoveredNotice] = useState(Boolean(recovered));
+  const [prefs] = useState(() => readStudioPrefs());
 
-  const [title, setTitle] = useState(recovered?.title ?? story?.title ?? "");
-  const [slug, setSlug] = useState(recovered?.slug ?? story?.slug ?? "");
+  // A brand-new story starts nearby-ready: the section and byline are remembered
+  // from the last story, and it publishes straight away unless a date is set.
+  const defaults = useMemo<FormValues>(
+    () => ({
+      title: "",
+      slug: "",
+      category: prefs?.category || DEFAULT_CATEGORY,
+      summary: "",
+      language: "en",
+      author: prefs?.author || DEFAULT_AUTHOR,
+      body: "",
+      imageKey: STORY_IMAGE_KEYS[0],
+      heroImageUrl: "",
+      videoUrl: "",
+      videoTitle: "",
+      featured: false,
+      displayOrder: "0",
+      publishedAt: "",
+    }),
+    [prefs],
+  );
+
+  const baseline = useMemo(() => (story ? valuesFromStory(story) : defaults), [story, defaults]);
+
+  const [values, setValues] = useState<FormValues>(() =>
+    recovered ? valuesFromDraft(recovered) : story ? valuesFromStory(story) : defaults,
+  );
   const [slugTouched, setSlugTouched] = useState(isEdit);
-  const [category, setCategory] = useState(recovered?.category ?? story?.category ?? "");
-  const [summary, setSummary] = useState(recovered?.summary ?? story?.summary ?? "");
-  const [language, setLanguage] = useState<StoryLanguage>(
-    recovered?.language ?? story?.language ?? "en",
+  const [showAdvanced, setShowAdvanced] = useState(
+    Boolean(story && (story.featured || story.has_video || story.display_order !== 0)),
   );
-  const [author, setAuthor] = useState(recovered?.author ?? story?.author ?? "");
-  const [body, setBody] = useState(recovered?.body ?? story?.body ?? "");
-  const [imageKey, setImageKey] = useState(
-    recovered?.image_key ?? story?.image_key ?? STORY_IMAGE_KEYS[0],
-  );
-  const [heroImageUrl, setHeroImageUrl] = useState(
-    recovered?.hero_image_url ?? story?.hero_image_url ?? "",
-  );
-  const [videoUrl, setVideoUrl] = useState(recovered?.video_url ?? story?.video?.url ?? "");
-  const [videoTitle, setVideoTitle] = useState(recovered?.video_title ?? story?.video?.title ?? "");
-  const [featured, setFeatured] = useState(recovered?.featured ?? story?.featured ?? false);
-  const [displayOrder, setDisplayOrder] = useState(
-    String(recovered?.display_order ?? story?.display_order ?? 0),
-  );
-  const [publishedAt, setPublishedAt] = useState(
-    recovered?.published_at
-      ? toLocalInput(recovered.published_at)
-      : story
-        ? toLocalInput(story.published_at)
-        : "",
-  );
+  const [customSection, setCustomSection] = useState(false);
+
+  // Sections already in use come from the API, so the dropdown lists the real
+  // names on the site as well as the built-in suggestions.
+  const categories = useQuery({
+    queryKey: ["admin", "story-categories"],
+    queryFn: fetchStoryCategories,
+    staleTime: 5 * 60_000,
+  });
+
+  const sectionOptions = useMemo(() => {
+    const names: string[] = [];
+    const seen = new Set<string>();
+    const add = (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed || seen.has(trimmed)) return;
+      seen.add(trimmed);
+      names.push(trimmed);
+    };
+
+    add(values.category); // keep the current value selectable even if unknown
+    for (const name of categories.data ?? []) add(name);
+    for (const name of SUGGESTED_CATEGORIES) add(name);
+
+    return [
+      ...names.map((name) => ({ value: name, label: name })),
+      { value: NEW_SECTION, label: "＋ Add a new section…" },
+    ];
+  }, [categories.data, values.category]);
 
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
-  // Compared against the story as loaded (never the recovered draft), so a
-  // recovered draft counts as unsaved work, which is exactly what it is.
-  const baseline = useMemo(
-    () => ({
-      title: story?.title ?? "",
-      slug: story?.slug ?? "",
-      category: story?.category ?? "",
-      summary: story?.summary ?? "",
-      language: story?.language ?? "en",
-      author: story?.author ?? "",
-      body: story?.body ?? "",
-      imageKey: story?.image_key ?? STORY_IMAGE_KEYS[0],
-      heroImageUrl: story?.hero_image_url ?? "",
-      videoUrl: story?.video?.url ?? "",
-      videoTitle: story?.video?.title ?? "",
-      featured: story?.featured ?? false,
-      displayOrder: String(story?.display_order ?? 0),
-      publishedAt: story ? toLocalInput(story.published_at) : "",
-    }),
-    [story],
+  const dirty = useMemo(
+    () => JSON.stringify(values) !== JSON.stringify(baseline),
+    [values, baseline],
   );
-  const dirty =
-    JSON.stringify({
-      title,
-      slug,
-      category,
-      summary,
-      language,
-      author,
-      body,
-      imageKey,
-      heroImageUrl,
-      videoUrl,
-      videoTitle,
-      featured,
-      displayOrder,
-      publishedAt,
-    }) !== JSON.stringify(baseline);
 
   // A ref lets success and sign-out paths release the leave guard immediately,
   // before React has re-rendered with the new state.
@@ -207,8 +270,8 @@ export function StoryForm({
   }, [sessionExpired, navigate]);
 
   const hasFieldErrors = Object.keys(fieldErrors).length > 0;
-  const status = publishState(publishedAt, isEdit);
-  const urdu = language === "ur";
+  const status = publishState(values.publishedAt, isEdit);
+  const urdu = values.language === "ur";
 
   const field = (id: string, label: string, hint?: string) => ({
     id,
@@ -217,27 +280,21 @@ export function StoryForm({
     error: fieldErrors[id]?.[0],
   });
 
+  function update(patch: Partial<FormValues>) {
+    setValues((current) => ({ ...current, ...patch }));
+  }
+
   function handleTitleChange(next: string) {
-    setTitle(next);
-    if (!slugTouched) setSlug(slugify(next));
+    setValues((current) => ({
+      ...current,
+      title: next,
+      slug: slugTouched ? current.slug : slugify(next),
+    }));
   }
 
   function discardRecovered() {
     clearDraft(storageKey);
-    setTitle(baseline.title);
-    setSlug(baseline.slug);
-    setCategory(baseline.category);
-    setSummary(baseline.summary);
-    setLanguage(baseline.language);
-    setAuthor(baseline.author);
-    setBody(baseline.body);
-    setImageKey(baseline.imageKey);
-    setHeroImageUrl(baseline.heroImageUrl);
-    setVideoUrl(baseline.videoUrl);
-    setVideoTitle(baseline.videoTitle);
-    setFeatured(baseline.featured);
-    setDisplayOrder(baseline.displayOrder);
-    setPublishedAt(baseline.publishedAt);
+    setValues(baseline);
     setRecoveredNotice(false);
   }
 
@@ -248,26 +305,26 @@ export function StoryForm({
     setFormError(null);
 
     const draft: StoryDraft = {
-      title: title.trim(),
-      slug: slug.trim() || slugify(title),
-      category: category.trim(),
-      summary: summary.trim(),
-      language,
-      author: author.trim(),
-      image_key: imageKey,
-      featured,
-      display_order: Number.parseInt(displayOrder, 10) || 0,
-      body,
-      hero_image_url: heroImageUrl.trim(),
-      video_url: videoUrl.trim(),
-      video_title: videoTitle.trim(),
+      title: values.title.trim(),
+      slug: values.slug.trim() || slugify(values.title),
+      category: values.category.trim(),
+      summary: values.summary.trim(),
+      language: values.language,
+      author: values.author.trim(),
+      image_key: values.imageKey,
+      featured: values.featured,
+      display_order: Number.parseInt(values.displayOrder, 10) || 0,
+      body: values.body,
+      hero_image_url: values.heroImageUrl.trim(),
+      video_url: values.videoUrl.trim(),
+      video_title: values.videoTitle.trim(),
     };
 
     // Only send the publish time when the editor changed it. The form keeps
     // minute precision, so resending an untouched value would shave the
     // seconds off an old story's publish time on every save.
-    if (publishedAt && publishedAt !== baseline.publishedAt) {
-      const parsed = new Date(publishedAt);
+    if (values.publishedAt && values.publishedAt !== baseline.publishedAt) {
+      const parsed = new Date(values.publishedAt);
       if (!Number.isNaN(parsed.getTime())) draft.published_at = parsed.toISOString();
     }
 
@@ -275,7 +332,9 @@ export function StoryForm({
       const saved = story ? await updateStory(story.id, draft) : await createStory(draft);
       clearDraft(storageKey);
       setRecoveredNotice(false);
-      toast.success(isEdit ? "Story saved" : "Story created");
+      // Remember the byline and section so the next story is quicker to write.
+      saveStudioPrefs({ author: draft.author, category: draft.category });
+      toast.success(isEdit ? "Story saved" : "Story published");
       leaveBypassRef.current = true;
       onSaved(saved);
     } catch (caught) {
@@ -301,201 +360,259 @@ export function StoryForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="grid gap-10">
+    <form onSubmit={handleSubmit} noValidate className="grid gap-8">
       {formError ? (
         <FormAlert>
           {formError}
           {hasFieldErrors ? (
-            <span className="mt-1 block text-xs font-normal">Fix the fields marked below.</span>
+            <span className="mt-1 block text-xs font-normal">
+              Some fields need attention — open More options if the problem is not visible here.
+            </span>
           ) : null}
         </FormAlert>
       ) : null}
 
       {recoveredNotice ? <RecoveredDraftNotice onDiscard={discardRecovered} /> : null}
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-        <section className="grid gap-6">
-          <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Story details</h2>
+      <section className="grid gap-6">
+        <div className="border-b-2 border-foreground pb-3">
+          <h2 className="font-display text-2xl">Write the story</h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            A headline, a standfirst and the story itself are all you need. The rest is filled in
+            for you.
+          </p>
+        </div>
 
+        <div className="grid gap-6 lg:grid-cols-2">
           <SelectField
-            meta={field(
-              "language",
-              "Language",
-              "Urdu stories are written and shown right to left, in an Urdu typeface.",
-            )}
-            value={language}
-            onChange={(next) => setLanguage(next as StoryLanguage)}
+            meta={field("language", "Language", "Urdu stories read right to left.")}
+            value={values.language}
+            onChange={(next) => update({ language: next as StoryLanguage })}
             options={STORY_LANGUAGE_OPTIONS}
           />
 
-          <TextField
-            meta={field("title", "Headline", urdu ? "Write the headline in Urdu." : undefined)}
-            value={title}
-            onChange={handleTitleChange}
-            dir={urdu ? "rtl" : undefined}
-            placeholder={urdu ? "وادی دنیا سے مخاطب ہے" : "The valley speaks to the world"}
-            autoFocus
-          />
-
-          <TextField
-            meta={field(
-              "slug",
-              "URL slug",
-              urdu
-                ? "Story addresses stay in Latin letters, so this cannot be filled in from an Urdu headline. Type the address yourself."
-                : "Lowercase words separated by dashes. This becomes the story address.",
-            )}
-            value={slug}
-            onChange={(next) => {
-              setSlugTouched(true);
-              setSlug(next);
-            }}
-            placeholder="valley-speaks-to-world"
-          />
-
-          <TextField
-            meta={field("category", "Category", "Pick a section or type a new one.")}
-            value={category}
-            onChange={setCategory}
-            list="story-category-options"
-            placeholder="Kashmir"
-          />
-          <datalist id="story-category-options">
-            {SUGGESTED_CATEGORIES.map((option) => (
-              <option key={option} value={option} />
-            ))}
-          </datalist>
-
-          <TextAreaField
-            meta={field(
-              "summary",
-              "Standfirst",
-              "One or two sentences. Readers see this under the headline.",
-            )}
-            value={summary}
-            onChange={setSummary}
-            rows={4}
-            dir={urdu ? "rtl" : undefined}
-            placeholder={
-              urdu
-                ? "صحافیوں کی نئی نسل کشمیر کو دنیا کے سامنے پیش کر رہی ہے۔"
-                : "A new generation of reporters is reshaping how Kashmir is seen."
-            }
-          />
-
-          <TextField
-            meta={field("author", "Byline")}
-            value={author}
-            onChange={setAuthor}
-            placeholder="Aamir Sofi"
-          />
-
-          <BodyField value={body} onChange={setBody} error={fieldErrors["body"]?.[0]} urdu={urdu} />
-        </section>
-
-        <aside className="grid gap-8">
-          <section className="grid gap-4">
-            <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Cover</h2>
-
-            <MediaField
-              id="hero_image_url"
-              kind="image"
-              label="Uploaded cover"
-              value={heroImageUrl}
-              onChange={setHeroImageUrl}
-              emptyMessage="No cover uploaded. The bundled photograph below is used instead."
-              hint="Drag a file in, or upload one. This wins over the bundled photograph."
-            />
-
+          {customSection ? (
+            <div className="grid gap-2">
+              <TextField
+                meta={field(
+                  "category-new",
+                  "New section name",
+                  "A new section is created on the site with this name.",
+                )}
+                value={values.category}
+                onChange={(next) => update({ category: next })}
+                placeholder={DEFAULT_CATEGORY}
+              />
+              <button
+                type="button"
+                onClick={() => setCustomSection(false)}
+                className="justify-self-start text-[10px] font-black tracking-[0.12em] text-primary uppercase underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Choose from the list instead
+              </button>
+            </div>
+          ) : (
             <SelectField
-              meta={field("image_key", "Bundled photograph", "Used when no cover is uploaded.")}
-              value={imageKey}
-              onChange={setImageKey}
-              options={STORY_IMAGE_KEYS.map((key) => ({
-                value: key,
-                label: STORY_IMAGE_LABELS[key],
-              }))}
+              meta={field(
+                "category",
+                "Section",
+                "Where the story appears on the site. Pick a name, or add a new one.",
+              )}
+              value={values.category}
+              onChange={(next) => {
+                if (next === NEW_SECTION) {
+                  setCustomSection(true);
+                  return;
+                }
+                update({ category: next });
+              }}
+              options={sectionOptions}
             />
-          </section>
+          )}
+        </div>
 
-          <section className="grid gap-4">
-            <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Placement</h2>
+        <TextField
+          meta={field("title", "Headline", urdu ? "Write the headline in Urdu." : undefined)}
+          value={values.title}
+          onChange={handleTitleChange}
+          dir={urdu ? "rtl" : undefined}
+          placeholder={urdu ? "وادی دنیا سے مخاطب ہے" : "The valley speaks to the world"}
+          autoFocus
+        />
+
+        <TextAreaField
+          meta={field(
+            "summary",
+            "Standfirst",
+            "One or two sentences. Readers see this under the headline.",
+          )}
+          value={values.summary}
+          onChange={(next) => update({ summary: next })}
+          rows={3}
+          dir={urdu ? "rtl" : undefined}
+          placeholder={
+            urdu
+              ? "صحافیوں کی نئی نسل کشمیر کو دنیا کے سامنے پیش کر رہی ہے۔"
+              : "A new generation of reporters is reshaping how Kashmir is seen."
+          }
+        />
+
+        <BodyField
+          value={values.body}
+          onChange={(next) => update({ body: next })}
+          error={fieldErrors["body"]?.[0]}
+          urdu={urdu}
+        />
+
+        <MediaField
+          id="hero_image_url"
+          kind="image"
+          label="Cover picture (optional)"
+          value={values.heroImageUrl}
+          onChange={(next) => update({ heroImageUrl: next })}
+          emptyMessage="Optional. Skip this and a matching photo from the site is used instead."
+          hint="Optional. Drag a picture in, or upload one."
+        />
+      </section>
+
+      <section className="border-2 border-foreground bg-card">
+        <button
+          type="button"
+          aria-expanded={showAdvanced}
+          aria-controls="story-advanced"
+          onClick={() => setShowAdvanced((open) => !open)}
+          className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <span>
+            <span className="block text-[11px] font-black tracking-[0.12em] uppercase">
+              More options
+            </span>
+            <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+              {showAdvanced
+                ? "Hide the optional settings."
+                : "Optional: address, byline, homepage feature, publish time and video."}
+            </span>
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn("size-5 shrink-0 transition-transform", showAdvanced && "rotate-180")}
+          />
+        </button>
+
+        {showAdvanced ? (
+          <div id="story-advanced" className="grid gap-6 border-t-2 border-foreground p-4 sm:p-5">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <TextField
+                meta={field(
+                  "slug",
+                  "Web address",
+                  urdu
+                    ? "Story addresses stay in Latin letters, so type one yourself. Example: valley-speaks-to-world"
+                    : "Filled in from the headline. Change it only if you need a different address.",
+                )}
+                value={values.slug}
+                onChange={(next) => {
+                  setSlugTouched(true);
+                  update({ slug: next });
+                }}
+                placeholder="valley-speaks-to-world"
+              />
+
+              <TextField
+                meta={field("author", "Byline", "Whose name appears under the headline.")}
+                value={values.author}
+                onChange={(next) => update({ author: next })}
+                placeholder="Aamir Sofi"
+              />
+
+              {!values.heroImageUrl ? (
+                <SelectField
+                  meta={field(
+                    "image_key",
+                    "Fallback photograph",
+                    "Used when no cover picture is uploaded.",
+                  )}
+                  value={values.imageKey}
+                  onChange={(next) => update({ imageKey: next })}
+                  options={STORY_IMAGE_KEYS.map((key) => ({
+                    value: key,
+                    label: STORY_IMAGE_LABELS[key],
+                  }))}
+                />
+              ) : null}
+
+              <TextField
+                meta={field(
+                  "display_order",
+                  "Position in section",
+                  "Lower numbers appear first. Leave at 0 unless you want to pin it.",
+                )}
+                value={values.displayOrder}
+                onChange={(next) => update({ displayOrder: next })}
+                type="number"
+                inputMode="numeric"
+              />
+            </div>
 
             <CheckboxField
               id="featured"
               label="Feature on the homepage"
-              hint="Makes this the homepage hero. Only one story can hold it, so this replaces whichever story has it now."
-              checked={featured}
-              onChange={setFeatured}
+              hint="Makes this the big story at the top of the homepage. Only one story holds it, so this replaces whichever story has it now."
+              checked={values.featured}
+              onChange={(checked) => update({ featured: checked })}
             />
 
-            <TextField
-              meta={field(
-                "display_order",
-                "Display order",
-                "Lower numbers appear first within a section.",
-              )}
-              value={displayOrder}
-              onChange={setDisplayOrder}
-              type="number"
-              inputMode="numeric"
-            />
-          </section>
-
-          <section className="grid gap-4">
-            <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Publishing</h2>
-
-            <TextField
-              meta={field("published_at", "Publish date")}
-              type="datetime-local"
-              value={publishedAt}
-              onChange={setPublishedAt}
-              aside={
-                <button
-                  type="button"
-                  onClick={() => setPublishedAt(toLocalInput(new Date().toISOString()))}
-                  className="text-[10px] font-black tracking-[0.12em] text-primary uppercase underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                >
-                  Set to now
-                </button>
-              }
-            />
-
-            <div className="grid gap-2 border-2 border-border bg-muted/40 px-3 py-3">
-              <p className="flex items-center gap-2 text-[10px] font-black tracking-[0.16em] uppercase">
-                <span aria-hidden="true" className={cn("size-2.5 shrink-0", status.swatch)} />
-                {status.label}
-              </p>
-              <p className="text-xs leading-relaxed text-muted-foreground">{status.message}</p>
+            <div className="grid gap-3">
+              <TextField
+                meta={field("published_at", "Publish time")}
+                type="datetime-local"
+                value={values.publishedAt}
+                onChange={(next) => update({ publishedAt: next })}
+                aside={
+                  <button
+                    type="button"
+                    onClick={() => update({ publishedAt: toLocalInput(new Date().toISOString()) })}
+                    className="text-[10px] font-black tracking-[0.12em] text-primary uppercase underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    Set to now
+                  </button>
+                }
+              />
+              <div className="grid gap-2 border-2 border-border bg-muted/40 px-3 py-3">
+                <p className="flex items-center gap-2 text-[10px] font-black tracking-[0.16em] uppercase">
+                  <span aria-hidden="true" className={cn("size-2.5 shrink-0", status.swatch)} />
+                  {status.label}
+                </p>
+                <p className="text-xs leading-relaxed text-muted-foreground">{status.message}</p>
+              </div>
             </div>
-          </section>
-        </aside>
-      </div>
 
-      <section className="grid gap-5 border-t-2 border-foreground pt-6">
-        <h2 className="font-display text-2xl">Video</h2>
-        <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
-          Attach one video to this story. A linked YouTube or Vimeo video streams from them; an
-          uploaded file is served from this server.
-        </p>
-        <VideoField
-          videoUrl={videoUrl}
-          onVideoUrlChange={setVideoUrl}
-          videoTitle={videoTitle}
-          onVideoTitleChange={setVideoTitle}
-          error={fieldErrors["video_url"]?.[0]}
-        />
+            <div className="grid gap-4 border-t border-border pt-5">
+              <h3 className="font-display text-xl">Video</h3>
+              <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                Optional. Attach one video: a YouTube or Vimeo link, or an uploaded file.
+              </p>
+              <VideoField
+                videoUrl={values.videoUrl}
+                onVideoUrlChange={(next) => update({ videoUrl: next })}
+                videoTitle={values.videoTitle}
+                onVideoTitleChange={(next) => update({ videoTitle: next })}
+                error={fieldErrors["video_url"]?.[0]}
+              />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <div className="sticky bottom-0 z-20 -mx-4 flex flex-wrap items-center gap-3 border-t-2 border-foreground bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <button type="submit" disabled={submitting} className={adminButton({ variant: "primary" })}>
-          {submitting ? "Saving" : isEdit ? "Save changes" : "Create story"}
+          {submitting ? "Saving" : isEdit ? "Save changes" : "Publish story"}
         </button>
         <Link to="/admin/stories" className={adminButton({ variant: "outline" })}>
           Cancel
         </Link>
         <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
-          {submitting ? "Saving this story." : ""}
+          {submitting ? "Saving this story." : dirty ? "Unsaved changes." : "Nothing to save yet."}
         </p>
       </div>
 

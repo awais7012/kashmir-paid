@@ -64,7 +64,9 @@ function SectionPage() {
             <h1
               {...storyTextAttrs(urduLabel ? "ur" : "en")}
               className={cn(
-                "mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black",
+                // A section name is editor-supplied and can be long or a single
+                // unbroken word, so it wraps rather than overflowing the page.
+                "mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black break-words",
                 urduLabel && URDU_TEXT_CLASS,
               )}
             >

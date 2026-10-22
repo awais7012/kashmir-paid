@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 const NAV_ITEM_CLASS =
   "text-[11px] font-bold tracking-[0.1em] uppercase transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
+// Long or multi-word section names wrap inside their cell rather than pushing
+// the grid out of shape.
+const MOBILE_NAV_ITEM_CLASS =
+  "border-b border-border py-3 text-sm font-bold uppercase break-words transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
 // About and Schedule are fixed entries: the studio's help and the client's
 // expectations both assume these two pages are always one click away.
 const PAGE_LINKS = [
@@ -78,6 +83,11 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   // Shares the cache key with the homepage loader, so this usually costs nothing.
   const { data: stories = [] } = useQuery(storiesQueryOptions);
   const sections = visibleSections(settings);
+
+  // Home leads, then Schedule and About, then the rest of the sections in the
+  // order the editor set. Split out here because the fixed links sit between.
+  const homeSection = sections.find((section) => section.kind === "home");
+  const otherSections = sections.filter((section) => section.kind !== "home");
 
   const matches = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -215,16 +225,15 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         ) : null}
 
         <nav
-          className="hidden items-center justify-between border-b border-border py-3 lg:flex"
+          className="hidden flex-wrap items-center gap-x-6 gap-y-2 border-b border-border py-3 lg:flex"
           aria-label="Main navigation"
         >
-          {sections.map((section) => (
+          {homeSection ? (
             <NavLink
-              key={`${section.kind}-${section.label}`}
-              section={section}
-              className={cn(NAV_ITEM_CLASS, pathname === navHref(section) && "text-primary")}
+              section={homeSection}
+              className={cn(NAV_ITEM_CLASS, pathname === navHref(homeSection) && "text-primary")}
             />
-          ))}
+          ) : null}
           {PAGE_LINKS.map((link) => (
             <Link
               key={link.to}
@@ -234,6 +243,13 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               {link.label}
             </Link>
           ))}
+          {otherSections.map((section) => (
+            <NavLink
+              key={`${section.kind}-${section.label}`}
+              section={section}
+              className={cn(NAV_ITEM_CLASS, pathname === navHref(section) && "text-primary")}
+            />
+          ))}
         </nav>
 
         {menuOpen ? (
@@ -241,29 +257,36 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             className="grid grid-cols-2 border-b border-foreground py-4 lg:hidden"
             aria-label="Mobile navigation"
           >
-            {sections.map((section) => (
+            {homeSection ? (
               <NavLink
-                key={`${section.kind}-${section.label}`}
-                section={section}
+                section={homeSection}
                 className={cn(
-                  "border-b border-border py-3 text-sm font-bold uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                  pathname === navHref(section) && "text-primary",
+                  MOBILE_NAV_ITEM_CLASS,
+                  pathname === navHref(homeSection) && "text-primary",
                 )}
                 onNavigate={() => setMenuOpen(false)}
               />
-            ))}
+            ) : null}
             {PAGE_LINKS.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
-                className={cn(
-                  "border-b border-border py-3 text-sm font-bold uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                  pathname === link.to && "text-primary",
-                )}
+                className={cn(MOBILE_NAV_ITEM_CLASS, pathname === link.to && "text-primary")}
               >
                 {link.label}
               </Link>
+            ))}
+            {otherSections.map((section) => (
+              <NavLink
+                key={`${section.kind}-${section.label}`}
+                section={section}
+                className={cn(
+                  MOBILE_NAV_ITEM_CLASS,
+                  pathname === navHref(section) && "text-primary",
+                )}
+                onNavigate={() => setMenuOpen(false)}
+              />
             ))}
           </nav>
         ) : null}

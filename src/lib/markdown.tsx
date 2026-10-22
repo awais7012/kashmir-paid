@@ -10,7 +10,9 @@ const INLINE_SOURCE = "(\\*\\*[^*]+\\*\\*|\\*[^*]+\\*|\\[[^\\]]+\\]\\([^)\\s]+\\
 /** Only http(s) and site-relative links survive; javascript: and data: do not. */
 function safeHref(raw: string): string | null {
   const value = raw.trim();
-  if (value.startsWith("/")) return value;
+  // "//evil.example" is protocol-relative, so it points off-site despite the
+  // leading slash. Only single-slash, site-relative paths are allowed through.
+  if (value.startsWith("/")) return value.startsWith("//") ? null : value;
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;

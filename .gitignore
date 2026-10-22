@@ -31,3 +31,8 @@ dist-ssr
 *.sln
 *.sw?
 .commandcode/
+
+# Environment files. The .example files stay tracked as templates.
+.env
+.env.*
+!.env.example

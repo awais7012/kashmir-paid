@@ -114,7 +114,7 @@ function StoryPage() {
           <h1
             {...textAttrs}
             className={cn(
-              "mt-5 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.92] font-black",
+              "mt-5 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.92] font-black break-words",
               urdu && URDU_TEXT_CLASS,
             )}
           >

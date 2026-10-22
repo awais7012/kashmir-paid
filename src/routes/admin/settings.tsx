@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, StudioSplash } from "@/components/admin/admin-shell";
 import {
@@ -260,6 +260,7 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const dirty =
     JSON.stringify({ hero, ticker, sections, footer }) !==
@@ -366,13 +367,14 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
       {recoveredNotice ? <RecoveredDraftNotice onDiscard={discard} /> : null}
 
       <section className="grid gap-6">
-        <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Hero</h2>
+        <div className="border-b-2 border-foreground pb-3">
+          <h2 className="font-display text-2xl">Homepage headline</h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            The big words at the very top of the front page. Everything else on this screen is
+            optional.
+          </p>
+        </div>
         <div className="grid gap-6 lg:grid-cols-2">
-          <TextField
-            meta={fieldMeta("hero-eyebrow", "Eyebrow")}
-            value={hero.eyebrow}
-            onChange={(value) => setHero({ ...hero, eyebrow: value })}
-          />
           <TextField
             meta={fieldMeta("hero-headline", "Headline")}
             value={hero.headline}
@@ -384,14 +386,9 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
             onChange={(value) => setHero({ ...hero, accent: value })}
           />
           <TextField
-            meta={fieldMeta("hero-primary", "Primary button")}
+            meta={fieldMeta("hero-primary", "Button label")}
             value={hero.primaryCta}
             onChange={(value) => setHero({ ...hero, primaryCta: value })}
-          />
-          <TextField
-            meta={fieldMeta("hero-secondary", "Secondary button")}
-            value={hero.secondaryCta}
-            onChange={(value) => setHero({ ...hero, secondaryCta: value })}
           />
         </div>
 
@@ -404,20 +401,6 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
           emptyMessage="No hero image set. The featured story's own cover is used."
           hint="Upload or pick artwork for the homepage hero. This overrides the featured story's cover."
         />
-
-        <div className="grid gap-3 border-2 border-border bg-muted/40 p-3">
-          <p className="text-[10px] font-black tracking-[0.16em] uppercase">Hero video</p>
-          <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
-            Optional. An uploaded file plays behind the headline, muted and looping. A YouTube or
-            Vimeo link shows a play button over the hero image instead, because a third-party embed
-            cannot be relied on to autoplay.
-          </p>
-          <VideoField
-            videoUrl={hero.videoUrl}
-            onVideoUrlChange={(value) => setHero({ ...hero, videoUrl: value })}
-            showCaption={false}
-          />
-        </div>
       </section>
 
       <section className="grid gap-6">
@@ -438,29 +421,92 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
       </section>
 
-      <section className="grid gap-6">
-        <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Navigation</h2>
-        <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-          The order here is the order on the site. Each entry links to a real page, so nothing in
-          the menu is a dead link.
-        </p>
-        <NavEditor sections={sections} onChange={setSections} />
-      </section>
+      <section className="border-2 border-foreground bg-card">
+        <button
+          type="button"
+          aria-expanded={showAdvanced}
+          aria-controls="settings-advanced"
+          onClick={() => setShowAdvanced((open) => !open)}
+          className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <span>
+            <span className="block text-[11px] font-black tracking-[0.12em] uppercase">
+              More options
+            </span>
+            <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+              {showAdvanced
+                ? "Hide the advanced settings."
+                : "Optional: the small label above the headline, the second button, the hero video and the menu."}
+            </span>
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn("size-5 shrink-0 transition-transform", showAdvanced && "rotate-180")}
+          />
+        </button>
 
-      <section className="grid gap-6">
-        <h2 className="border-b-2 border-foreground pb-2 font-display text-2xl">Footer</h2>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <TextField
-            meta={fieldMeta("footer-note", "Footer note")}
-            value={footer.note}
-            onChange={(value) => setFooter({ ...footer, note: value })}
-          />
-          <TextField
-            meta={fieldMeta("footer-copyright", "Copyright line")}
-            value={footer.copyright}
-            onChange={(value) => setFooter({ ...footer, copyright: value })}
-          />
-        </div>
+        {showAdvanced ? (
+          <div
+            id="settings-advanced"
+            className="grid gap-10 border-t-2 border-foreground p-4 sm:p-6"
+          >
+            <div className="grid gap-6">
+              <h3 className="font-display text-2xl">Homepage extras</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <TextField
+                  meta={fieldMeta(
+                    "hero-eyebrow",
+                    "Small label above the headline",
+                    "For example: Breaking report.",
+                  )}
+                  value={hero.eyebrow}
+                  onChange={(value) => setHero({ ...hero, eyebrow: value })}
+                />
+                <TextField
+                  meta={fieldMeta("hero-secondary", "Second button label")}
+                  value={hero.secondaryCta}
+                  onChange={(value) => setHero({ ...hero, secondaryCta: value })}
+                />
+              </div>
+              <div className="grid gap-3 border-2 border-border bg-muted/40 p-3">
+                <p className="text-[10px] font-black tracking-[0.16em] uppercase">Hero video</p>
+                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                  Optional. An uploaded file plays behind the headline, muted and looping.
+                </p>
+                <VideoField
+                  videoUrl={hero.videoUrl}
+                  onVideoUrlChange={(value) => setHero({ ...hero, videoUrl: value })}
+                  showCaption={false}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-6">
+              <h3 className="font-display text-2xl">Menu</h3>
+              <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
+                The order here is the order on the site. Schedule and About always appear too, so
+                you do not need to add them.
+              </p>
+              <NavEditor sections={sections} onChange={setSections} />
+            </div>
+
+            <div className="grid gap-6">
+              <h3 className="font-display text-2xl">Footer</h3>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <TextField
+                  meta={fieldMeta("footer-note", "Footer note")}
+                  value={footer.note}
+                  onChange={(value) => setFooter({ ...footer, note: value })}
+                />
+                <TextField
+                  meta={fieldMeta("footer-copyright", "Copyright line")}
+                  value={footer.copyright}
+                  onChange={(value) => setFooter({ ...footer, copyright: value })}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <div className="sticky bottom-0 z-20 -mx-4 flex flex-wrap items-center gap-3 border-t-2 border-foreground bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
@@ -470,7 +516,7 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
           disabled={saving || !dirty}
           className={adminButton({ variant: "primary" })}
         >
-          {saving ? "Saving" : "Save settings"}
+          {saving ? "Saving" : "Save website"}
         </button>
         <button
           type="button"

@@ -234,6 +234,12 @@ export async function fetchStories(): Promise<{ data: AdminStory[]; meta: { tota
   );
 }
 
+/** Every section name already in use, so the editor can pick from a list. */
+export async function fetchStoryCategories(): Promise<string[]> {
+  const payload = await requestRaw<{ data: string[] }>("/api/stories/categories");
+  return payload.data;
+}
+
 export async function fetchStory(id: string): Promise<AdminStory> {
   const payload = await requestRaw<{ data: AdminStory }>(
     `/api/admin/stories/${encodeURIComponent(id)}`,

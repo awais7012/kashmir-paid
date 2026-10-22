@@ -12,6 +12,7 @@ export function signAdminToken(admin: AuthAdmin): string {
   const options: SignOptions = {
     subject: admin.id,
     expiresIn: env.JWT_EXPIRES_IN as SignOptions["expiresIn"],
+    algorithm: "HS256",
   };
   return jwt.sign({ email: admin.email, role: admin.role }, env.JWT_SECRET, options);
 }
@@ -19,7 +20,9 @@ export function signAdminToken(admin: AuthAdmin): string {
 export function verifyAdminToken(token: string): AuthAdmin {
   let payload: string | jwt.JwtPayload;
   try {
-    payload = jwt.verify(token, env.JWT_SECRET);
+    // Pin the algorithm: without an allowlist, verification accepts any HMAC
+    // variant the key supports, which widens the surface for algorithm attacks.
+    payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] });
   } catch {
     throw new HttpError(401, "Invalid or expired token");
   }
