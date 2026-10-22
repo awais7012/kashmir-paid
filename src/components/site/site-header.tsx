@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Menu, Play, Search, X } from "lucide-react";
+import { BRAND_LOGO } from "@/lib/brand";
 import { storiesQueryOptions } from "@/lib/stories";
 import { isUrdu, looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import {
@@ -15,6 +16,13 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEM_CLASS =
   "text-[11px] font-bold tracking-[0.1em] uppercase transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
+// About and Schedule are fixed entries: the studio's help and the client's
+// expectations both assume these two pages are always one click away.
+const PAGE_LINKS = [
+  { to: "/schedule", label: "Schedule" },
+  { to: "/about", label: "About" },
+] as const;
 
 function NavLink({
   section,
@@ -85,17 +93,33 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     <header className="relative z-40 bg-card">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b-4 border-foreground py-5 sm:py-7">
-          <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
             <Link
               to="/"
-              className="flex items-baseline gap-2 font-display text-[clamp(2rem,6vw,5.25rem)] leading-[.82] font-black uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              aria-label="Global Kashmir TV, home"
+              className="shrink-0 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >
-              <span className="truncate">Global Kashmir</span>
-              <span className="shrink-0 text-primary">TV</span>
+              <img
+                src={BRAND_LOGO}
+                alt=""
+                width={1254}
+                height={1254}
+                className="size-12 rounded-full bg-white object-cover sm:size-16 lg:size-20"
+              />
             </Link>
-            <p className="mt-3 text-[9px] font-bold tracking-[0.22em] text-muted-foreground uppercase sm:text-[11px] sm:tracking-[0.34em]">
-              Kashmir. Connected to the World.
-            </p>
+
+            <div className="min-w-0">
+              <Link
+                to="/"
+                className="flex items-baseline gap-2 font-display text-[clamp(2rem,6vw,5.25rem)] leading-[.82] font-black uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              >
+                <span className="truncate">Global Kashmir</span>
+                <span className="shrink-0 text-primary">TV</span>
+              </Link>
+              <p className="mt-3 text-[9px] font-bold tracking-[0.22em] text-muted-foreground uppercase sm:text-[11px] sm:tracking-[0.34em]">
+                Kashmir. Connected to the World.
+              </p>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
@@ -201,6 +225,15 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               className={cn(NAV_ITEM_CLASS, pathname === navHref(section) && "text-primary")}
             />
           ))}
+          {PAGE_LINKS.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={cn(NAV_ITEM_CLASS, pathname === link.to && "text-primary")}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {menuOpen ? (
@@ -218,6 +251,19 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 )}
                 onNavigate={() => setMenuOpen(false)}
               />
+            ))}
+            {PAGE_LINKS.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMenuOpen(false)}
+                className={cn(
+                  "border-b border-border py-3 text-sm font-bold uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                  pathname === link.to && "text-primary",
+                )}
+              >
+                {link.label}
+              </Link>
             ))}
           </nav>
         ) : null}

@@ -63,7 +63,7 @@ function AdminEditStory() {
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
               It may have been deleted in another tab or session.
             </p>
-            <Link to="/admin" className={adminButton({ variant: "outline" })}>
+            <Link to="/admin/stories" className={adminButton({ variant: "outline" })}>
               Back to stories
             </Link>
           </div>
@@ -95,7 +95,7 @@ function AdminEditStory() {
               onSaved={() => {
                 void queryClient.invalidateQueries({ queryKey: ["admin", "stories"] });
                 void queryClient.invalidateQueries({ queryKey: ["admin", "story", id] });
-                void navigate({ to: "/admin" });
+                void navigate({ to: "/admin/stories" });
               }}
             />
 
@@ -109,7 +109,7 @@ function AdminEditStory() {
                   story={query.data}
                   onDeleted={() => {
                     void queryClient.invalidateQueries({ queryKey: ["admin", "stories"] });
-                    void navigate({ to: "/admin" });
+                    void navigate({ to: "/admin/stories" });
                   }}
                 />
               </div>

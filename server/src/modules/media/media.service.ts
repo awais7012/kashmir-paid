@@ -132,6 +132,7 @@ export async function deleteMedia(id: string): Promise<DeleteMediaOutcome> {
     [settings.hero.image === row.url, "the homepage hero image"],
     [settings.hero.videoUrl === row.url, "the homepage hero video"],
     [settings.live.streamUrl === row.url, "the live broadcast"],
+    [settings.schedule.image === row.url, "the programme schedule"],
   ];
   const settingsUse = settingsUses.find(([used]) => used);
   if (settingsUse) {

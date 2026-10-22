@@ -34,6 +34,13 @@ export type SiteSettings = {
     startedAt: string;
     video: VideoDto | null;
   };
+  /** The programme schedule, uploaded as a picture and shown as-is on /schedule. */
+  schedule: {
+    image: string;
+    title: string;
+    caption: string;
+    note: string;
+  };
   nav: { sections: NavSection[] };
   footer: { note: string; copyright: string };
 };

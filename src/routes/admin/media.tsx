@@ -110,7 +110,7 @@ function MediaLibrary() {
       <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-4">
         <div>
           <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Studio</p>
-          <h1 className="mt-1 font-display text-4xl leading-none">Media</h1>
+          <h1 className="mt-1 font-display text-4xl leading-none">Photos &amp; videos</h1>
         </div>
         <p className="text-xs text-muted-foreground">
           {query.data?.meta.total ?? 0} {query.data?.meta.total === 1 ? "file" : "files"}

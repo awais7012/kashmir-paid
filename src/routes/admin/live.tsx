@@ -238,7 +238,7 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
     <div className="grid gap-10">
       <div className="border-b-2 border-foreground pb-4">
         <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Studio</p>
-        <h1 className="mt-1 font-display text-4xl leading-none">Live</h1>
+        <h1 className="mt-1 font-display text-4xl leading-none">Go live</h1>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
           This app does not broadcast. You go live on YouTube, then paste that link here and switch
           the badge on, so the site can show it.

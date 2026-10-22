@@ -491,7 +491,7 @@ export function StoryForm({
         <button type="submit" disabled={submitting} className={adminButton({ variant: "primary" })}>
           {submitting ? "Saving" : isEdit ? "Save changes" : "Create story"}
         </button>
-        <Link to="/admin" className={adminButton({ variant: "outline" })}>
+        <Link to="/admin/stories" className={adminButton({ variant: "outline" })}>
           Cancel
         </Link>
         <p role="status" aria-live="polite" className="text-xs text-muted-foreground">

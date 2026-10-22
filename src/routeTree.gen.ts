@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminIdRouteImport } from './routes/admin/$id'
 import { Route as AdminAccountRouteImport } from './routes/admin/account'
@@ -19,13 +21,20 @@ import { Route as AdminLiveRouteImport } from './routes/admin/live'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminNewRouteImport } from './routes/admin/new'
+import { Route as AdminScheduleRouteImport } from './routes/admin/schedule'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminStoriesRouteImport } from './routes/admin/stories'
 import { Route as SectionCategoryRouteImport } from './routes/section/$category'
 import { Route as StorySlugRouteImport } from './routes/story/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveRoute = LiveRouteImport.update({
@@ -36,6 +45,11 @@ const LiveRoute = LiveRouteImport.update({
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -73,9 +87,19 @@ const AdminNewRoute = AdminNewRouteImport.update({
   path: '/admin/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminScheduleRoute = AdminScheduleRouteImport.update({
+  id: '/admin/schedule',
+  path: '/admin/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStoriesRoute = AdminStoriesRouteImport.update({
+  id: '/admin/stories',
+  path: '/admin/stories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SectionCategoryRoute = SectionCategoryRouteImport.update({
@@ -91,30 +115,38 @@ const StorySlugRoute = StorySlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
+  '/schedule': typeof ScheduleRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stories': typeof AdminStoriesRoute
   '/section/$category': typeof SectionCategoryRoute
   '/story/$slug': typeof StorySlugRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
+  '/schedule': typeof ScheduleRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stories': typeof AdminStoriesRoute
   '/section/$category': typeof SectionCategoryRoute
   '/story/$slug': typeof StorySlugRoute
   '/admin': typeof AdminIndexRoute
@@ -122,15 +154,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
+  '/schedule': typeof ScheduleRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/new': typeof AdminNewRoute
+  '/admin/schedule': typeof AdminScheduleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/stories': typeof AdminStoriesRoute
   '/section/$category': typeof SectionCategoryRoute
   '/story/$slug': typeof StorySlugRoute
   '/admin/': typeof AdminIndexRoute
@@ -139,45 +175,57 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/live'
     | '/news'
+    | '/schedule'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
     | '/admin/login'
     | '/admin/media'
     | '/admin/new'
+    | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/stories'
     | '/section/$category'
     | '/story/$slug'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/live'
     | '/news'
+    | '/schedule'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
     | '/admin/login'
     | '/admin/media'
     | '/admin/new'
+    | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/stories'
     | '/section/$category'
     | '/story/$slug'
     | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/live'
     | '/news'
+    | '/schedule'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
     | '/admin/login'
     | '/admin/media'
     | '/admin/new'
+    | '/admin/schedule'
     | '/admin/settings'
+    | '/admin/stories'
     | '/section/$category'
     | '/story/$slug'
     | '/admin/'
@@ -185,15 +233,19 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   LiveRoute: typeof LiveRoute
   NewsRoute: typeof NewsRoute
+  ScheduleRoute: typeof ScheduleRoute
   AdminIdRoute: typeof AdminIdRoute
   AdminAccountRoute: typeof AdminAccountRoute
   AdminLiveRoute: typeof AdminLiveRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminNewRoute: typeof AdminNewRoute
+  AdminScheduleRoute: typeof AdminScheduleRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStoriesRoute: typeof AdminStoriesRoute
   SectionCategoryRoute: typeof SectionCategoryRoute
   StorySlugRoute: typeof StorySlugRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -208,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/live': {
       id: '/live'
       path: '/live'
@@ -220,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -271,11 +337,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/schedule': {
+      id: '/admin/schedule'
+      path: '/admin/schedule'
+      fullPath: '/admin/schedule'
+      preLoaderRoute: typeof AdminScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/admin/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/stories': {
+      id: '/admin/stories'
+      path: '/admin/stories'
+      fullPath: '/admin/stories'
+      preLoaderRoute: typeof AdminStoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/section/$category': {
@@ -297,15 +377,19 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   LiveRoute: LiveRoute,
   NewsRoute: NewsRoute,
+  ScheduleRoute: ScheduleRoute,
   AdminIdRoute: AdminIdRoute,
   AdminAccountRoute: AdminAccountRoute,
   AdminLiveRoute: AdminLiveRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminNewRoute: AdminNewRoute,
+  AdminScheduleRoute: AdminScheduleRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStoriesRoute: AdminStoriesRoute,
   SectionCategoryRoute: SectionCategoryRoute,
   StorySlugRoute: StorySlugRoute,
   AdminIndexRoute: AdminIndexRoute,

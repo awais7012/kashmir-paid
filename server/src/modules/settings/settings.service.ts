@@ -25,6 +25,7 @@ function withDefaults(stored: unknown): SiteSettings {
       hero: { ...DEFAULT_SETTINGS.hero, ...raw.hero },
       ticker: { ...DEFAULT_SETTINGS.ticker, ...raw.ticker },
       live: { ...DEFAULT_SETTINGS.live, ...raw.live },
+      schedule: { ...DEFAULT_SETTINGS.schedule, ...raw.schedule },
       nav: raw.nav?.sections?.length ? { sections: raw.nav.sections } : DEFAULT_SETTINGS.nav,
       footer: { ...DEFAULT_SETTINGS.footer, ...raw.footer },
     });
@@ -79,6 +80,7 @@ export async function updateSettings(patch: UpdateSettingsInput): Promise<SiteSe
     hero: mergeSection(current.hero, patch.hero),
     ticker: mergeSection(current.ticker, patch.ticker),
     live: mergeSection(current.live, patch.live),
+    schedule: mergeSection(current.schedule, patch.schedule),
     nav: patch.nav ? { sections: patch.nav.sections } : current.nav,
     footer: mergeSection(current.footer, patch.footer),
   };

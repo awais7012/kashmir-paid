@@ -53,6 +53,14 @@ export const siteSettingsSchema = z.object({
     /** Set by the server when the broadcast starts, cleared when it ends. */
     startedAt: z.string().trim().max(40),
   }),
+  schedule: z.object({
+    /** Uploaded picture of the programme schedule. Shown as-is on /schedule. */
+    image: z.string().trim().max(512),
+    title: z.string().trim().max(120),
+    /** Sits under the title, e.g. "W.E.F. 6 October 2026". */
+    caption: z.string().trim().max(160),
+    note: z.string().trim().max(400),
+  }),
   nav: z.object({
     sections: z.array(navSectionSchema).max(SECTION_LIMIT),
   }),
@@ -66,6 +74,7 @@ export const updateSettingsSchema = z.object({
   hero: siteSettingsSchema.shape.hero.partial().optional(),
   ticker: siteSettingsSchema.shape.ticker.partial().optional(),
   live: siteSettingsSchema.shape.live.partial().optional(),
+  schedule: siteSettingsSchema.shape.schedule.partial().optional(),
   nav: z.object({ sections: z.array(navSectionSchema).max(SECTION_LIMIT) }).optional(),
   footer: siteSettingsSchema.shape.footer.partial().optional(),
 });
@@ -96,6 +105,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     description: "Watch Global Kashmir TV live from the valley.",
     isLive: false,
     startedAt: "",
+  },
+  schedule: {
+    image: "",
+    title: "Programme Schedule",
+    caption: "",
+    note: "",
   },
   nav: {
     sections: [
