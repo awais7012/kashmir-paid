@@ -211,7 +211,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         ) : null}
 
         <nav
-          className="hidden items-center justify-between gap-x-4 gap-y-2 border-b border-border py-4 lg:flex"
+          className="hidden items-center justify-center gap-x-10 border-b border-border py-4 lg:flex"
           aria-label="Main navigation"
         >
           <Link to="/" className={cn(NAV_ITEM_CLASS, pathname === "/" && "text-primary")}>
