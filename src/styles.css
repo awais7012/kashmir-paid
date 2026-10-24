@@ -239,18 +239,27 @@
  * the heading or paragraph itself, not only one of its children.
  */
 [dir="rtl"] {
-  line-height: 2.05;
+  line-height: 2.7;
 }
 
 [dir="rtl"] :is(h1, h2, h3, h4, h5, h6, blockquote),
 [dir="rtl"]:is(h1, h2, h3, h4, h5, h6, blockquote) {
   font-family: var(--urdu-font);
-  line-height: 1.9;
+  line-height: 2.7;
+}
+
+/*
+ * Noto Nastaliq Urdu's own line box is about 2.5em tall, so its display sizes
+ * have to be smaller than the Latin ones to stay readable at that leading.
+ * Without this the headline alone fills the screen.
+ */
+[dir="rtl"]:is(h1) {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
 }
 
 [dir="rtl"] :is(p, li, dd, dt, td),
 [dir="rtl"]:is(p, li, dd, dt, td) {
-  line-height: 2.1;
+  line-height: 2.7;
 }
 
 [dir="rtl"] :is(h1, h2, h3, h4, h5, h6, p, li, blockquote, a, span, strong, em),
