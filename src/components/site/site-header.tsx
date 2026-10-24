@@ -70,8 +70,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   return (
     <header className="relative z-40 bg-card">
       <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b-4 border-foreground py-5 sm:py-7">
-          <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b-4 border-foreground py-4 sm:py-5">
+          <div className="flex min-w-0 items-center gap-4 sm:gap-6">
             <Link
               to="/"
               aria-label="Global Kashmir TV, home"
@@ -82,14 +82,14 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 alt=""
                 width={1254}
                 height={1254}
-                className="size-12 rounded-full bg-white object-cover sm:size-16 lg:size-20"
+                className="size-11 rounded-full bg-white object-cover sm:size-14 lg:size-16"
               />
             </Link>
 
             <div className="min-w-0">
               <Link
                 to="/"
-                className="flex items-baseline gap-2 font-display text-[clamp(2rem,6vw,5.25rem)] leading-[.82] font-black uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+                className="flex items-baseline gap-2 font-display text-[clamp(1.75rem,4.5vw,3.25rem)] leading-[0.9] font-black uppercase focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
               >
                 <span className="truncate">Global Kashmir</span>
                 <span className="shrink-0 text-primary">TV</span>

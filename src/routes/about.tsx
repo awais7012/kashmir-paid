@@ -165,7 +165,7 @@ function AboutPage() {
       <SiteHeader settings={settings} />
 
       <main>
-        <section className="mx-auto max-w-[1100px] px-4 py-12 sm:px-8 lg:py-16">
+        <section className="mx-auto max-w-[52rem] px-4 py-12 sm:px-8 lg:py-16">
           <div className="grid gap-8 border-b-2 border-foreground pb-10 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
             <img
               src={BRAND_LOGO}
@@ -193,7 +193,7 @@ function AboutPage() {
         </section>
 
         <section className="border-y-2 border-foreground bg-card">
-          <div className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
+          <div className="mx-auto max-w-[48rem] px-4 py-14 sm:px-8 lg:py-20">
             <Eyebrow>Our vision</Eyebrow>
             <blockquote className="mt-4 max-w-[46ch] font-display text-3xl leading-tight sm:text-4xl">
               “To help build an informed, thoughtful and ethical society through truth, research,
@@ -208,7 +208,7 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
+        <section className="mx-auto max-w-[52rem] px-4 py-14 sm:px-8 lg:py-20">
           <Eyebrow>Our mission</Eyebrow>
           <SectionTitle>What we set out to do</SectionTitle>
           <ol className="mt-10 grid gap-px bg-border">

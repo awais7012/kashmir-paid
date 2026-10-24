@@ -103,9 +103,9 @@ function renderBlock(block: string, index: number): ReactNode {
 
   if (lines.every((line) => /^[-*]\s+/.test(line))) {
     return (
-      <ul key={key} className="grid list-disc gap-2 ps-6">
+      <ul key={key} className="grid list-disc gap-3 ps-6">
         {lines.map((line, lineIndex) => (
-          <li key={`${key}-${lineIndex}`} className="leading-relaxed">
+          <li key={`${key}-${lineIndex}`} className="text-lg leading-relaxed sm:text-xl">
             {renderInline(line.replace(/^[-*]\s+/, ""), `${key}-${lineIndex}`)}
           </li>
         ))}
@@ -114,7 +114,7 @@ function renderBlock(block: string, index: number): ReactNode {
   }
 
   return (
-    <p key={key} className="text-base leading-relaxed sm:text-lg sm:leading-relaxed">
+    <p key={key} className="text-lg leading-relaxed sm:text-xl sm:leading-relaxed">
       {renderInline(lines.join(" "), key)}
     </p>
   );
@@ -128,6 +128,6 @@ export function Markdown({ source }: { source: string }) {
     .filter((block) => block.trim() !== "");
 
   return (
-    <div className="grid gap-5">{blocks.map((block, index) => renderBlock(block, index))}</div>
+    <div className="grid gap-6">{blocks.map((block, index) => renderBlock(block, index))}</div>
   );
 }

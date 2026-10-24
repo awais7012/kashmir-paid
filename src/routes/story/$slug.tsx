@@ -79,7 +79,9 @@ function StoryPage() {
       <SiteHeader settings={settings} />
 
       <main>
-        <article className="mx-auto max-w-[1100px] px-4 py-10 sm:px-8 lg:py-14">
+        {/* A single measured column: headline, deck, byline, media and body all
+            share the same edges, so nothing looks left over or off-grid. */}
+        <article className="mx-auto w-full max-w-[46rem] px-4 py-12 sm:px-8 lg:py-16">
           <Link
             to="/section/$category"
             params={{ category: sectionSlug }}
@@ -114,7 +116,7 @@ function StoryPage() {
           <h1
             {...textAttrs}
             className={cn(
-              "mt-5 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.92] font-black break-words",
+              "mt-7 font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.95] font-black break-words",
               urdu && URDU_TEXT_CLASS,
             )}
           >
@@ -124,14 +126,14 @@ function StoryPage() {
           <p
             {...textAttrs}
             className={cn(
-              "mt-6 max-w-3xl font-display text-xl leading-snug text-muted-foreground italic sm:text-2xl",
+              "mt-8 font-display text-xl leading-snug text-muted-foreground italic sm:text-2xl",
               urdu && URDU_TEXT_CLASS,
             )}
           >
             {story.summary}
           </p>
 
-          <p className="mt-6 text-[10px] font-black tracking-[0.16em] uppercase">
+          <p className="mt-8 text-[10px] font-black tracking-[0.16em] uppercase">
             By {story.author}
           </p>
 
@@ -139,7 +141,7 @@ function StoryPage() {
               otherwise the cover. A video story must not also pull in the
               bundled photograph, or readers get two images before the text. */}
           {story.video ? (
-            <figure className="mx-auto mt-8 grid max-w-3xl gap-3">
+            <figure className="mt-10 grid gap-4">
               <div className="border-2 border-foreground">
                 <VideoPlayer
                   video={story.video}
@@ -154,7 +156,7 @@ function StoryPage() {
           ) : (
             /* Kept to a comfortable width so it reads as a picture above the
                article rather than a full-bleed banner that dwarfs the text. */
-            <div className="mx-auto mt-8 max-w-2xl overflow-hidden border-2 border-foreground bg-muted">
+            <div className="mt-10 overflow-hidden border-2 border-foreground bg-muted">
               <img
                 src={cover}
                 alt={story.title}
@@ -166,19 +168,12 @@ function StoryPage() {
           )}
 
           {story.body ? (
-            <div
-              {...textAttrs}
-              className={cn(
-                "mt-10 max-w-[70ch]",
-                // Urdu reads from the right, so the measure hugs that edge too.
-                urdu ? cn(URDU_TEXT_CLASS, "me-auto") : null,
-              )}
-            >
+            <div {...textAttrs} className={cn("mt-12", urdu && URDU_TEXT_CLASS)}>
               <Markdown source={story.body} />
             </div>
           ) : null}
 
-          <div className="mt-12 border-t-2 border-foreground pt-6">
+          <div className="mt-16 border-t-2 border-foreground pt-6">
             <Link
               to="/section/$category"
               params={{ category: sectionSlug }}
