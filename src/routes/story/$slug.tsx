@@ -135,29 +135,35 @@ function StoryPage() {
             By {story.author}
           </p>
 
-          {/* Kept to a comfortable width so it reads as a picture above the
-              article rather than a full-bleed banner that dwarfs the text. */}
-          <div className="mx-auto mt-8 max-w-2xl overflow-hidden border-2 border-foreground bg-muted">
-            <img
-              src={cover}
-              alt={story.title}
-              width={1536}
-              height={1024}
-              className="aspect-[16/10] w-full object-cover"
-            />
-          </div>
-
+          {/* One piece of lead media only: the video when the story has one,
+              otherwise the cover. A video story must not also pull in the
+              bundled photograph, or readers get two images before the text. */}
           {story.video ? (
-            <figure className="mt-8 grid gap-3">
+            <figure className="mx-auto mt-8 grid max-w-3xl gap-3">
               <div className="border-2 border-foreground">
-                <VideoPlayer video={story.video} poster={story.video.thumbnail_url ?? cover} />
+                <VideoPlayer
+                  video={story.video}
+                  poster={story.video.thumbnail_url ?? mediaUrl(story.hero_image_url)}
+                />
               </div>
               <figcaption className="flex items-center gap-2 text-[10px] font-black tracking-[0.14em] uppercase">
                 <Play className="size-3.5 fill-current text-primary" />
                 {story.video.title ?? "Watch"}
               </figcaption>
             </figure>
-          ) : null}
+          ) : (
+            /* Kept to a comfortable width so it reads as a picture above the
+               article rather than a full-bleed banner that dwarfs the text. */
+            <div className="mx-auto mt-8 max-w-2xl overflow-hidden border-2 border-foreground bg-muted">
+              <img
+                src={cover}
+                alt={story.title}
+                width={1536}
+                height={1024}
+                className="aspect-[16/10] w-full object-cover"
+              />
+            </div>
+          )}
 
           {story.body ? (
             <div
