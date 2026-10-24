@@ -56,18 +56,20 @@ function TeamPage() {
       <SiteHeader settings={settings} />
 
       <main>
-        <section className="mx-auto max-w-[1100px] px-4 py-12 sm:px-8 lg:py-16">
-          <div className="border-b-2 border-foreground pb-6">
-            <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
-              Who we are
-            </p>
-            <h1 className="mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
-              Team
-            </h1>
-            <p className="mt-3 font-display text-xl text-primary italic sm:text-2xl">
-              Bridging the Valley and the World
-            </p>
-            <p className="mt-5 max-w-[70ch] text-base leading-relaxed text-muted-foreground">
+        <section className="mx-auto max-w-[1100px] px-4 pt-12 pb-12 sm:px-8 lg:pt-16 lg:pb-16">
+          <div className="grid gap-8 border-b-2 border-foreground pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+            <div>
+              <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+                Who we are
+              </p>
+              <h1 className="mt-2 font-display text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
+                Team
+              </h1>
+              <p className="mt-4 font-display text-xl text-primary italic sm:text-2xl">
+                Bridging the Valley and the World
+              </p>
+            </div>
+            <p className="max-w-[62ch] text-base leading-relaxed text-muted-foreground lg:pb-1">
               {INTRO}
             </p>
           </div>
@@ -75,7 +77,7 @@ function TeamPage() {
 
         {empty ? (
           <section className="mx-auto max-w-[1100px] px-4 pb-16 sm:px-8">
-            <div className="grid justify-items-start gap-3 border-2 border-foreground bg-card px-5 py-12">
+            <div className="grid justify-items-start gap-3 border-2 border-foreground bg-card px-6 py-14">
               <h2 className="font-display text-3xl">The team is being put together</h2>
               <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
                 Team profiles have not been published yet. Please check back shortly.
@@ -86,16 +88,26 @@ function TeamPage() {
 
         {members.length > 0 ? (
           <section className="mx-auto max-w-[1100px] px-4 pb-16 sm:px-8">
-            <div className="border-b-2 border-foreground pb-3">
-              <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
-                Leadership
+            <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-foreground pb-3">
+              <div>
+                <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+                  Leadership
+                </p>
+                <h2 className="mt-1 font-display text-3xl leading-none sm:text-4xl">
+                  Our leadership
+                </h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {members.length} {members.length === 1 ? "person" : "people"}
               </p>
-              <h2 className="mt-1 font-display text-3xl leading-none sm:text-4xl">
-                Our leadership
-              </h2>
             </div>
 
-            <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              className={cn(
+                "mt-10 grid gap-6 sm:grid-cols-2",
+                members.length >= 3 && "lg:grid-cols-3",
+              )}
+            >
               {members.map((member, index) => {
                 const photo = mediaUrl(member.photo);
                 const nameUrdu = looksUrdu(member.name);
@@ -103,25 +115,26 @@ function TeamPage() {
                 return (
                   <article
                     key={member.id || `${member.name}-${index}`}
-                    className="grid content-start gap-4"
+                    className="group grid content-start border-2 border-foreground bg-card"
                   >
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt={member.name}
-                        loading="lazy"
-                        className="aspect-[4/5] w-full border-2 border-foreground object-cover object-top"
-                      />
-                    ) : (
-                      <div
-                        aria-hidden="true"
-                        className="grid aspect-[4/5] w-full place-items-center border-2 border-foreground bg-card font-display text-6xl text-primary"
-                      >
-                        {initials(member.name)}
-                      </div>
-                    )}
+                    <div className="aspect-[4/5] overflow-hidden bg-muted">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt={member.name}
+                          loading="lazy"
+                          className="h-full w-full object-cover object-top transition-transform duration-500 motion-reduce:transition-none group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <div aria-hidden="true" className="grid h-full place-items-center">
+                          <span className="grid size-28 place-items-center rounded-full border-2 border-foreground bg-background font-display text-4xl text-primary">
+                            {initials(member.name)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                    <div>
+                    <div className="grid gap-2 border-t-2 border-foreground px-5 py-5 sm:px-6">
                       <h3
                         {...storyTextAttrs(nameUrdu ? "ur" : "en")}
                         className={cn(
@@ -135,7 +148,7 @@ function TeamPage() {
                         <p
                           {...storyTextAttrs(roleUrdu ? "ur" : "en")}
                           className={cn(
-                            "mt-1 text-[10px] font-black tracking-[0.14em] text-primary uppercase break-words",
+                            "text-[10px] font-black tracking-[0.14em] text-primary uppercase break-words",
                             roleUrdu && URDU_TEXT_CLASS,
                           )}
                         >
@@ -146,7 +159,7 @@ function TeamPage() {
                         <p
                           {...storyTextAttrs(looksUrdu(member.bio) ? "ur" : "en")}
                           className={cn(
-                            "mt-3 text-sm leading-relaxed text-muted-foreground",
+                            "mt-1 text-sm leading-relaxed text-muted-foreground",
                             looksUrdu(member.bio) && URDU_TEXT_CLASS,
                           )}
                         >
@@ -163,7 +176,7 @@ function TeamPage() {
 
         {structure.length > 0 ? (
           <section className="border-y-2 border-foreground bg-card">
-            <div className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-16">
+            <div className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
               <div className="border-b-2 border-foreground pb-3">
                 <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
                   How we are organised
@@ -173,42 +186,47 @@ function TeamPage() {
                 </h2>
               </div>
 
-              <div className="mt-8 grid gap-6 lg:grid-cols-2">
+              <div className="mt-10 grid gap-6 lg:grid-cols-2">
                 {structure.map((section, index) => (
                   <article
                     key={section.id || `${section.title}-${index}`}
-                    className="grid content-start gap-4 border-2 border-foreground bg-background p-6"
+                    className="grid content-start gap-6 border-2 border-foreground bg-background p-6 sm:p-8"
                   >
-                    <div>
-                      <p className="text-[10px] font-black tracking-[0.16em] text-primary uppercase">
-                        Part {String(index + 1).padStart(2, "0")}
-                      </p>
-                      <h3 className="mt-1 font-display text-2xl leading-tight font-bold">
-                        {section.title}
-                      </h3>
-                      {section.description ? (
-                        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                          {section.description}
-                        </p>
-                      ) : null}
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4">
+                      <span
+                        aria-hidden="true"
+                        className="font-display text-3xl leading-none text-primary italic sm:text-4xl"
+                      >
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="font-display text-2xl leading-tight font-bold break-words">
+                          {section.title}
+                        </h3>
+                        {section.description ? (
+                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                            {section.description}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
 
                     {section.roles.length > 0 ? (
-                      <ul className="grid gap-3 border-t border-border pt-4">
+                      <ul className="grid gap-4 border-t border-border pt-6">
                         {section.roles.map((role) => {
                           const { title, note } = splitRole(role);
                           return (
                             <li key={role} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
                               <span
                                 aria-hidden="true"
-                                className="mt-2 size-2 shrink-0 bg-primary"
+                                className="mt-2.5 h-0.5 w-4 shrink-0 bg-primary"
                               />
                               <span className="min-w-0">
                                 <span className="block text-sm leading-snug font-bold break-words">
                                   {title}
                                 </span>
                                 {note ? (
-                                  <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                                  <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
                                     {note}
                                   </span>
                                 ) : null}
