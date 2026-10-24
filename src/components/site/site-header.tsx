@@ -94,9 +94,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 <span className="truncate">Global Kashmir</span>
                 <span className="shrink-0 text-primary">TV</span>
               </Link>
-              <p className="mt-3 text-[9px] font-bold tracking-[0.22em] text-muted-foreground uppercase sm:text-[11px] sm:tracking-[0.34em]">
-                Kashmir. Connected to the World.
-              </p>
             </div>
           </div>
 
