@@ -14,6 +14,8 @@ export type NavSection = {
 export type HeroSlide = {
   url: string;
   kind: "image" | "video";
+  /** When set, the slide is an advert and clicking it opens this address. */
+  link: string;
 };
 
 /** A person listed on the Team page. */

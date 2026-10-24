@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { adminButton } from "@/components/admin/controls";
+import { adminButton, TextField } from "@/components/admin/controls";
 import { measureImage } from "@/components/admin/media-field";
 import { ApiError, uploadMedia } from "@/lib/admin-api";
 import { mediaUrl } from "@/lib/media";
@@ -35,7 +35,7 @@ export function SlidesEditor({
       try {
         const dimensions = kind === "image" ? await measureImage(file) : {};
         const uploaded = await uploadMedia(file, dimensions);
-        added.push({ url: uploaded.url, kind });
+        added.push({ url: uploaded.url, kind, link: "" });
       } catch (caught) {
         toast.error(caught instanceof ApiError ? caught.message : `Could not upload ${file.name}.`);
       }
@@ -58,6 +58,12 @@ export function SlidesEditor({
     next[index] = b;
     next[target] = a;
     onChange(next);
+  }
+
+  function updateAt(index: number, patch: Partial<HeroSlide>) {
+    onChange(
+      slides.map((slide, position) => (position === index ? { ...slide, ...patch } : slide)),
+    );
   }
 
   return (
@@ -105,54 +111,68 @@ export function SlidesEditor({
             return (
               <li
                 key={`${slide.url}-${index}`}
-                className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4 border-2 border-border bg-card p-2"
+                className="grid gap-3 border-2 border-border bg-card p-3"
               >
-                <div className="aspect-[16/10] overflow-hidden bg-foreground">
-                  {slide.kind === "video" ? (
-                    <video
-                      src={src ?? undefined}
-                      muted
-                      preload="metadata"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <img src={src ?? ""} alt="" className="h-full w-full object-cover" />
-                  )}
-                </div>
+                <div className="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-4">
+                  <div className="aspect-[16/10] overflow-hidden bg-foreground">
+                    {slide.kind === "video" ? (
+                      <video
+                        src={src ?? undefined}
+                        muted
+                        preload="metadata"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <img src={src ?? ""} alt="" className="h-full w-full object-cover" />
+                    )}
+                  </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-black tracking-[0.14em] uppercase">
-                    {index + 1}. {slide.kind}
-                  </span>
-                  <div className="ms-auto flex items-center gap-1">
-                    <button
-                      type="button"
-                      aria-label={`Move slide ${index + 1} up`}
-                      disabled={index === 0}
-                      onClick={() => move(index, -1)}
-                      className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
-                    >
-                      <ArrowUp className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Move slide ${index + 1} down`}
-                      disabled={index === slides.length - 1}
-                      onClick={() => move(index, 1)}
-                      className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
-                    >
-                      <ArrowDown className="size-4" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Remove slide ${index + 1}`}
-                      onClick={() => onChange(slides.filter((_, position) => position !== index))}
-                      className={cn(adminButton({ variant: "danger", size: "sm" }), "px-2.5")}
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] font-black tracking-[0.14em] uppercase">
+                      {index + 1}. {slide.kind}
+                      {slide.link.trim() ? " · advert" : ""}
+                    </span>
+                    <div className="ms-auto flex items-center gap-1">
+                      <button
+                        type="button"
+                        aria-label={`Move slide ${index + 1} up`}
+                        disabled={index === 0}
+                        onClick={() => move(index, -1)}
+                        className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
+                      >
+                        <ArrowUp className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Move slide ${index + 1} down`}
+                        disabled={index === slides.length - 1}
+                        onClick={() => move(index, 1)}
+                        className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
+                      >
+                        <ArrowDown className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Remove slide ${index + 1}`}
+                        onClick={() => onChange(slides.filter((_, position) => position !== index))}
+                        className={cn(adminButton({ variant: "danger", size: "sm" }), "px-2.5")}
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                <TextField
+                  meta={{
+                    id: `slide-link-${index}`,
+                    label: "Link (optional)",
+                    hint: "Add a web address and this slide becomes an advert: clicking it opens that page in a new tab.",
+                  }}
+                  value={slide.link}
+                  onChange={(value) => updateAt(index, { link: value })}
+                  placeholder="https://example.com"
+                />
               </li>
             );
           })}

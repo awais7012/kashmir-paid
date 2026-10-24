@@ -14,12 +14,29 @@ const navSectionSchema = z.object({
 
 /**
  * One frame of the homepage slider. The editor uploads a full picture or a
- * video; there is no headline or button copy laid over it any more.
+ * video; there is no headline or button copy laid over it any more. A slide
+ * with a link is an advert: clicking it opens the advertiser's page.
  */
-const heroSlideSchema = z.object({
-  url: z.string().trim().max(512),
-  kind: z.enum(["image", "video"]).default("image"),
-});
+const heroSlideSchema = z
+  .object({
+    url: z.string().trim().max(512),
+    kind: z.enum(["image", "video"]).default("image"),
+    link: z.string().trim().max(512).default(""),
+  })
+  .superRefine((slide, ctx) => {
+    if (!slide.link) return;
+    try {
+      const parsed = new URL(slide.link);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") return;
+    } catch {
+      // Falls through to the issue below.
+    }
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["link"],
+      message: "Use a full web address starting with https://",
+    });
+  });
 
 /** A person on the Team page. Photos are uploaded through the media library. */
 const teamMemberSchema = z.object({

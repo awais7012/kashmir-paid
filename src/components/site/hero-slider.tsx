@@ -11,6 +11,8 @@ type Slide = {
   key: string;
   kind: "image" | "video";
   src: string;
+  /** Set when the slide is an advert; the whole slide then becomes a link. */
+  link: string;
 };
 
 /**
@@ -29,10 +31,12 @@ export function HeroSlider({
   const items = useMemo<Slide[]>(() => {
     const uploaded = slides.flatMap((slide, position) => {
       const src = mediaUrl(slide.url);
-      return src ? [{ key: `${slide.url}-${position}`, kind: slide.kind, src }] : [];
+      return src
+        ? [{ key: `${slide.url}-${position}`, kind: slide.kind, src, link: slide.link }]
+        : [];
     });
     if (uploaded.length > 0) return uploaded;
-    return fallbackImage ? [{ key: "fallback", kind: "image", src: fallbackImage }] : [];
+    return fallbackImage ? [{ key: "fallback", kind: "image", src: fallbackImage, link: "" }] : [];
   }, [slides, fallbackImage]);
 
   const count = items.length;
@@ -91,6 +95,30 @@ export function HeroSlider({
     >
       {items.map((item, position) => {
         const isActive = position === active;
+        const media =
+          item.kind === "video" ? (
+            isActive ? (
+              <video
+                src={item.src}
+                className="h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <div className="h-full w-full bg-foreground" />
+            )
+          ) : (
+            <img
+              src={item.src}
+              alt=""
+              loading={position === 0 ? "eager" : "lazy"}
+              className="h-full w-full object-cover"
+            />
+          );
+
         return (
           <div
             key={item.key}
@@ -100,27 +128,20 @@ export function HeroSlider({
               isActive ? "opacity-100" : "pointer-events-none opacity-0",
             )}
           >
-            {item.kind === "video" ? (
-              isActive ? (
-                <video
-                  src={item.src}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                />
-              ) : (
-                <div className="h-full w-full bg-foreground" />
-              )
+            {item.link ? (
+              // An advert slide: the whole frame opens the advertiser's page.
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Sponsored link"
+                tabIndex={isActive ? 0 : -1}
+                className="block h-full w-full focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-primary"
+              >
+                {media}
+              </a>
             ) : (
-              <img
-                src={item.src}
-                alt=""
-                loading={position === 0 ? "eager" : "lazy"}
-                className="h-full w-full object-cover"
-              />
+              media
             )}
           </div>
         );
