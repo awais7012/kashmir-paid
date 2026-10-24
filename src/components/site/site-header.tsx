@@ -10,7 +10,7 @@ import { storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEM_CLASS =
-  "text-[11px] font-bold tracking-[0.1em] uppercase transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "text-[12px] font-bold tracking-[0.12em] uppercase transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
 // Long or multi-word names wrap inside their cell rather than pushing the grid
 // out of shape.
@@ -211,7 +211,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         ) : null}
 
         <nav
-          className="hidden flex-wrap items-center gap-x-7 gap-y-2 border-b border-border py-3 lg:flex"
+          className="hidden items-center justify-between gap-x-4 gap-y-2 border-b border-border py-4 lg:flex"
           aria-label="Main navigation"
         >
           <Link to="/" className={cn(NAV_ITEM_CLASS, pathname === "/" && "text-primary")}>
