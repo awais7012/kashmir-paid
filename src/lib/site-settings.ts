@@ -10,19 +10,37 @@ export type NavSection = {
   visible: boolean;
 };
 
+/** One frame of the homepage slider: a full picture or a video. */
+export type HeroSlide = {
+  url: string;
+  kind: "image" | "video";
+};
+
+/** A person listed on the Team page. */
+export type TeamMember = {
+  /** Stable key for the studio's list editor. */
+  id: string;
+  name: string;
+  role: string;
+  bio: string;
+  photo: string;
+};
+
+/**
+ * One block of the published org chart. A role line may carry its own detail
+ * after a dash, e.g. "Director of News — editors".
+ */
+export type TeamSection = {
+  id: string;
+  title: string;
+  description: string;
+  roles: string[];
+};
+
 export type SiteSettings = {
   hero: {
-    eyebrow: string;
-    headline: string;
-    accent: string;
-    primaryCta: string;
-    secondaryCta: string;
-    /** Uploaded artwork. When empty, the featured story's cover is used. */
-    image: string;
-    /** The video link exactly as pasted in the studio. */
-    videoUrl: string;
-    /** Derived by the API so the client never parses video links itself. */
-    video: VideoDto | null;
+    /** Full pictures or videos for the homepage slider, in order. */
+    slides: HeroSlide[];
   };
   ticker: { enabled: boolean; label: string };
   live: {
@@ -41,6 +59,21 @@ export type SiteSettings = {
     caption: string;
     note: string;
   };
+  /** Shown on the Contact page. */
+  contact: {
+    address: string;
+    phone: string;
+    email: string;
+    whatsapp: string;
+  };
+  /** Drives the header and footer icons; empty links are simply not shown. */
+  social: {
+    instagram: string;
+    twitter: string;
+    facebook: string;
+    youtube: string;
+  };
+  team: { members: TeamMember[]; structure: TeamSection[] };
   nav: { sections: NavSection[] };
   footer: { note: string; copyright: string };
 };

@@ -76,6 +76,12 @@ export type SettingsPatch = {
   ticker?: Partial<SiteSettings["ticker"]>;
   live?: Partial<Omit<SiteSettings["live"], "video">>;
   schedule?: Partial<SiteSettings["schedule"]>;
+  contact?: Partial<SiteSettings["contact"]>;
+  social?: Partial<SiteSettings["social"]>;
+  team?: {
+    members?: SiteSettings["team"]["members"];
+    structure?: SiteSettings["team"]["structure"];
+  };
   nav?: { sections: SiteSettings["nav"]["sections"] };
   footer?: Partial<SiteSettings["footer"]>;
 };

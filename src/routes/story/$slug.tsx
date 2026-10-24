@@ -135,13 +135,15 @@ function StoryPage() {
             By {story.author}
           </p>
 
-          <div className="mt-8 overflow-hidden border-2 border-foreground bg-muted">
+          {/* Kept to a comfortable width so it reads as a picture above the
+              article rather than a full-bleed banner that dwarfs the text. */}
+          <div className="mx-auto mt-8 max-w-2xl overflow-hidden border-2 border-foreground bg-muted">
             <img
               src={cover}
               alt={story.title}
               width={1536}
               height={1024}
-              className="aspect-[16/9] w-full object-cover"
+              className="aspect-[16/10] w-full object-cover"
             />
           </div>
 

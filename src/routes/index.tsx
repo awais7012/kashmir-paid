@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Play } from "lucide-react";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
-import { HeroMedia } from "@/components/site/hero-media";
+import { HeroSlider } from "@/components/site/hero-slider";
 import { PageShimmer } from "@/components/site/page-shimmer";
 import { StoryCard } from "@/components/story/story-card";
-import { mediaUrl, storyCoverUrl } from "@/lib/media";
+import { storyCoverUrl } from "@/lib/media";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { primeQuery, storiesQueryOptions } from "@/lib/stories";
@@ -128,52 +128,11 @@ function Index() {
 
       <main>
         <section className="mx-auto grid max-w-[1440px] grid-cols-1 bg-card lg:grid-cols-12">
-          <article className="group border-b border-border p-4 sm:p-8 lg:col-span-8 lg:border-r lg:p-10">
-            <div className="relative min-h-[430px] overflow-hidden sm:min-h-[590px]">
-              <HeroMedia
-                image={mediaUrl(settings.hero.image) ?? storyCoverUrl(lead)}
-                video={settings.hero.video}
-                alt={lead.title}
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/10 to-transparent" />
-              {/* The copy sits above the media, so it must not swallow clicks
-                  meant for the hero's play button; only the CTAs take input. */}
-              <div className="editorial-rise pointer-events-none absolute inset-x-0 bottom-0 p-5 text-background sm:p-9">
-                <p className="mb-3 inline-flex bg-primary px-3 py-1.5 text-[10px] font-black tracking-[0.16em] text-primary-foreground uppercase">
-                  {settings.hero.eyebrow}
-                </p>
-                <h1 className="max-w-4xl font-display text-[clamp(3rem,7vw,6.5rem)] leading-[0.84] font-black">
-                  {settings.hero.headline}
-                  <br />
-                  <em className="font-normal text-primary">{settings.hero.accent}</em>
-                </h1>
-                <p
-                  {...storyTextAttrs(lead.language)}
-                  className={cn(
-                    "mt-5 max-w-2xl text-sm leading-relaxed text-background/80 sm:text-lg",
-                    isUrdu(lead.language) && URDU_TEXT_CLASS,
-                  )}
-                >
-                  {lead.summary}
-                </p>
-                <div className="pointer-events-auto mt-6 flex flex-wrap gap-3">
-                  <Link
-                    to="/live"
-                    className="inline-flex items-center gap-2 bg-primary px-5 py-3 text-xs font-black tracking-[0.12em] text-primary-foreground uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    <Play className="size-4 fill-current" />
-                    {settings.hero.primaryCta}
-                  </Link>
-                  <a
-                    href="#top-stories"
-                    className="inline-flex items-center gap-2 border border-background px-5 py-3 text-xs font-black tracking-[0.12em] text-background uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    {settings.hero.secondaryCta}
-                    <ArrowRight className="size-4" />
-                  </a>
-                </div>
-              </div>
-            </div>
+          <article className="border-b border-border lg:col-span-8 lg:border-r">
+            {/* The hero is media only now: no headline, standfirst or buttons.
+                The page title stays for search engines and screen readers. */}
+            <h1 className="sr-only">Global Kashmir TV — Kashmir, connected to the world</h1>
+            <HeroSlider slides={settings.hero.slides} fallbackImage={storyCoverUrl(lead)} />
           </article>
 
           <aside className="flex flex-col lg:col-span-4">

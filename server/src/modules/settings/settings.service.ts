@@ -26,6 +26,12 @@ function withDefaults(stored: unknown): SiteSettings {
       ticker: { ...DEFAULT_SETTINGS.ticker, ...raw.ticker },
       live: { ...DEFAULT_SETTINGS.live, ...raw.live },
       schedule: { ...DEFAULT_SETTINGS.schedule, ...raw.schedule },
+      contact: { ...DEFAULT_SETTINGS.contact, ...raw.contact },
+      social: { ...DEFAULT_SETTINGS.social, ...raw.social },
+      team: {
+        members: raw.team?.members ?? DEFAULT_SETTINGS.team.members,
+        structure: raw.team?.structure ?? DEFAULT_SETTINGS.team.structure,
+      },
       nav: raw.nav?.sections?.length ? { sections: raw.nav.sections } : DEFAULT_SETTINGS.nav,
       footer: { ...DEFAULT_SETTINGS.footer, ...raw.footer },
     });
@@ -62,10 +68,6 @@ function videoDto(rawUrl: string, title: string | null) {
 export function withDerivedVideo<T extends SiteSettings>(value: T) {
   return {
     ...value,
-    hero: {
-      ...value.hero,
-      video: videoDto(value.hero.videoUrl, null),
-    },
     live: {
       ...value.live,
       video: videoDto(value.live.streamUrl, value.live.title || null),
@@ -81,6 +83,14 @@ export async function updateSettings(patch: UpdateSettingsInput): Promise<SiteSe
     ticker: mergeSection(current.ticker, patch.ticker),
     live: mergeSection(current.live, patch.live),
     schedule: mergeSection(current.schedule, patch.schedule),
+    contact: mergeSection(current.contact, patch.contact),
+    social: mergeSection(current.social, patch.social),
+    team: patch.team
+      ? {
+          members: patch.team.members ?? current.team.members,
+          structure: patch.team.structure ?? current.team.structure,
+        }
+      : current.team,
     nav: patch.nav ? { sections: patch.nav.sections } : current.nav,
     footer: mergeSection(current.footer, patch.footer),
   };

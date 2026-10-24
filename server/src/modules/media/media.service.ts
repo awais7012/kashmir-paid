@@ -125,14 +125,15 @@ export async function deleteMedia(id: string): Promise<DeleteMediaOutcome> {
     };
   }
 
-  // Site settings can point at uploaded files too (hero artwork, hero video,
-  // live stream), so those references have to keep the file alive as well.
+  // Site settings can point at uploaded files too (slider frames, the live
+  // stream, the schedule and team photos), so those references have to keep the
+  // file alive as well.
   const settings = await getSettings();
   const settingsUses: [boolean, string][] = [
-    [settings.hero.image === row.url, "the homepage hero image"],
-    [settings.hero.videoUrl === row.url, "the homepage hero video"],
+    [settings.hero.slides.some((slide) => slide.url === row.url), "the homepage slider"],
     [settings.live.streamUrl === row.url, "the live broadcast"],
     [settings.schedule.image === row.url, "the programme schedule"],
+    [settings.team.members.some((member) => member.photo === row.url), "a team member's photo"],
   ];
   const settingsUse = settingsUses.find(([used]) => used);
   if (settingsUse) {

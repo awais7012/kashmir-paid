@@ -1,18 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell, StudioSplash } from "@/components/admin/admin-shell";
-import {
-  adminButton,
-  adminInput,
-  CheckboxField,
-  FormAlert,
-  TextField,
-} from "@/components/admin/controls";
-import { MediaField } from "@/components/admin/media-field";
-import { VideoField } from "@/components/admin/video-field";
+import { adminButton, CheckboxField, FormAlert, TextField } from "@/components/admin/controls";
+import { SlidesEditor } from "@/components/admin/slides-editor";
+import { TeamEditor } from "@/components/admin/team-editor";
 import {
   LeaveGuardDialog,
   RecoveredDraftNotice,
@@ -27,13 +21,13 @@ import {
   type FieldErrors,
   type SettingsPatch,
 } from "@/lib/admin-api";
-import { SUGGESTED_CATEGORIES, type NavSection, type SiteSettings } from "@/lib/site-settings";
+import type { HeroSlide, SiteSettings, TeamMember, TeamSection } from "@/lib/site-settings";
 import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
-    meta: [{ title: "Settings · Global Kashmir Studio" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Website · Global Kashmir Studio" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminSettingsRoute,
 });
@@ -80,160 +74,13 @@ function AdminSettingsRoute() {
   );
 }
 
-function NavEditor({
-  sections,
-  onChange,
-}: {
-  sections: NavSection[];
-  onChange: (next: NavSection[]) => void;
-}) {
-  function updateAt(index: number, patch: Partial<NavSection>) {
-    onChange(sections.map((section, i) => (i === index ? { ...section, ...patch } : section)));
-  }
-
-  function move(index: number, delta: number) {
-    const target = index + delta;
-    const next = [...sections];
-    const a = next[index];
-    const b = next[target];
-    if (!a || !b) return;
-    next[index] = b;
-    next[target] = a;
-    onChange(next);
-  }
-
-  return (
-    <div className="grid gap-4">
-      <ul className="grid gap-3">
-        {sections.map((section, index) => (
-          <li
-            key={`nav-row-${index}`}
-            className="grid gap-3 border-2 border-border bg-card p-3 lg:grid-cols-[minmax(0,1fr)_10rem_10rem_auto] lg:items-end"
-          >
-            <div className="grid gap-1">
-              <label
-                htmlFor={`nav-label-${index}`}
-                className="text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase"
-              >
-                Label
-              </label>
-              <input
-                id={`nav-label-${index}`}
-                value={section.label}
-                onChange={(event) => updateAt(index, { label: event.target.value })}
-                className={adminInput}
-              />
-            </div>
-
-            <div className="grid gap-1">
-              <label
-                htmlFor={`nav-kind-${index}`}
-                className="text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase"
-              >
-                Links to
-              </label>
-              <select
-                id={`nav-kind-${index}`}
-                value={section.kind}
-                onChange={(event) =>
-                  updateAt(index, { kind: event.target.value as NavSection["kind"] })
-                }
-                className={cn(adminInput, "appearance-none")}
-              >
-                <option value="home">Homepage</option>
-                <option value="index">All stories</option>
-                <option value="live">Live page</option>
-                <option value="category">A category</option>
-              </select>
-            </div>
-
-            {section.kind === "category" ? (
-              <div className="grid gap-1">
-                <label
-                  htmlFor={`nav-category-${index}`}
-                  className="text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase"
-                >
-                  Category
-                </label>
-                <input
-                  id={`nav-category-${index}`}
-                  value={section.category}
-                  list="nav-category-options"
-                  onChange={(event) => updateAt(index, { category: event.target.value })}
-                  className={adminInput}
-                />
-              </div>
-            ) : (
-              <div className="hidden lg:block" />
-            )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 border-2 border-foreground bg-card px-3">
-                <input
-                  type="checkbox"
-                  checked={section.visible}
-                  onChange={(event) => updateAt(index, { visible: event.target.checked })}
-                  className="size-5 accent-[var(--primary)]"
-                />
-                <span className="text-[10px] font-black tracking-[0.12em] uppercase">Shown</span>
-              </label>
-              <button
-                type="button"
-                aria-label={`Move ${section.label} up`}
-                onClick={() => move(index, -1)}
-                className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
-              >
-                <ArrowUp className="size-4" />
-              </button>
-              <button
-                type="button"
-                aria-label={`Move ${section.label} down`}
-                onClick={() => move(index, 1)}
-                className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2.5")}
-              >
-                <ArrowDown className="size-4" />
-              </button>
-              <button
-                type="button"
-                aria-label={`Remove ${section.label}`}
-                onClick={() => onChange(sections.filter((_, i) => i !== index))}
-                className={cn(adminButton({ variant: "danger", size: "sm" }), "px-2.5")}
-              >
-                <Trash2 className="size-4" />
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <datalist id="nav-category-options">
-        {SUGGESTED_CATEGORIES.map((option) => (
-          <option key={option} value={option} />
-        ))}
-      </datalist>
-
-      <div>
-        <button
-          type="button"
-          onClick={() =>
-            onChange([
-              ...sections,
-              { label: "New section", kind: "category", category: "", visible: true },
-            ])
-          }
-          className={adminButton({ variant: "outline", size: "sm" })}
-        >
-          Add section
-        </button>
-      </div>
-    </div>
-  );
-}
-
 type SettingsDraft = {
-  hero: SiteSettings["hero"];
+  slides: HeroSlide[];
   ticker: SiteSettings["ticker"];
-  sections: NavSection[];
+  contact: SiteSettings["contact"];
+  social: SiteSettings["social"];
+  members: TeamMember[];
+  structure: TeamSection[];
   footer: SiteSettings["footer"];
 };
 
@@ -249,10 +96,13 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
   );
   const [recoveredNotice, setRecoveredNotice] = useState(Boolean(recovered));
 
-  const [hero, setHero] = useState(recovered?.hero ?? initial.hero);
+  const [slides, setSlides] = useState<HeroSlide[]>(recovered?.slides ?? initial.hero.slides);
   const [ticker, setTicker] = useState(recovered?.ticker ?? initial.ticker);
-  const [sections, setSections] = useState<NavSection[]>(
-    recovered?.sections ?? initial.nav.sections,
+  const [contact, setContact] = useState(recovered?.contact ?? initial.contact);
+  const [social, setSocial] = useState(recovered?.social ?? initial.social);
+  const [members, setMembers] = useState<TeamMember[]>(recovered?.members ?? initial.team.members);
+  const [structure, setStructure] = useState<TeamSection[]>(
+    recovered?.structure ?? initial.team.structure,
   );
   const [footer, setFooter] = useState(recovered?.footer ?? initial.footer);
 
@@ -262,14 +112,19 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const baseline = {
+    slides: initial.hero.slides,
+    ticker: initial.ticker,
+    contact: initial.contact,
+    social: initial.social,
+    members: initial.team.members,
+    structure: initial.team.structure,
+    footer: initial.footer,
+  };
+
   const dirty =
-    JSON.stringify({ hero, ticker, sections, footer }) !==
-    JSON.stringify({
-      hero: initial.hero,
-      ticker: initial.ticker,
-      sections: initial.nav.sections,
-      footer: initial.footer,
-    });
+    JSON.stringify({ slides, ticker, contact, social, members, structure, footer }) !==
+    JSON.stringify(baseline);
 
   const leaveBypassRef = useRef(false);
   const guard = useLeaveGuard(() => dirty && !leaveBypassRef.current, dirty);
@@ -284,10 +139,13 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
   function discard() {
     clearDraft(SETTINGS_DRAFT_KEY);
     setRecoveredNotice(false);
-    setHero(initial.hero);
-    setTicker(initial.ticker);
-    setSections(initial.nav.sections);
-    setFooter(initial.footer);
+    setSlides(baseline.slides);
+    setTicker(baseline.ticker);
+    setContact(baseline.contact);
+    setSocial(baseline.social);
+    setMembers(baseline.members);
+    setStructure(baseline.structure);
+    setFooter(baseline.footer);
     setError(null);
     setFieldErrors({});
   }
@@ -298,9 +156,11 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
     setFieldErrors({});
 
     const patch: SettingsPatch = {
-      hero,
+      hero: { slides },
       ticker,
-      nav: { sections },
+      contact,
+      social,
+      team: { members, structure },
       footer,
     };
 
@@ -309,18 +169,28 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
       clearDraft(SETTINGS_DRAFT_KEY);
       setRecoveredNotice(false);
       // The response is the trimmed, merged truth, so adopting it stops the
-      // form from staying "dirty" over whitespace or a stale derived video.
-      setHero(saved.hero);
+      // form from staying "dirty" over whitespace.
+      setSlides(saved.hero.slides);
       setTicker(saved.ticker);
-      setSections(saved.nav.sections);
+      setContact(saved.contact);
+      setSocial(saved.social);
+      setMembers(saved.team.members);
+      setStructure(saved.team.structure);
       setFooter(saved.footer);
-      toast.success("Settings saved");
-      // Public pages read the same settings, so they need refetching.
+      toast.success("Website saved");
       queryClient.setQueryData(["admin", "settings"], saved);
       void queryClient.invalidateQueries({ queryKey: ["site-settings"] });
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 401) {
-        saveDraft(SETTINGS_DRAFT_KEY, { hero, ticker, sections, footer });
+        saveDraft(SETTINGS_DRAFT_KEY, {
+          slides,
+          ticker,
+          contact,
+          social,
+          members,
+          structure,
+          footer,
+        });
         clearSession();
         setSessionExpired(true);
         return;
@@ -344,8 +214,8 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
         <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Studio</p>
         <h1 className="mt-1 font-display text-4xl leading-none">Website</h1>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
-          These control the public site: the homepage headline block, the breaking ticker, the
-          navigation and the footer. The broadcast has its own screen under Go live.
+          The homepage slider, the breaking ticker, the contact details and the team. The broadcast
+          has its own screen under Go live.
         </p>
       </div>
 
@@ -368,39 +238,13 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
 
       <section className="grid gap-6">
         <div className="border-b-2 border-foreground pb-3">
-          <h2 className="font-display text-2xl">Homepage headline</h2>
+          <h2 className="font-display text-2xl">Homepage slider</h2>
           <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
-            The big words at the very top of the front page. Everything else on this screen is
-            optional.
+            The big area at the top of the front page. Add as many pictures or videos as you like;
+            they change automatically, and visitors can swipe or use the arrows.
           </p>
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <TextField
-            meta={fieldMeta("hero-headline", "Headline")}
-            value={hero.headline}
-            onChange={(value) => setHero({ ...hero, headline: value })}
-          />
-          <TextField
-            meta={fieldMeta("hero-accent", "Headline accent", "The highlighted second line.")}
-            value={hero.accent}
-            onChange={(value) => setHero({ ...hero, accent: value })}
-          />
-          <TextField
-            meta={fieldMeta("hero-primary", "Button label")}
-            value={hero.primaryCta}
-            onChange={(value) => setHero({ ...hero, primaryCta: value })}
-          />
-        </div>
-
-        <MediaField
-          id="hero_image"
-          kind="image"
-          label="Hero image"
-          value={hero.image}
-          onChange={(value) => setHero({ ...hero, image: value })}
-          emptyMessage="No hero image set. The featured story's own cover is used."
-          hint="Upload or pick artwork for the homepage hero. This overrides the featured story's cover."
-        />
+        <SlidesEditor slides={slides} onChange={setSlides} />
       </section>
 
       <section className="grid gap-6">
@@ -421,6 +265,87 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
         </div>
       </section>
 
+      <section className="grid gap-6">
+        <div className="border-b-2 border-foreground pb-3">
+          <h2 className="font-display text-2xl">Contact</h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            Shown on the Contact page. Leave a line blank and it is simply not shown.
+          </p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <TextField
+            meta={fieldMeta("contact-email", "Email")}
+            type="email"
+            value={contact.email}
+            onChange={(value) => setContact({ ...contact, email: value })}
+            placeholder="news@globalkashmirtv.com"
+          />
+          <TextField
+            meta={fieldMeta("contact-phone", "Phone")}
+            value={contact.phone}
+            onChange={(value) => setContact({ ...contact, phone: value })}
+            placeholder="+92 300 0000000"
+          />
+          <TextField
+            meta={fieldMeta("contact-whatsapp", "WhatsApp")}
+            value={contact.whatsapp}
+            onChange={(value) => setContact({ ...contact, whatsapp: value })}
+            placeholder="+92 300 0000000"
+          />
+          <TextField
+            meta={fieldMeta("contact-address", "Address")}
+            value={contact.address}
+            onChange={(value) => setContact({ ...contact, address: value })}
+            placeholder="Muzaffarabad, Azad Kashmir"
+          />
+        </div>
+
+        <div className="grid gap-6 border-t border-border pt-6 lg:grid-cols-2">
+          <TextField
+            meta={fieldMeta("social-instagram", "Instagram link")}
+            value={social.instagram}
+            onChange={(value) => setSocial({ ...social, instagram: value })}
+            placeholder="https://instagram.com/yourchannel"
+          />
+          <TextField
+            meta={fieldMeta("social-twitter", "X (Twitter) link")}
+            value={social.twitter}
+            onChange={(value) => setSocial({ ...social, twitter: value })}
+            placeholder="https://x.com/yourchannel"
+          />
+          <TextField
+            meta={fieldMeta("social-facebook", "Facebook link")}
+            value={social.facebook}
+            onChange={(value) => setSocial({ ...social, facebook: value })}
+            placeholder="https://facebook.com/yourchannel"
+          />
+          <TextField
+            meta={fieldMeta("social-youtube", "YouTube link")}
+            value={social.youtube}
+            onChange={(value) => setSocial({ ...social, youtube: value })}
+            placeholder="https://youtube.com/@yourchannel"
+          />
+        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          The Instagram and X links appear as icons in the header. Any link left blank stays hidden.
+        </p>
+      </section>
+
+      <section className="grid gap-6">
+        <div className="border-b-2 border-foreground pb-3">
+          <h2 className="font-display text-2xl">Team</h2>
+          <p className="mt-1 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            The people shown on the Team page. The order here is the order on the site.
+          </p>
+        </div>
+        <TeamEditor
+          members={members}
+          onChange={setMembers}
+          structure={structure}
+          onStructureChange={setStructure}
+        />
+      </section>
+
       <section className="border-2 border-foreground bg-card">
         <button
           type="button"
@@ -434,9 +359,7 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
               More options
             </span>
             <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-              {showAdvanced
-                ? "Hide the advanced settings."
-                : "Optional: the small label above the headline, the second button, the hero video and the menu."}
+              Footer wording.
             </span>
           </span>
           <ChevronDown
@@ -448,62 +371,19 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
         {showAdvanced ? (
           <div
             id="settings-advanced"
-            className="grid gap-10 border-t-2 border-foreground p-4 sm:p-6"
+            className="grid gap-6 border-t-2 border-foreground p-4 sm:p-6"
           >
-            <div className="grid gap-6">
-              <h3 className="font-display text-2xl">Homepage extras</h3>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <TextField
-                  meta={fieldMeta(
-                    "hero-eyebrow",
-                    "Small label above the headline",
-                    "For example: Breaking report.",
-                  )}
-                  value={hero.eyebrow}
-                  onChange={(value) => setHero({ ...hero, eyebrow: value })}
-                />
-                <TextField
-                  meta={fieldMeta("hero-secondary", "Second button label")}
-                  value={hero.secondaryCta}
-                  onChange={(value) => setHero({ ...hero, secondaryCta: value })}
-                />
-              </div>
-              <div className="grid gap-3 border-2 border-border bg-muted/40 p-3">
-                <p className="text-[10px] font-black tracking-[0.16em] uppercase">Hero video</p>
-                <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
-                  Optional. An uploaded file plays behind the headline, muted and looping.
-                </p>
-                <VideoField
-                  videoUrl={hero.videoUrl}
-                  onVideoUrlChange={(value) => setHero({ ...hero, videoUrl: value })}
-                  showCaption={false}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-6">
-              <h3 className="font-display text-2xl">Menu</h3>
-              <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-                The order here is the order on the site. Schedule and About always appear too, so
-                you do not need to add them.
-              </p>
-              <NavEditor sections={sections} onChange={setSections} />
-            </div>
-
-            <div className="grid gap-6">
-              <h3 className="font-display text-2xl">Footer</h3>
-              <div className="grid gap-6 lg:grid-cols-2">
-                <TextField
-                  meta={fieldMeta("footer-note", "Footer note")}
-                  value={footer.note}
-                  onChange={(value) => setFooter({ ...footer, note: value })}
-                />
-                <TextField
-                  meta={fieldMeta("footer-copyright", "Copyright line")}
-                  value={footer.copyright}
-                  onChange={(value) => setFooter({ ...footer, copyright: value })}
-                />
-              </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <TextField
+                meta={fieldMeta("footer-note", "Footer note")}
+                value={footer.note}
+                onChange={(value) => setFooter({ ...footer, note: value })}
+              />
+              <TextField
+                meta={fieldMeta("footer-copyright", "Copyright line")}
+                value={footer.copyright}
+                onChange={(value) => setFooter({ ...footer, copyright: value })}
+              />
             </div>
           </div>
         ) : null}

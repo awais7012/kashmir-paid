@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminIdRouteImport } from './routes/admin/$id'
 import { Route as AdminAccountRouteImport } from './routes/admin/account'
@@ -37,6 +39,11 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LiveRoute = LiveRouteImport.update({
   id: '/live',
   path: '/live',
@@ -50,6 +57,11 @@ const NewsRoute = NewsRouteImport.update({
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -116,9 +128,11 @@ const StorySlugRoute = StorySlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
   '/schedule': typeof ScheduleRoute
+  '/team': typeof TeamRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
@@ -135,9 +149,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
   '/schedule': typeof ScheduleRoute
+  '/team': typeof TeamRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
@@ -155,9 +171,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/live': typeof LiveRoute
   '/news': typeof NewsRoute
   '/schedule': typeof ScheduleRoute
+  '/team': typeof TeamRoute
   '/admin/$id': typeof AdminIdRoute
   '/admin/account': typeof AdminAccountRoute
   '/admin/live': typeof AdminLiveRoute
@@ -176,9 +194,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/contact'
     | '/live'
     | '/news'
     | '/schedule'
+    | '/team'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
@@ -195,9 +215,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/contact'
     | '/live'
     | '/news'
     | '/schedule'
+    | '/team'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
@@ -214,9 +236,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/contact'
     | '/live'
     | '/news'
     | '/schedule'
+    | '/team'
     | '/admin/$id'
     | '/admin/account'
     | '/admin/live'
@@ -234,9 +258,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  ContactRoute: typeof ContactRoute
   LiveRoute: typeof LiveRoute
   NewsRoute: typeof NewsRoute
   ScheduleRoute: typeof ScheduleRoute
+  TeamRoute: typeof TeamRoute
   AdminIdRoute: typeof AdminIdRoute
   AdminAccountRoute: typeof AdminAccountRoute
   AdminLiveRoute: typeof AdminLiveRoute
@@ -267,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/live': {
       id: '/live'
       path: '/live'
@@ -286,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/schedule'
       fullPath: '/schedule'
       preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -378,9 +418,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  ContactRoute: ContactRoute,
   LiveRoute: LiveRoute,
   NewsRoute: NewsRoute,
   ScheduleRoute: ScheduleRoute,
+  TeamRoute: TeamRoute,
   AdminIdRoute: AdminIdRoute,
   AdminAccountRoute: AdminAccountRoute,
   AdminLiveRoute: AdminLiveRoute,

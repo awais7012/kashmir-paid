@@ -1,93 +1,61 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, Play, Search, X } from "lucide-react";
+import { ChevronDown, Menu, Play, Search, X } from "lucide-react";
 import { BRAND_LOGO } from "@/lib/brand";
+import { slugifyLabel, type SiteSettings } from "@/lib/site-settings";
+import { socialLinks } from "@/lib/social";
+import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { storiesQueryOptions } from "@/lib/stories";
-import { isUrdu, looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
-import {
-  navHref,
-  slugifyLabel,
-  visibleSections,
-  type NavSection,
-  type SiteSettings,
-} from "@/lib/site-settings";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEM_CLASS =
   "text-[11px] font-bold tracking-[0.1em] uppercase transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-// Long or multi-word section names wrap inside their cell rather than pushing
-// the grid out of shape.
+// Long or multi-word names wrap inside their cell rather than pushing the grid
+// out of shape.
 const MOBILE_NAV_ITEM_CLASS =
-  "border-b border-border py-3 text-sm font-bold uppercase break-words transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+  "border-b border-border py-3 text-sm font-bold uppercase break-words text-start transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-// About and Schedule are fixed entries: the studio's help and the client's
-// expectations both assume these two pages are always one click away.
-const PAGE_LINKS = [
+/**
+ * The top-level menu is fixed. Every section an editor creates is reached
+ * through the single News dropdown, so the bar never grows a link per category.
+ */
+const NAV_LINKS = [
   { to: "/schedule", label: "Schedule" },
   { to: "/about", label: "About" },
+  { to: "/team", label: "Team" },
+  { to: "/contact", label: "Contact" },
 ] as const;
-
-function NavLink({
-  section,
-  className,
-  onNavigate,
-}: {
-  section: NavSection;
-  className?: string;
-  onNavigate?: () => void;
-}) {
-  // Nav labels are typed by an editor, so an Urdu label gets Urdu treatment.
-  const urdu = looksUrdu(section.label);
-  const shared = {
-    ...storyTextAttrs(urdu ? "ur" : "en"),
-    className: cn(className, urdu && URDU_TEXT_CLASS),
-    onClick: onNavigate,
-  };
-
-  if (section.kind === "home") {
-    return (
-      <Link to="/" {...shared}>
-        {section.label}
-      </Link>
-    );
-  }
-  if (section.kind === "live") {
-    return (
-      <Link to="/live" {...shared}>
-        {section.label}
-      </Link>
-    );
-  }
-  if (section.kind === "index") {
-    return (
-      <Link to="/news" {...shared}>
-        {section.label}
-      </Link>
-    );
-  }
-  return (
-    <Link to="/section/$category" params={{ category: slugifyLabel(section.label) }} {...shared}>
-      {section.label}
-    </Link>
-  );
-}
 
 export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [newsOpen, setNewsOpen] = useState(false);
+  const [mobileNewsOpen, setMobileNewsOpen] = useState(false);
   const { pathname } = useLocation();
 
   // Shares the cache key with the homepage loader, so this usually costs nothing.
   const { data: stories = [] } = useQuery(storiesQueryOptions);
-  const sections = visibleSections(settings);
 
-  // Home leads, then Schedule and About, then the rest of the sections in the
-  // order the editor set. Split out here because the fixed links sit between.
-  const homeSection = sections.find((section) => section.kind === "home");
-  const otherSections = sections.filter((section) => section.kind !== "home");
+  // The menu lists the sections that actually hold stories, so it has no dead links.
+  const categories = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const story of stories) {
+      const name = story.category.trim();
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        list.push(name);
+      }
+    }
+    return list.sort((a, b) => a.localeCompare(b));
+  }, [stories]);
+
+  const social = socialLinks(settings);
+
+  const newsActive = pathname === "/news" || pathname.startsWith("/section/");
 
   const matches = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -133,6 +101,27 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
+            {social.length > 0 ? (
+              <div className="hidden items-center gap-1.5 sm:flex">
+                {social.map((item) => {
+                  const Icon = item.Icon;
+                  return (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={item.label}
+                      title={item.label}
+                      className="grid size-9 place-items-center border border-foreground text-foreground transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                    </a>
+                  );
+                })}
+              </div>
+            ) : null}
+
             <button
               type="button"
               aria-label="Search"
@@ -225,16 +214,64 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         ) : null}
 
         <nav
-          className="hidden flex-wrap items-center gap-x-6 gap-y-2 border-b border-border py-3 lg:flex"
+          className="hidden flex-wrap items-center gap-x-7 gap-y-2 border-b border-border py-3 lg:flex"
           aria-label="Main navigation"
         >
-          {homeSection ? (
-            <NavLink
-              section={homeSection}
-              className={cn(NAV_ITEM_CLASS, pathname === navHref(homeSection) && "text-primary")}
-            />
-          ) : null}
-          {PAGE_LINKS.map((link) => (
+          <Link to="/" className={cn(NAV_ITEM_CLASS, pathname === "/" && "text-primary")}>
+            Home
+          </Link>
+
+          <div
+            className="relative"
+            onMouseEnter={() => setNewsOpen(true)}
+            onMouseLeave={() => setNewsOpen(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setNewsOpen(false);
+            }}
+          >
+            <button
+              type="button"
+              aria-expanded={newsOpen}
+              aria-haspopup="true"
+              onClick={() => setNewsOpen((open) => !open)}
+              className={cn(
+                NAV_ITEM_CLASS,
+                "inline-flex items-center gap-1.5",
+                newsActive && "text-primary",
+              )}
+            >
+              News
+              <ChevronDown
+                aria-hidden="true"
+                className={cn("size-3.5 transition-transform", newsOpen && "rotate-180")}
+              />
+            </button>
+
+            {newsOpen ? (
+              <div className="absolute top-full left-0 z-50 grid w-60 border-2 border-foreground bg-card py-1 shadow-lg">
+                <Link
+                  to="/news"
+                  onClick={() => setNewsOpen(false)}
+                  className="px-4 py-2.5 text-[11px] font-black tracking-[0.1em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+                >
+                  All news
+                </Link>
+                {categories.map((name) => (
+                  <Link
+                    key={name}
+                    to="/section/$category"
+                    params={{ category: slugifyLabel(name) }}
+                    onClick={() => setNewsOpen(false)}
+                    className="px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
+                  >
+                    {name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {NAV_LINKS.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -243,13 +280,6 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               {link.label}
             </Link>
           ))}
-          {otherSections.map((section) => (
-            <NavLink
-              key={`${section.kind}-${section.label}`}
-              section={section}
-              className={cn(NAV_ITEM_CLASS, pathname === navHref(section) && "text-primary")}
-            />
-          ))}
         </nav>
 
         {menuOpen ? (
@@ -257,17 +287,54 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
             className="grid grid-cols-2 border-b border-foreground py-4 lg:hidden"
             aria-label="Mobile navigation"
           >
-            {homeSection ? (
-              <NavLink
-                section={homeSection}
-                className={cn(
-                  MOBILE_NAV_ITEM_CLASS,
-                  pathname === navHref(homeSection) && "text-primary",
-                )}
-                onNavigate={() => setMenuOpen(false)}
+            <Link
+              to="/"
+              onClick={() => setMenuOpen(false)}
+              className={cn(MOBILE_NAV_ITEM_CLASS, pathname === "/" && "text-primary")}
+            >
+              Home
+            </Link>
+            <button
+              type="button"
+              aria-expanded={mobileNewsOpen}
+              onClick={() => setMobileNewsOpen((open) => !open)}
+              className={cn(
+                MOBILE_NAV_ITEM_CLASS,
+                "inline-flex items-center justify-between gap-2",
+                newsActive && "text-primary",
+              )}
+            >
+              News
+              <ChevronDown
+                aria-hidden="true"
+                className={cn("size-4 transition-transform", mobileNewsOpen && "rotate-180")}
               />
+            </button>
+
+            {mobileNewsOpen ? (
+              <div className="col-span-2 grid border-b border-border bg-muted/40 pb-2">
+                <Link
+                  to="/news"
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-2.5 text-[11px] font-black tracking-[0.1em] uppercase hover:text-primary"
+                >
+                  All news
+                </Link>
+                {categories.map((name) => (
+                  <Link
+                    key={name}
+                    to="/section/$category"
+                    params={{ category: slugifyLabel(name) }}
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4 py-2.5 text-[11px] font-bold tracking-[0.08em] uppercase hover:text-primary"
+                  >
+                    {name}
+                  </Link>
+                ))}
+              </div>
             ) : null}
-            {PAGE_LINKS.map((link) => (
+
+            {NAV_LINKS.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
@@ -277,17 +344,26 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                 {link.label}
               </Link>
             ))}
-            {otherSections.map((section) => (
-              <NavLink
-                key={`${section.kind}-${section.label}`}
-                section={section}
-                className={cn(
-                  MOBILE_NAV_ITEM_CLASS,
-                  pathname === navHref(section) && "text-primary",
-                )}
-                onNavigate={() => setMenuOpen(false)}
-              />
-            ))}
+
+            {social.length > 0 ? (
+              <div className="col-span-2 flex items-center gap-2 pt-4">
+                {social.map((item) => {
+                  const Icon = item.Icon;
+                  return (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={item.label}
+                      className="grid size-10 place-items-center border border-foreground hover:bg-foreground hover:text-background"
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                    </a>
+                  );
+                })}
+              </div>
+            ) : null}
           </nav>
         ) : null}
       </div>

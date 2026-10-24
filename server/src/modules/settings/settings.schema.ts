@@ -12,24 +12,39 @@ const navSectionSchema = z.object({
   visible: z.boolean().default(true),
 });
 
+/**
+ * One frame of the homepage slider. The editor uploads a full picture or a
+ * video; there is no headline or button copy laid over it any more.
+ */
+const heroSlideSchema = z.object({
+  url: z.string().trim().max(512),
+  kind: z.enum(["image", "video"]).default("image"),
+});
+
+/** A person on the Team page. Photos are uploaded through the media library. */
+const teamMemberSchema = z.object({
+  // Stable key so the studio's list editor can reorder rows without losing focus.
+  id: z.string().trim().max(64).default(""),
+  name: z.string().trim().min(1).max(120),
+  role: z.string().trim().max(120).default(""),
+  bio: z.string().trim().max(800).default(""),
+  photo: z.string().trim().max(512).default(""),
+});
+
+/**
+ * One block of the published org chart. Roles are plain lines, and a line may
+ * carry its own detail after a dash, e.g. "Director of News — editors".
+ */
+const teamSectionSchema = z.object({
+  id: z.string().trim().max(64).default(""),
+  title: z.string().trim().min(1).max(160),
+  description: z.string().trim().max(400).default(""),
+  roles: z.array(z.string().trim().min(1).max(300)).max(40).default([]),
+});
+
 export const siteSettingsSchema = z.object({
   hero: z.object({
-    eyebrow: z.string().trim().max(80),
-    headline: z.string().trim().max(120),
-    accent: z.string().trim().max(120),
-    primaryCta: z.string().trim().max(40),
-    secondaryCta: z.string().trim().max(40),
-    // An uploaded hero image wins over the featured story's cover.
-    image: z.string().trim().max(512),
-    videoUrl: z
-      .string()
-      .trim()
-      .max(512)
-      .superRefine((value, ctx) => {
-        if (value && !parseVideoUrl(value)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: VIDEO_URL_HINT });
-        }
-      }),
+    slides: z.array(heroSlideSchema).max(20),
   }),
   ticker: z.object({
     enabled: z.boolean(),
@@ -61,6 +76,22 @@ export const siteSettingsSchema = z.object({
     caption: z.string().trim().max(160),
     note: z.string().trim().max(400),
   }),
+  contact: z.object({
+    address: z.string().trim().max(300),
+    phone: z.string().trim().max(60),
+    email: z.string().trim().max(160),
+    whatsapp: z.string().trim().max(60),
+  }),
+  social: z.object({
+    instagram: z.string().trim().max(300),
+    twitter: z.string().trim().max(300),
+    facebook: z.string().trim().max(300),
+    youtube: z.string().trim().max(300),
+  }),
+  team: z.object({
+    members: z.array(teamMemberSchema).max(60),
+    structure: z.array(teamSectionSchema).max(24),
+  }),
   nav: z.object({
     sections: z.array(navSectionSchema).max(SECTION_LIMIT),
   }),
@@ -75,6 +106,9 @@ export const updateSettingsSchema = z.object({
   ticker: siteSettingsSchema.shape.ticker.partial().optional(),
   live: siteSettingsSchema.shape.live.partial().optional(),
   schedule: siteSettingsSchema.shape.schedule.partial().optional(),
+  contact: siteSettingsSchema.shape.contact.partial().optional(),
+  social: siteSettingsSchema.shape.social.partial().optional(),
+  team: siteSettingsSchema.shape.team.partial().optional(),
   nav: z.object({ sections: z.array(navSectionSchema).max(SECTION_LIMIT) }).optional(),
   footer: siteSettingsSchema.shape.footer.partial().optional(),
 });
@@ -87,13 +121,7 @@ export const navSectionPublicSchema = navSectionSchema;
 // Mirrors the copy the site shipped with, so nothing changes until it is edited.
 export const DEFAULT_SETTINGS: SiteSettings = {
   hero: {
-    eyebrow: "Breaking report",
-    headline: "Kashmir,",
-    accent: "connected.",
-    primaryCta: "Watch live",
-    secondaryCta: "Explore GKTV",
-    image: "",
-    videoUrl: "",
+    slides: [],
   },
   ticker: {
     enabled: true,
@@ -112,20 +140,89 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     caption: "",
     note: "",
   },
+  contact: {
+    address: "",
+    phone: "",
+    email: "",
+    whatsapp: "",
+  },
+  social: {
+    instagram: "",
+    twitter: "",
+    facebook: "",
+    youtube: "",
+  },
+  team: {
+    // Only confirmed appointments carry a name. Everyone else is published as a
+    // position under the structure below, in line with the publication policy.
+    members: [
+      {
+        id: "chairman",
+        name: "Vincent Lyn",
+        role: "Chairman",
+        bio: "",
+        photo: "",
+      },
+      {
+        id: "ceo",
+        name: "Raja Ejaz Ahmed Khan",
+        role: "Chief Executive Officer",
+        bio: "Executive leadership and international operations.",
+        photo: "",
+      },
+    ],
+    structure: [
+      {
+        id: "governance",
+        title: "Leadership & Governance",
+        description: "Institutional governance and strategic oversight.",
+        roles: ["Governing Body / Board of Directors"],
+      },
+      {
+        id: "executive",
+        title: "Executive Management",
+        description:
+          "These departments report to the CEO and coordinate operations across all regional offices.",
+        roles: [
+          "Director of News & Editorial — News Editor, Assignment Editor, Fact-Checking and Editorial Team",
+          "Director of Programmes & Production — Programme Managers, Producers, Presenters, Researchers and Video Editors",
+          "Director of International Operations — Regional coordination and international bureau management",
+          "Director of Digital Media & Technology — Website, Social Media, Graphics, Digital Publishing and Technical Operations",
+          "Director of Marketing & Partnerships — Advertising, Sponsorships, Public Relations and Institutional Partnerships",
+          "Director of Administration & Finance — Administration, Human Resources, Budgeting and Financial Management",
+        ],
+      },
+      {
+        id: "regional",
+        title: "International Regional Structure",
+        description:
+          "Bureau chiefs and correspondents across Pakistan, Azad Jammu & Kashmir, the United Kingdom and Saudi Arabia.",
+        roles: [
+          "Head of Pakistan Operations — Bureau chiefs in Islamabad, Lahore and Karachi; regional reporters and correspondents",
+          "Head of Azad Jammu & Kashmir Operations — Bureau chiefs in Muzaffarabad, Mirpur and Rawalakot / Poonch; district correspondents and field reporters",
+          "Head of United Kingdom Operations — Bureau chiefs in London and Peterborough / Midlands; UK community correspondents; local news and events team",
+          "Head of Saudi Arabia Operations — Bureau chiefs in Riyadh and Jeddah / Makkah; Gulf correspondents; Hajj, Umrah and community affairs team",
+        ],
+      },
+      {
+        id: "bureau",
+        title: "Bureau-Level Team Structure",
+        description:
+          "Every regional bureau follows this reporting structure, adapted to its size and staffing.",
+        roles: [
+          "Regional Head",
+          "Bureau Chief",
+          "Senior Reporter / Correspondent",
+          "Video Journalist / Digital Producer",
+        ],
+      },
+    ],
+  },
   nav: {
     sections: [
       { label: "Home", kind: "home", category: "", visible: true },
       { label: "News", kind: "index", category: "", visible: true },
-      { label: "Kashmir", kind: "category", category: "Kashmir", visible: true },
-      { label: "Pakistan", kind: "category", category: "Pakistan", visible: true },
-      { label: "World", kind: "category", category: "World", visible: true },
       { label: "Live", kind: "live", category: "", visible: true },
-      { label: "Shows", kind: "category", category: "Shows", visible: true },
-      { label: "Videos", kind: "category", category: "Videos", visible: true },
-      { label: "Tourism", kind: "category", category: "Tourism", visible: true },
-      { label: "Sports", kind: "category", category: "Sports", visible: true },
-      { label: "Heritage", kind: "category", category: "Heritage", visible: true },
-      { label: "Library", kind: "category", category: "Library", visible: true },
     ],
   },
   footer: {

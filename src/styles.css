@@ -151,28 +151,70 @@
     margin: 0;
   }
 
-  button, a { -webkit-tap-highlight-color: transparent; }
-  ::selection { background: var(--primary); color: var(--primary-foreground); }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
 }
 
-@keyframes ticker { to { transform: translateX(-50%); } }
-@keyframes signal-pulse { 50% { opacity: .35; transform: scale(.72); } }
-@keyframes editorial-rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes signal-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+}
+@keyframes editorial-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
 
-@utility ticker-track { animation: ticker 34s linear infinite; }
-@utility signal-pulse { animation: signal-pulse 1.4s ease-in-out infinite; }
-@utility editorial-rise { animation: editorial-rise .7s cubic-bezier(.2,.7,.2,1) both; }
-@utility story-image { transition: transform .7s cubic-bezier(.2,.7,.2,1), filter .7s ease; }
+@utility ticker-track {
+  animation: ticker 34s linear infinite;
+}
+@utility signal-pulse {
+  animation: signal-pulse 1.4s ease-in-out infinite;
+}
+@utility editorial-rise {
+  animation: editorial-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@utility story-image {
+  transition:
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 0.7s ease;
+}
 
-@keyframes shimmer { to { background-position: -200% 0; } }
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
 @utility shimmer {
-  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%) 0 0 / 200% 100%;
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%) 0 0 /
+    200% 100%;
   animation: shimmer 1.6s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ticker-track, .signal-pulse, .editorial-rise, .shimmer { animation: none; }
-  .story-image { transition: none; }
+  .ticker-track,
+  .signal-pulse,
+  .editorial-rise,
+  .shimmer {
+    animation: none;
+  }
+  .story-image {
+    transition: none;
+  }
 }
 
 /*
@@ -187,10 +229,37 @@
  * Nastaliq has no italic, and the browser's synthesised slant looks broken, so
  * the design's italics are dropped for Urdu.
  */
-[dir="rtl"] :is(h1, h2, h3, h4, h5, h6, blockquote) {
-  font-family: var(--urdu-font);
+/*
+ * Nastaliq stacks its glyphs well above and below the baseline, so leading that
+ * looks right for Latin display type makes consecutive Urdu lines collide.
+ * These rules sit outside the cascade layers on purpose: they have to outrank
+ * the utility classes the components carry (leading-*, tracking-*).
+ *
+ * Each selector is written twice so it also matches when the marked element is
+ * the heading or paragraph itself, not only one of its children.
+ */
+[dir="rtl"] {
+  line-height: 2.05;
 }
 
-[dir="rtl"] :is(em, blockquote) {
+[dir="rtl"] :is(h1, h2, h3, h4, h5, h6, blockquote),
+[dir="rtl"]:is(h1, h2, h3, h4, h5, h6, blockquote) {
+  font-family: var(--urdu-font);
+  line-height: 1.9;
+}
+
+[dir="rtl"] :is(p, li, dd, dt, td),
+[dir="rtl"]:is(p, li, dd, dt, td) {
+  line-height: 2.1;
+}
+
+[dir="rtl"] :is(h1, h2, h3, h4, h5, h6, p, li, blockquote, a, span, strong, em),
+[dir="rtl"]:is(h1, h2, h3, h4, h5, h6, p, li, blockquote, a, span, strong, em) {
+  /* Letter-spacing pulls apart the joins between Nastaliq glyphs. */
+  letter-spacing: normal;
+}
+
+[dir="rtl"] :is(em, blockquote),
+[dir="rtl"]:is(em, blockquote) {
   font-style: normal;
 }

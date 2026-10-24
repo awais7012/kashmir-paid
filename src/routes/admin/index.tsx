@@ -73,7 +73,7 @@ const TASKS: Task[] = [
     to: "/admin/settings",
     icon: Settings,
     title: "Website settings",
-    description: "The homepage headline, the menu, the footer and the rest of the front page.",
+    description: "The homepage slider, contact details, the team, and the breaking ticker.",
     cta: "Open settings",
   },
   {
