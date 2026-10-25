@@ -74,7 +74,18 @@ export type SiteSettings = {
     twitter: string;
     facebook: string;
     youtube: string;
+    /**
+     * Optional: the API does not return this yet, so the icon stays hidden
+     * until a value is ever configured. Typed here so nothing has to change
+     * when it is added server-side.
+     */
+    tiktok?: string;
   };
+  /**
+   * Optional: store links for the app banner. Hidden entirely while unset,
+   * which is why the homepage never renders an empty download block.
+   */
+  apps?: { android?: string; ios?: string };
   team: { members: TeamMember[]; structure: TeamSection[] };
   nav: { sections: NavSection[] };
   footer: { note: string; copyright: string };
@@ -91,8 +102,119 @@ export type VideoDto = {
   embeddable: boolean;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+function str(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+function bool(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+function list<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+/**
+ * Nav entries are used to build links, so an entry that arrives without a label
+ * would be a link to nowhere — such entries are dropped rather than rendered.
+ */
+function navSection(value: unknown): NavSection {
+  const raw = isRecord(value) ? value : {};
+  const kind = raw["kind"];
+  return {
+    label: str(raw["label"]),
+    kind:
+      kind === "home" || kind === "index" || kind === "live" || kind === "category"
+        ? kind
+        : "category",
+    category: str(raw["category"]),
+    visible: bool(raw["visible"], true),
+  };
+}
+
+/**
+ * The API is an external boundary, and the type above is a claim about it
+ * rather than a guarantee: a deployment running an older build answers with
+ * settings sections this client has never heard of, and a partially written
+ * row can be missing them entirely. Every section is therefore filled in here,
+ * once, so no component has to defend itself against a missing one.
+ */
+export function normaliseSettings(input: unknown): SiteSettings {
+  const raw = isRecord(input) ? input : {};
+  const section = (key: string): Record<string, unknown> => {
+    const value = raw[key];
+    return isRecord(value) ? value : {};
+  };
+
+  const hero = section("hero");
+  const ticker = section("ticker");
+  const live = section("live");
+  const schedule = section("schedule");
+  const contact = section("contact");
+  const social = section("social");
+  const team = section("team");
+  const nav = section("nav");
+  const footer = section("footer");
+  const apps = isRecord(raw["apps"]) ? raw["apps"] : null;
+
+  const settings: SiteSettings = {
+    hero: { slides: list<HeroSlide>(hero["slides"]) },
+    ticker: { enabled: bool(ticker["enabled"], false), label: str(ticker["label"]) },
+    live: {
+      streamUrl: str(live["streamUrl"]),
+      title: str(live["title"]),
+      description: str(live["description"]),
+      isLive: bool(live["isLive"], false),
+      startedAt: str(live["startedAt"]),
+      video: isRecord(live["video"]) ? (live["video"] as unknown as VideoDto) : null,
+    },
+    schedule: {
+      image: str(schedule["image"]),
+      title: str(schedule["title"]),
+      caption: str(schedule["caption"]),
+      note: str(schedule["note"]),
+    },
+    contact: {
+      address: str(contact["address"]),
+      phone: str(contact["phone"]),
+      email: str(contact["email"]),
+      whatsapp: str(contact["whatsapp"]),
+    },
+    social: {
+      instagram: str(social["instagram"]),
+      twitter: str(social["twitter"]),
+      facebook: str(social["facebook"]),
+      youtube: str(social["youtube"]),
+    },
+    team: {
+      members: list<TeamMember>(team["members"]),
+      structure: list<TeamSection>(team["structure"]),
+    },
+    nav: {
+      sections: list<unknown>(nav["sections"])
+        .map(navSection)
+        .filter((s) => s.label !== ""),
+    },
+    footer: { note: str(footer["note"]), copyright: str(footer["copyright"]) },
+  };
+
+  // Optional extras stay absent unless the API really sends them, so the blocks
+  // they drive stay hidden instead of rendering as empty shells.
+  if (typeof social["tiktok"] === "string") settings.social.tiktok = social["tiktok"];
+  if (apps) {
+    const ios = str(apps["ios"]);
+    const android = str(apps["android"]);
+    if (ios) settings.apps = { ios };
+    if (android) settings.apps = { ...settings.apps, android };
+  }
+
+  return settings;
+}
+
 export async function fetchSettings(): Promise<SiteSettings> {
-  return (await getJson<{ data: SiteSettings }>("/api/settings")).data;
+  const payload = await getJson<{ data: unknown }>("/api/settings");
+  return normaliseSettings(payload.data);
 }
 
 export const siteSettingsQueryOptions = queryOptions({
@@ -162,9 +284,22 @@ export function categoryForSlug(settings: SiteSettings, slug: string): string {
   return match ? match.category : slug;
 }
 
+/**
+ * A display name from a URL slug: "top-stories" reads as "Top Stories". Words
+ * already in another script are left exactly as they are.
+ */
+export function titleCase(value: string): string {
+  return value
+    .split(/[-\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function sectionLabelForSlug(settings: SiteSettings, slug: string): string {
   const match = settings.nav.sections.find(
     (section) => section.kind === "category" && slugifyLabel(section.label) === slug,
   );
-  return match ? match.label : slug.replace(/-/g, " ");
+  // The display name, never the raw slug.
+  return match ? match.label : titleCase(slug);
 }

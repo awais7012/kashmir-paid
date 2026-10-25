@@ -38,6 +38,8 @@ export const stories = mysqlTable(
     videoProvider: varchar("video_provider", { length: 32 }),
     videoId: varchar("video_id", { length: 255 }),
     videoTitle: varchar("video_title", { length: 255 }),
+    // A PDF attached to the story, served from /uploads. Shown as a download.
+    documentUrl: varchar("document_url", { length: 512 }),
     featured: boolean("featured").notNull().default(false),
     displayOrder: int("display_order").notNull().default(0),
     createdAt: datetime("created_at", { fsp: 3 })

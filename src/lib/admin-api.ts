@@ -1,4 +1,4 @@
-import type { SiteSettings } from "@/lib/site-settings";
+import { normaliseSettings, type SiteSettings } from "@/lib/site-settings";
 import { API_BASE_URL } from "@/lib/stories";
 import type { StoryLanguage } from "@/lib/story-language";
 
@@ -36,6 +36,8 @@ export type AdminStory = {
   hero_thumb_url: string | null;
   has_video: boolean;
   video: AdminStoryVideo | null;
+  /** An attached PDF, served from the API; null when there is none. */
+  document_url: string | null;
   body: string | null;
   featured: boolean;
   display_order: number;
@@ -56,6 +58,7 @@ export type StoryDraft = {
   hero_image_url: string;
   video_url: string;
   video_title: string;
+  document_url: string;
 };
 
 export type MediaItem = {
@@ -354,13 +357,44 @@ export function uploadMedia(
   });
 }
 
+/** Uploads a story's PDF (5 MB max) and returns its public path. */
+export async function uploadDocument(file: File): Promise<{ url: string; name: string }> {
+  const token = getToken();
+  if (!token) throw new ApiError(401, "Your session has ended. Sign in again.");
+
+  const form = new FormData();
+  form.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/admin/documents`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}` },
+      body: form,
+    });
+  } catch {
+    throw new ApiError(0, `Cannot reach the API at ${API_BASE_URL}. Is the backend running?`);
+  }
+
+  const text = await response.text();
+  let payload: unknown;
+  try {
+    payload = text ? JSON.parse(text) : undefined;
+  } catch {
+    payload = undefined;
+  }
+
+  if (!response.ok) {
+    throw errorFrom(response.status, payload, `Upload failed (HTTP ${response.status})`);
+  }
+
+  return (payload as { data: { url: string; name: string } }).data;
+}
+
 export async function fetchAdminSettings(): Promise<SiteSettings> {
-  const payload = await requestRaw<{ data: SiteSettings }>(
-    "/api/admin/settings",
-    {},
-    { auth: true },
-  );
-  return payload.data;
+  const payload = await requestRaw<{ data: unknown }>("/api/admin/settings", {}, { auth: true });
+  // Same reasoning as the public read: never hand a partial payload to a form.
+  return normaliseSettings(payload.data);
 }
 
 export async function saveSettings(patch: SettingsPatch): Promise<SiteSettings> {

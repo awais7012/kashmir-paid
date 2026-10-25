@@ -1,14 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Play } from "lucide-react";
+import type { ReactNode } from "react";
+import { Download } from "lucide-react";
+import { CategoryBlock, type BlockTone } from "@/components/site/category-block";
+import { Hero } from "@/components/site/hero";
+import { HomeSkeleton } from "@/components/site/home-skeleton";
+import { LatestVideos } from "@/components/site/latest-videos";
+import { LiveStrip } from "@/components/site/live-strip";
+import { Motif } from "@/components/site/motif";
+import { MostReadList } from "@/components/site/most-read-list";
+import { Reveal } from "@/components/site/reveal";
+import { SectionHeader, ViewAllLink, ViewAllSectionLink } from "@/components/site/section-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
-import { HeroSlider } from "@/components/site/hero-slider";
-import { PageShimmer } from "@/components/site/page-shimmer";
+import { SocialFollow } from "@/components/site/social-follow";
+import { SubscribeBanner } from "@/components/site/subscribe-banner";
 import { StoryCard } from "@/components/story/story-card";
-import { storyCoverUrl } from "@/lib/media";
+import { selectHomeFeed } from "@/lib/home-feed";
+import { categoryTitles, t } from "@/lib/i18n";
+import { mediaUrl } from "@/lib/media";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
-import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { socialLinks } from "@/lib/social";
 import { primeQuery, storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -28,318 +40,272 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Global Kashmir TV — Kashmir, Connected to the World" },
       { property: "og:description", content: "See Kashmir. Hear Kashmir. Understand Kashmir." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Global Kashmir TV" },
+      { property: "og:locale", content: "en_GB" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Global Kashmir TV" },
+      { name: "twitter:description", content: "See Kashmir. Hear Kashmir. Understand Kashmir." },
     ],
   }),
   component: Index,
 });
 
-function SectionHeader({
-  eyebrow,
-  title,
-  dark = false,
-}: {
-  eyebrow: string;
-  title: string;
-  dark?: boolean;
-}) {
+/**
+ * A full-width band. Only two carry colour — the navy video band and the green
+ * category band. Every other section is white or off-white, alternating.
+ */
+type BandTone = "white" | "offwhite" | "green";
+
+const BAND_BG: Record<BandTone, string> = {
+  white: "bg-card",
+  offwhite: "bg-background",
+  green: "relative bg-green text-green-foreground",
+};
+
+function Band({ children, tone = "white" }: { children: ReactNode; tone?: BandTone }) {
   return (
-    <div
-      className={`grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b-2 pb-3 ${dark ? "border-primary-foreground/25" : "border-foreground"}`}
-    >
-      <div className="min-w-0">
-        <p className="text-[11px] font-black tracking-[0.18em] text-primary uppercase">{eyebrow}</p>
-        <h2 className="mt-1 font-display text-4xl leading-none sm:text-5xl">{title}</h2>
+    <div className={BAND_BG[tone]}>
+      {tone === "green" ? <Motif /> : null}
+      <div className={cn("page-shell section-pad", tone === "green" && "relative z-10")}>
+        {children}
       </div>
-      <ArrowRight className="size-5 shrink-0" aria-hidden="true" />
     </div>
   );
 }
+
+/** Each section keeps the same shape; only the accent colour differs. */
+const CATEGORY_STYLE: Record<string, { tone: BlockTone; band: BandTone; inverted?: boolean }> = {
+  kashmir: { tone: "navy", band: "offwhite" },
+  pakistan: { tone: "green", band: "green", inverted: true },
+  world: { tone: "sky", band: "white" },
+  library: { tone: "sky", band: "offwhite" },
+};
+
+/** The programmes row needs a few cards before it is worth drawing. */
+const MIN_PROGRAMS = 3;
 
 function Index() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
   const { data: stories } = useQuery(storiesQueryOptions);
 
-  if (!settings || !stories) return <PageShimmer />;
+  if (!settings || !stories) return <HomeSkeleton />;
 
-  // A scheduled story can carry the featured flag before it is public. When
-  // several featured stories are live at once, the newest one is the hero.
-  const featured = stories.filter((story) => story.featured);
-  const lead = featured.length
-    ? featured.reduce((newest, story) =>
-        story.published_at > newest.published_at ? story : newest,
-      )
-    : stories[0];
-  const latest = stories.filter((story) => story.id !== lead?.id).slice(0, 3);
-  const top = stories.filter((story) => story.id !== lead?.id).slice(0, 4);
-  const culture = stories
-    .filter((story) => ["Kashmir", "Heritage"].includes(story.category))
-    .slice(0, 3);
-  const world = stories
-    .filter((story) => ["Pakistan", "World", "Global"].includes(story.category))
-    .slice(0, 3);
-  const show = stories.find((story) => story.category === "Shows");
-  const tourism = stories.find((story) => story.category === "Tourism");
-  const sports = stories.find((story) => story.category === "Sports");
+  const feed = selectHomeFeed(stories);
+  const social = socialLinks(settings);
+  const scheduleImage = mediaUrl(settings.schedule.image);
 
-  if (!lead) {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <SiteHeader settings={settings} />
-        <main className="mx-auto max-w-[1100px] px-4 py-24 sm:px-8">
-          <h1 className="font-display text-5xl leading-none">No stories published yet</h1>
-          <p className="mt-4 max-w-prose text-sm leading-relaxed text-muted-foreground">
-            Once a story is published from the studio it appears here.
-          </p>
-        </main>
-        <SiteFooter settings={settings} />
-      </div>
-    );
-  }
+  // Store links are optional and unset today, so this list is empty and the
+  // block does not appear.
+  const appLinks: { href: string; label: string }[] = [];
+  if (settings.apps?.ios) appLinks.push({ href: settings.apps.ios, label: "App Store" });
+  if (settings.apps?.android) appLinks.push({ href: settings.apps.android, label: "Google Play" });
+
+  // The hero rotator takes the lead and the four beside it.
+  const heroStories = feed.lead ? [feed.lead, ...feed.heroSidebar] : [];
+
+  const showVideos = feed.videos.length >= 4;
+  const showPrograms = feed.programs.length >= MIN_PROGRAMS;
+  const showLatest = feed.latest.length > 0;
+  const hasSidebar =
+    feed.mostRead.length > 0 ||
+    settings.social.youtube.trim() !== "" ||
+    social.length > 0 ||
+    appLinks.length > 0;
+
+  /*
+   * The latest grid never leaves an orphan cell. Six divides by both two and
+   * three, so six cards fill the row at every breakpoint; a shorter list is laid
+   * out for the columns it can actually complete.
+   */
+  const latestAll = feed.latest;
+  const latest = latestAll.length >= 6 ? latestAll.slice(0, 6) : latestAll;
+  const latestCols =
+    latest.length >= 6
+      ? "sm:grid-cols-2 lg:grid-cols-3"
+      : latest.length === 3
+        ? "lg:grid-cols-3"
+        : "sm:grid-cols-2";
+  const latestSpanFirst = latest.length === 5;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
+      {/* keyboard readers land here before the masthead's many links */}
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:start-2 focus:z-[60] focus:bg-navy focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-navy-foreground"
+      >
+        {t.skipToContent}
+      </a>
 
-      {settings.ticker.enabled ? (
-        <div className="flex overflow-hidden border-b-2 border-foreground bg-primary text-primary-foreground">
-          <div className="z-10 flex shrink-0 items-center gap-2 bg-foreground px-4 py-2.5 text-[10px] font-black tracking-[0.16em] text-background uppercase">
-            <span className="signal-pulse size-2 rounded-full bg-primary" />
-            {settings.ticker.label}
-          </div>
-          <div className="ticker-track flex w-max min-w-max items-center py-2.5 text-xs font-bold tracking-[0.08em] whitespace-nowrap hover:[animation-play-state:paused] focus-within:[animation-play-state:paused]">
-            {[...stories.slice(0, 5), ...stories.slice(0, 5)].map((story, index) => (
-              <Link
-                key={`${story.id}-${index}`}
-                to="/story/$slug"
-                params={{ slug: story.slug }}
-                {...storyTextAttrs(story.language)}
-                className={cn(
-                  "px-6 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-                  isUrdu(story.language) && URDU_TEXT_CLASS,
-                )}
-              >
-                {story.title} <span className="ms-6 opacity-50">◆</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      <main id="main">
+        {feed.lead ? (
+          <>
+            {/* The hero runs edge to edge, so it is not wrapped in a Band. */}
+            <Hero stories={heroStories} />
 
-      <main>
-        <section className="mx-auto grid max-w-[1440px] grid-cols-1 bg-card lg:grid-cols-12">
-          <article className="border-b border-border lg:col-span-8 lg:border-r">
-            {/* The hero is media only now: no headline, standfirst or buttons.
-                The page title stays for search engines and screen readers. */}
-            <h1 className="sr-only">Global Kashmir TV — Kashmir, connected to the world</h1>
-            <HeroSlider slides={settings.hero.slides} fallbackImage={storyCoverUrl(lead)} />
-          </article>
+            <LiveStrip live={settings.live} />
 
-          <aside className="flex flex-col lg:col-span-4">
-            <div className="p-6 sm:p-8">
-              <p className="mb-8 flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
-                <span className="h-px w-5 bg-border" />
-                The latest
-              </p>
-              <div className="space-y-8">
-                {latest.map((story, index) => (
-                  <Link
-                    key={story.id}
-                    to="/story/$slug"
-                    params={{ slug: story.slug }}
-                    className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    <span className="font-display text-4xl leading-none text-border italic">
-                      0{index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h2
-                        {...storyTextAttrs(story.language)}
-                        className={cn(
-                          "font-display text-2xl leading-[1.05] font-bold hover:text-primary",
-                          isUrdu(story.language) && URDU_TEXT_CLASS,
-                        )}
-                      >
-                        {story.title}
-                      </h2>
-                      <p
-                        {...storyTextAttrs(story.language)}
-                        className={cn(
-                          "mt-2 text-[10px] font-bold tracking-[0.1em] text-muted-foreground uppercase",
-                          isUrdu(story.language) && URDU_TEXT_CLASS,
-                        )}
-                      >
-                        {story.category}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            {showVideos ? <LatestVideos stories={feed.videos} title={t.latestVideos} /> : null}
 
-            <div id="live" className="mt-auto bg-foreground p-8 text-center text-background">
-              <p className="flex items-center justify-center gap-2 text-[10px] font-black tracking-[0.18em] text-primary uppercase">
-                <span className="signal-pulse size-2 rounded-full bg-primary" />
-                {settings.live.isLive ? "Live now" : "Broadcast"}
-              </p>
-              <blockquote className="mt-5 font-display text-3xl leading-tight italic">
-                “{settings.live.title}”
-              </blockquote>
-              <p className="mt-3 text-sm leading-relaxed text-background/70">
-                {settings.live.description}
-              </p>
-              <Link
-                to="/live"
-                className="mt-7 inline-flex items-center gap-2 border border-background px-5 py-3 text-xs font-black tracking-[0.12em] uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <Play className="size-4 fill-current" />
-                Open broadcast
-              </Link>
-            </div>
-          </aside>
-        </section>
+            {feed.categories.map((section) => {
+              const style = CATEGORY_STYLE[section.key];
+              return (
+                <Band key={section.key} tone={style?.band ?? "offwhite"}>
+                  <Reveal>
+                    <CategoryBlock
+                      id={section.key}
+                      title={
+                        categoryTitles[section.key as keyof typeof categoryTitles] ?? section.key
+                      }
+                      stories={section.stories}
+                      tone={style?.tone ?? "navy"}
+                      inverted={style?.inverted ?? false}
+                    />
+                  </Reveal>
+                </Band>
+              );
+            })}
 
-        <section
-          id="top-stories"
-          className="mx-auto max-w-[1440px] border-t-2 border-foreground bg-card px-4 py-14 sm:px-8 lg:px-12 lg:py-20"
-        >
-          <SectionHeader eyebrow="Top stories" title="Kashmir · Pakistan · World" />
-          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {top.map((story) => (
-              <StoryCard key={story.id} story={story} />
-            ))}
-          </div>
-        </section>
+            {showPrograms ? (
+              <Band tone="white">
+                <SectionHeader
+                  title={t.programs}
+                  action={<ViewAllSectionLink slug="shows" label={t.viewAll} />}
+                />
+                <Reveal>
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {feed.programs.slice(0, 4).map((story) => (
+                      <StoryCard key={story.id} story={story} variant="standard" />
+                    ))}
+                  </div>
+                </Reveal>
+              </Band>
+            ) : null}
 
-        <section id="kashmir" className="bg-foreground text-background">
-          <div className="mx-auto max-w-[1440px] px-4 py-14 sm:px-8 lg:px-12 lg:py-20">
-            <SectionHeader eyebrow="Kashmir" title="People · Issues · Future" dark />
-            <div className="mt-8 grid gap-8 md:grid-cols-3">
-              {culture.map((story) => (
-                <StoryCard key={story.id} story={story} large />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="world"
-          className="mx-auto max-w-[1440px] bg-card px-4 py-14 sm:px-8 lg:px-12 lg:py-20"
-        >
-          <SectionHeader eyebrow="Global" title="News from around the world" />
-          <div className="mt-8 grid gap-8 md:grid-cols-3">
-            {world.map((story) => (
-              <StoryCard key={story.id} story={story} large />
-            ))}
-          </div>
-        </section>
-
-        {show ? (
-          <section
-            id="shows"
-            className="border-y-2 border-foreground bg-primary text-primary-foreground"
-          >
-            <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
-              <div className="p-8 sm:p-12 lg:p-16">
-                <p className="text-[10px] font-black tracking-[.2em] uppercase">
-                  Shows &amp; videos
-                </p>
-                <h2 className="mt-5 font-display text-5xl leading-[.95] sm:text-7xl">
-                  Interviews.
-                  <br />
-                  Analysis.
-                  <br />
-                  <em>Originals.</em>
-                </h2>
-                <p
-                  {...storyTextAttrs(show.language)}
+            {showLatest || hasSidebar ? (
+              <Band tone="white">
+                <div
                   className={cn(
-                    "mt-6 max-w-lg text-sm leading-relaxed opacity-80",
-                    isUrdu(show.language) && URDU_TEXT_CLASS,
+                    "grid gap-10",
+                    showLatest && hasSidebar && "lg:grid-cols-[minmax(0,1fr)_20rem]",
                   )}
                 >
-                  {show.summary}
-                </p>
-                {show.has_video ? (
-                  <Link
-                    to="/story/$slug"
-                    params={{ slug: show.slug }}
-                    className="mt-8 inline-flex items-center gap-2 bg-foreground px-5 py-3 text-xs font-black tracking-[.12em] text-background uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    <Play className="size-4 fill-current" />
-                    Watch now
-                  </Link>
-                ) : (
-                  <Link
-                    to="/section/$category"
-                    params={{ category: "shows" }}
-                    className="mt-8 inline-flex items-center gap-2 bg-foreground px-5 py-3 text-xs font-black tracking-[.12em] text-background uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                  >
-                    <Play className="size-4 fill-current" />
-                    More shows
-                  </Link>
-                )}
-              </div>
-              <Link
-                to="/story/$slug"
-                params={{ slug: show.slug }}
-                className="relative block min-h-[380px] focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-primary"
-                aria-label={show.title}
-              >
-                <img
-                  loading="lazy"
-                  width={1024}
-                  height={768}
-                  src={storyCoverUrl(show)}
-                  alt={show.title}
-                  className="absolute inset-0 h-full w-full object-cover grayscale"
+                  {showLatest ? (
+                    <div className="min-w-0">
+                      <SectionHeader
+                        title={t.latestStories}
+                        action={<ViewAllLink to="/news" label={t.viewAll} />}
+                      />
+                      <div className={cn("mt-6 grid gap-x-6 gap-y-8", latestCols)}>
+                        {latest.map((story, position) => (
+                          <Reveal
+                            key={story.id}
+                            delay={position * 60}
+                            className={cn(position === 0 && latestSpanFirst && "sm:col-span-2")}
+                          >
+                            <StoryCard
+                              story={story}
+                              variant={position === 0 && latestSpanFirst ? "large" : "standard"}
+                            />
+                          </Reveal>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {hasSidebar ? (
+                    <aside className="grid content-start gap-5">
+                      <MostReadList stories={feed.mostRead} title={t.mostRead} />
+                      <SubscribeBanner href={settings.social.youtube} />
+                      <SocialFollow social={social} title={t.followUs} />
+                      {appLinks.length > 0 ? (
+                        <section
+                          aria-label="Global Kashmir TV apps"
+                          className="rounded-card border border-border bg-card p-5 shadow-card"
+                        >
+                          <h2 className="flex items-center gap-2 text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase">
+                            <Download className="size-4" aria-hidden="true" />
+                            Apps
+                          </h2>
+                          <ul className="mt-4 grid gap-2">
+                            {appLinks.map((app) => (
+                              <li key={app.label}>
+                                <a
+                                  href={app.href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="block rounded-sm border border-border px-3 py-2.5 text-xs font-bold transition-colors hover:border-primary hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                >
+                                  {app.label}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      ) : null}
+                    </aside>
+                  ) : null}
+                </div>
+              </Band>
+            ) : null}
+
+            {feed.opinion.length > 0 ? (
+              <Band tone="offwhite">
+                <SectionHeader
+                  title={t.opinion}
+                  action={<ViewAllLink to="/news" label={t.viewAll} />}
                 />
-                <span className="absolute inset-0 grid place-items-center">
-                  <span className="grid size-20 place-items-center rounded-full bg-primary text-primary-foreground">
-                    <Play className="size-7 fill-current" />
-                  </span>
-                </span>
-              </Link>
-            </div>
-          </section>
-        ) : null}
+                {/* Columns follow the number of cards. A single opinion piece
+                    becomes one wide card rather than a card floating in an
+                    otherwise empty band. */}
+                <div
+                  className={cn(
+                    "mt-6 grid gap-x-6 gap-y-8",
+                    feed.opinion.length > 1 && "sm:grid-cols-2",
+                    feed.opinion.length > 2 && "lg:grid-cols-3",
+                  )}
+                >
+                  {feed.opinion.slice(0, 3).map((story, position) => (
+                    <Reveal key={story.id} delay={position * 60}>
+                      <StoryCard
+                        story={story}
+                        variant={feed.opinion.length === 1 ? "large" : "standard"}
+                      />
+                    </Reveal>
+                  ))}
+                </div>
+              </Band>
+            ) : null}
 
-        <section className="mx-auto grid max-w-[1440px] border-b-2 border-foreground bg-card md:grid-cols-2">
-          {tourism ? (
-            <div
-              id="tourism"
-              className="border-b border-border p-4 py-12 sm:p-8 md:border-b-0 md:border-r lg:p-12"
-            >
-              <StoryCard story={tourism} large />
-            </div>
-          ) : null}
-          {sports ? (
-            <div id="sports" className="p-4 py-12 sm:p-8 lg:p-12">
-              <StoryCard story={sports} large />
-            </div>
-          ) : null}
-        </section>
-
-        <section id="library" className="bg-card px-4 py-16 text-center sm:px-8 lg:py-24">
-          <p className="text-[10px] font-black tracking-[.25em] text-primary uppercase">
-            Library · History · Heritage · Knowledge
-          </p>
-          <h2 className="mx-auto mt-5 max-w-5xl font-display text-[clamp(3rem,8vw,7rem)] leading-[.88]">
-            See Kashmir.
-            <br />
-            Hear Kashmir.
-            <br />
-            <em>Understand Kashmir.</em>
-          </h2>
-          <Link
-            to="/section/$category"
-            params={{ category: "library" }}
-            className="mt-8 inline-flex items-center gap-2 border-2 border-foreground px-5 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Enter the library
-            <ArrowRight className="size-4" />
-          </Link>
-        </section>
+            {scheduleImage ? (
+              <Band tone="white">
+                <SectionHeader
+                  title={settings.schedule.title || t.schedule}
+                  action={<ViewAllLink to="/schedule" label={t.openSchedule} />}
+                />
+                <Link
+                  to="/schedule"
+                  className="mt-6 block overflow-hidden rounded-card border border-border bg-card shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  <img
+                    src={scheduleImage}
+                    alt={settings.schedule.title || t.schedule}
+                    loading="lazy"
+                    className="max-h-[420px] w-full object-cover object-top"
+                  />
+                </Link>
+              </Band>
+            ) : null}
+          </>
+        ) : (
+          <Band tone="offwhite">
+            <h1 className="font-display text-3xl font-bold">{t.noStories}</h1>
+            <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
+              {t.noStoriesBody}
+            </p>
+          </Band>
+        )}
       </main>
 
       <SiteFooter settings={settings} />

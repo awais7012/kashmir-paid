@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
@@ -25,15 +25,17 @@ import {
   createStory,
   fetchStoryCategories,
   updateStory,
+  uploadDocument,
   type AdminStory,
   type FieldErrors,
   type StoryDraft,
 } from "@/lib/admin-api";
 import { STORY_IMAGE_KEYS, STORY_IMAGE_LABELS } from "@/lib/story-images";
+import { mediaUrl } from "@/lib/media";
 import { SUGGESTED_CATEGORIES } from "@/lib/site-settings";
 import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { readStudioPrefs, saveStudioPrefs } from "@/lib/studio-prefs";
-import { STORY_LANGUAGE_OPTIONS, type StoryLanguage } from "@/lib/story-language";
+import type { StoryLanguage } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_AUTHOR = "GKTV Desk";
@@ -54,6 +56,7 @@ type FormValues = {
   heroImageUrl: string;
   videoUrl: string;
   videoTitle: string;
+  documentUrl: string;
   featured: boolean;
   displayOrder: string;
   publishedAt: string;
@@ -99,6 +102,7 @@ function valuesFromStory(story: AdminStory): FormValues {
     heroImageUrl: story.hero_image_url ?? "",
     videoUrl: story.video?.url ?? "",
     videoTitle: story.video?.title ?? "",
+    documentUrl: story.document_url ?? "",
     featured: story.featured,
     displayOrder: String(story.display_order),
     publishedAt: toLocalInput(story.published_at),
@@ -118,6 +122,7 @@ function valuesFromDraft(draft: StoryDraft): FormValues {
     heroImageUrl: draft.hero_image_url,
     videoUrl: draft.video_url,
     videoTitle: draft.video_title,
+    documentUrl: draft.document_url ?? "",
     featured: draft.featured,
     displayOrder: String(draft.display_order),
     publishedAt: draft.published_at ? toLocalInput(draft.published_at) : "",
@@ -201,6 +206,7 @@ export function StoryForm({
       heroImageUrl: "",
       videoUrl: "",
       videoTitle: "",
+      documentUrl: "",
       featured: false,
       displayOrder: "0",
       publishedAt: "",
@@ -215,7 +221,10 @@ export function StoryForm({
   );
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [showAdvanced, setShowAdvanced] = useState(
-    Boolean(story && (story.featured || story.has_video || story.display_order !== 0)),
+    Boolean(
+      story &&
+      (story.featured || story.has_video || story.display_order !== 0 || story.document_url),
+    ),
   );
   const [customSection, setCustomSection] = useState(false);
 
@@ -251,6 +260,8 @@ export function StoryForm({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const dirty = useMemo(
     () => JSON.stringify(values) !== JSON.stringify(baseline),
@@ -282,6 +293,34 @@ export function StoryForm({
 
   function update(patch: Partial<FormValues>) {
     setValues((current) => ({ ...current, ...patch }));
+  }
+
+  /** A PDF is uploaded straight to the API; the story only stores its path. */
+  async function handleDocument(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setPdfError("That file is not a PDF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPdfError("That PDF is larger than 5 MB.");
+      return;
+    }
+
+    setPdfUploading(true);
+    setPdfError(null);
+    try {
+      const uploaded = await uploadDocument(file);
+      update({ documentUrl: uploaded.url });
+      toast.success("PDF attached");
+    } catch (caught) {
+      setPdfError(caught instanceof ApiError ? caught.message : "The PDF could not be uploaded.");
+    } finally {
+      setPdfUploading(false);
+    }
   }
 
   function handleTitleChange(next: string) {
@@ -318,6 +357,7 @@ export function StoryForm({
       hero_image_url: values.heroImageUrl.trim(),
       video_url: values.videoUrl.trim(),
       video_title: values.videoTitle.trim(),
+      document_url: values.documentUrl.trim(),
     };
 
     // Only send the publish time when the editor changed it. The form keeps
@@ -383,14 +423,7 @@ export function StoryForm({
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <SelectField
-            meta={field("language", "Language", "Urdu stories read right to left.")}
-            value={values.language}
-            onChange={(next) => update({ language: next as StoryLanguage })}
-            options={STORY_LANGUAGE_OPTIONS}
-          />
-
+        <div className="grid gap-6">
           {customSection ? (
             <div className="grid gap-2">
               <TextField
@@ -599,6 +632,51 @@ export function StoryForm({
                 onVideoTitleChange={(next) => update({ videoTitle: next })}
                 error={fieldErrors["video_url"]?.[0]}
               />
+            </div>
+
+            <div className="grid gap-4 border-t border-border pt-5">
+              <h3 className="font-display text-xl">Document (PDF)</h3>
+              <p className="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                Optional. Attach one PDF, up to 5 MB. It shows as a download on the story page —
+                useful for Library entries, reports and public notices.
+              </p>
+
+              {values.documentUrl ? (
+                <div className="flex flex-wrap items-center gap-3 border-2 border-border bg-card px-3 py-2.5">
+                  <a
+                    href={mediaUrl(values.documentUrl) ?? values.documentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-bold text-primary underline underline-offset-2 hover:text-foreground"
+                  >
+                    Open the attached PDF
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => update({ documentUrl: "" })}
+                    className="text-[10px] font-black tracking-[0.12em] text-destructive uppercase underline underline-offset-2"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : null}
+
+              <label className="cursor-pointer justify-self-start border-2 border-foreground bg-card px-4 py-2.5 text-[11px] font-black tracking-[0.12em] uppercase hover:bg-foreground hover:text-background">
+                {pdfUploading ? "Uploading…" : values.documentUrl ? "Replace PDF" : "Upload PDF"}
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="sr-only"
+                  disabled={pdfUploading}
+                  onChange={handleDocument}
+                />
+              </label>
+
+              {pdfError ? (
+                <p role="alert" className="text-xs font-bold text-destructive">
+                  {pdfError}
+                </p>
+              ) : null}
             </div>
           </div>
         ) : null}

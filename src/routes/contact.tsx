@@ -77,7 +77,7 @@ function ContactPage() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
 
-      <main className="mx-auto max-w-[1100px] px-4 py-12 sm:px-8 lg:py-16">
+      <main className="page-shell py-12 lg:py-16">
         <div className="border-b-2 border-foreground pb-4">
           <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
             Get in touch

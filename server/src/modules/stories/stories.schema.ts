@@ -32,6 +32,8 @@ const storyFields = {
       }
     }),
   video_title: z.string().trim().max(255),
+  /** Path of an uploaded PDF, e.g. /uploads/2026/10/<uuid>.pdf. */
+  document_url: z.string().trim().max(512),
 };
 
 export const createStorySchema = z.object({
@@ -45,6 +47,7 @@ export const createStorySchema = z.object({
   hero_image_url: storyFields.hero_image_url.default(""),
   video_url: storyFields.video_url.default(""),
   video_title: storyFields.video_title.default(""),
+  document_url: storyFields.document_url.default(""),
 });
 
 export const updateStorySchema = z.object(storyFields).partial();

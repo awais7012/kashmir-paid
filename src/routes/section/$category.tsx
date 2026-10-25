@@ -4,6 +4,8 @@ import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
+import { publicStories } from "@/lib/home-feed";
+import { t } from "@/lib/i18n";
 import {
   categoryForSlug,
   sectionLabelForSlug,
@@ -47,18 +49,21 @@ function SectionPage() {
 
   if (!settings || !page) return <PageShimmer />;
 
+  // A section lists one language: the one this deployment publishes in.
+  const stories = publicStories(page.data);
+  // The display name, not the slug: "top-stories" reads as "Top Stories".
   const label = sectionLabelForSlug(settings, category);
-  // A section label is a category name the editor chose, so it may be Urdu.
   const urduLabel = looksUrdu(label);
+  const [lead, ...rest] = stories;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
 
-      <main className="mx-auto max-w-[1440px] px-4 py-12 sm:px-8 lg:px-12 lg:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-4">
+      <main className="page-shell py-8 lg:py-10">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-3">
           <div>
-            <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+            <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
               Section
             </p>
             <h1
@@ -66,7 +71,7 @@ function SectionPage() {
               className={cn(
                 // A section name is editor-supplied and can be long or a single
                 // unbroken word, so it wraps rather than overflowing the page.
-                "mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black break-words",
+                "mt-1 font-display text-3xl leading-[1.2] font-bold break-words sm:text-4xl",
                 urduLabel && URDU_TEXT_CLASS,
               )}
             >
@@ -74,19 +79,36 @@ function SectionPage() {
             </h1>
           </div>
           <p className="text-xs text-muted-foreground">
-            {page.meta.total} {page.meta.total === 1 ? "story" : "stories"}
+            {stories.length} {stories.length === 1 ? t.story : t.stories}
           </p>
         </div>
 
-        {page.data.length > 0 ? (
-          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {page.data.map((story) => (
-              <StoryCard key={story.id} story={story} large />
-            ))}
-          </div>
+        {lead ? (
+          // A short section gets a lead and a list rather than a grid with two
+          // empty columns.
+          stories.length < 4 ? (
+            <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+              <StoryCard story={lead} variant="large" />
+              {rest.length > 0 ? (
+                <ul className="grid content-start gap-4 self-start">
+                  {rest.map((story) => (
+                    <li key={story.id}>
+                      <StoryCard story={story} variant="compact" />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+              {stories.map((story) => (
+                <StoryCard key={story.id} story={story} variant="large" />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="mt-10 grid justify-items-start gap-4 border-2 border-foreground bg-card px-5 py-10">
-            <h2 className="font-display text-2xl">Nothing filed here yet</h2>
+          <div className="mt-6 grid justify-items-start gap-3 rounded-card border border-border bg-card px-5 py-8 shadow-card">
+            <h2 className="font-display text-xl font-bold">Nothing filed here yet</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
               There is no published story in {label} so far. Stories appear here as soon as they are
               published in this category.
@@ -94,13 +116,13 @@ function SectionPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/news"
-                className="border-2 border-foreground px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="rounded-sm bg-primary px-4 py-2.5 text-xs font-black tracking-[0.12em] text-primary-foreground uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 All stories
               </Link>
               <Link
                 to="/"
-                className="px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="rounded-sm px-4 py-2.5 text-xs font-black tracking-[0.12em] uppercase hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 Go home
               </Link>

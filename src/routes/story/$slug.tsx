@@ -1,12 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Download, Play } from "lucide-react";
 import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
 import { VideoPlayer } from "@/components/story/video-player";
 import { formatDate, timeAgo } from "@/lib/format";
+import { publicStories } from "@/lib/home-feed";
 import { Markdown } from "@/lib/markdown";
 import { mediaUrl, storyCoverUrl } from "@/lib/media";
 import { siteSettingsQueryOptions, slugifyLabel } from "@/lib/site-settings";
@@ -70,13 +71,52 @@ function StoryPage() {
 
   const cover = storyCoverUrl(story);
   const sectionSlug = slugifyLabel(story.category);
-  const related = (categoryPage?.data ?? []).filter((item) => item.id !== story.id).slice(0, 3);
+  // Related stories obey the same rules as every other list: site language, no
+  // test copy, and never the story you are already reading.
+  const related = publicStories(categoryPage?.data ?? [])
+    .filter((item) => item.id !== story.id)
+    .slice(0, 3);
   const urdu = isUrdu(story.language);
   const textAttrs = storyTextAttrs(story.language);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
+
+      {/* The banner: the story's lead media across the page, so the article
+          opens with a picture rather than a column of text. A video story puts
+          its player here instead of a still, and this is the only piece of lead
+          media on the page — the column below never repeats it. */}
+      {story.video ? (
+        <div className="border-b border-border bg-background">
+          <div className="mx-auto max-w-4xl px-4 py-5 sm:px-8">
+            <div className="overflow-hidden rounded-card border border-border shadow-lift">
+              <VideoPlayer
+                video={story.video}
+                poster={story.video.thumbnail_url ?? mediaUrl(story.hero_image_url)}
+              />
+            </div>
+            <p className="mt-2 flex items-center gap-2 text-[10px] font-black tracking-[0.14em] text-muted-foreground uppercase">
+              <Play className="size-3.5 fill-current text-live" aria-hidden="true" />
+              {story.video.title ?? "Watch"}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="relative h-[clamp(240px,38vh,460px)] w-full overflow-hidden bg-muted">
+          <img
+            src={cover}
+            alt={story.title}
+            width={1536}
+            height={864}
+            className="h-full w-full object-cover"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-foreground/45 via-transparent to-transparent"
+            aria-hidden="true"
+          />
+        </div>
+      )}
 
       <main>
         {/* A single measured column: headline, deck, byline, media and body all
@@ -116,7 +156,7 @@ function StoryPage() {
           <h1
             {...textAttrs}
             className={cn(
-              "mt-7 font-display text-[clamp(2.25rem,5vw,3.75rem)] leading-[0.95] font-black break-words",
+              "mt-7 font-display text-[clamp(2rem,3.6vw,3rem)] leading-[1.15] font-bold break-words",
               urdu && URDU_TEXT_CLASS,
             )}
           >
@@ -133,39 +173,34 @@ function StoryPage() {
             {story.summary}
           </p>
 
-          <p className="mt-8 text-[10px] font-black tracking-[0.16em] uppercase">
+          {/* The byline follows the page direction, so it sits on the reading
+              edge in both builds. */}
+          <p
+            {...textAttrs}
+            className={cn(
+              "mt-8 text-[11px] font-bold tracking-[0.12em] text-muted-foreground uppercase",
+              urdu && URDU_TEXT_CLASS,
+            )}
+          >
             By {story.author}
           </p>
 
-          {/* One piece of lead media only: the video when the story has one,
-              otherwise the cover. A video story must not also pull in the
-              bundled photograph, or readers get two images before the text. */}
-          {story.video ? (
-            <figure className="mt-10 grid gap-4">
-              <div className="border-2 border-foreground">
-                <VideoPlayer
-                  video={story.video}
-                  poster={story.video.thumbnail_url ?? mediaUrl(story.hero_image_url)}
-                />
-              </div>
-              <figcaption className="flex items-center gap-2 text-[10px] font-black tracking-[0.14em] uppercase">
-                <Play className="size-3.5 fill-current text-primary" />
-                {story.video.title ?? "Watch"}
-              </figcaption>
-            </figure>
-          ) : (
-            /* Kept to a comfortable width so it reads as a picture above the
-               article rather than a full-bleed banner that dwarfs the text. */
-            <div className="mt-10 overflow-hidden border-2 border-foreground bg-muted">
-              <img
-                src={cover}
-                alt={story.title}
-                width={1536}
-                height={1024}
-                className="aspect-[16/10] w-full object-cover"
-              />
-            </div>
-          )}
+          {story.document_url ? (
+            <a
+              href={mediaUrl(story.document_url) ?? story.document_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-10 flex items-center justify-between gap-4 rounded-card border border-border bg-card px-4 py-4 shadow-card transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <span className="grid gap-1">
+                <span className="text-[10px] font-black tracking-[0.14em] text-muted-foreground uppercase">
+                  Attached document
+                </span>
+                <span className="font-display text-lg font-bold">Open the PDF</span>
+              </span>
+              <Download className="size-5 shrink-0 text-primary" aria-hidden="true" />
+            </a>
+          ) : null}
 
           {story.body ? (
             <div {...textAttrs} className={cn("mt-12", urdu && URDU_TEXT_CLASS)}>
@@ -186,9 +221,9 @@ function StoryPage() {
         </article>
 
         {related.length > 0 ? (
-          <section className="mx-auto max-w-[1440px] border-t-2 border-foreground px-4 py-12 sm:px-8 lg:px-12">
-            <h2 className="font-display text-3xl sm:text-4xl">More stories</h2>
-            <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="page-shell border-t border-border py-8">
+            <h2 className="font-display text-2xl font-bold">More stories</h2>
+            <div className="mt-6 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item) => (
                 <StoryCard key={item.id} story={item} />
               ))}
