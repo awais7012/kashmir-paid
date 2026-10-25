@@ -35,7 +35,7 @@ import { mediaUrl } from "@/lib/media";
 import { SUGGESTED_CATEGORIES } from "@/lib/site-settings";
 import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { readStudioPrefs, saveStudioPrefs } from "@/lib/studio-prefs";
-import type { StoryLanguage } from "@/lib/story-language";
+import { STORY_LANGUAGE_OPTIONS, type StoryLanguage } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_AUTHOR = "GKTV Desk";
@@ -424,6 +424,17 @@ export function StoryForm({
         </div>
 
         <div className="grid gap-6">
+          <SelectField
+            meta={field(
+              "language",
+              "Language",
+              "An Urdu story reads right-to-left on the page and appears only on the Urdu site.",
+            )}
+            value={values.language}
+            onChange={(next) => update({ language: next as StoryLanguage })}
+            options={STORY_LANGUAGE_OPTIONS}
+          />
+
           {customSection ? (
             <div className="grid gap-2">
               <TextField

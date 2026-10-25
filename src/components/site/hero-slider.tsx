@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { CategoryChip } from "@/components/story/category-chip";
-import { timeAgo } from "@/lib/format";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BrandedFallback } from "@/components/story/branded-fallback";
 import { t } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
-import { isUrdu, storyTextAttrs, URDU_DISPLAY_CLASS, URDU_TITLE_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +19,6 @@ type Slide = {
   slug: string;
   title: string;
   category: string;
-  publishedAt: string;
-  hasVideo: boolean;
-  language: Story["language"];
 };
 
 function toSlides(stories: Story[]): Slide[] {
@@ -33,20 +28,21 @@ function toSlides(stories: Story[]): Slide[] {
     slug: story.slug,
     title: story.title,
     category: story.category,
-    publishedAt: story.published_at,
-    hasVideo: story.has_video,
-    language: story.language,
   }));
 }
 
 /**
- * The hero. Pictures crossfade so the frame never jumps. The scrim covers only
- * the bottom half, so the photograph stays bright, and the copy sits on that
- * half with the dots and arrows placed clear of it.
+ * The hero: the top stories as full-bleed pictures, with nothing laid over them.
  *
- * It advances on its own and can be driven with the dots, the arrows, a swipe or
- * the left/right keys. It holds still while hovered or focused, and never
- * rotates for readers who ask for reduced motion.
+ * The frame carries no headline, chip, date or button — the desk's artwork is
+ * the whole slide, so an editor who wants words on it puts them in the picture.
+ * Each frame links to its story, and the headline is the link's accessible name
+ * and the picture's alt text.
+ *
+ * Pictures crossfade so the frame never jumps. It advances on its own and can be
+ * driven with the dots, the arrows, a swipe or the left/right keys. It holds
+ * still while hovered or focused, and never rotates for readers who ask for
+ * reduced motion.
  */
 export function HeroSlider({ stories, className }: { stories: Story[]; className?: string }) {
   const items = useMemo(() => toSlides(stories), [stories]);
@@ -119,8 +115,6 @@ export function HeroSlider({ stories, className }: { stories: Story[]; className
     >
       {items.map((item, position) => {
         const isActive = position === active;
-        const urdu = isUrdu(item.language);
-        const textAttrs = storyTextAttrs(item.language);
 
         return (
           <div
@@ -140,66 +134,25 @@ export function HeroSlider({ stories, className }: { stories: Story[]; className
                 fetchPriority={position === 0 ? "high" : "auto"}
                 className="h-full w-full object-cover"
               />
-            ) : null}
+            ) : (
+              /* No picture: the brand plate stands in, exactly as it does on a card. */
+              <BrandedFallback category={item.category} />
+            )}
 
-            {/* The scrim covers only the bottom half, so the picture reads bright. */}
-            <span
-              className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-foreground/90 via-foreground/45 to-transparent"
-              aria-hidden="true"
+            {/* The whole frame is the link. There is no copy over the picture —
+                artwork that carries its own words is uploaded that way. */}
+            <Link
+              to="/story/$slug"
+              params={{ slug: item.slug }}
+              tabIndex={isActive ? 0 : -1}
+              aria-label={item.title}
+              className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:outline-offset-[-6px] focus-visible:outline-white"
             />
-
-            <span className="absolute inset-x-0 bottom-0 block p-4 sm:p-6 lg:p-8">
-              <span className="grid max-w-2xl gap-2.5">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center bg-brand-blue px-2 py-1 text-[10px] font-black tracking-[0.14em] text-brand-blue-foreground uppercase">
-                    {t.topStory}
-                  </span>
-                  {item.category ? <CategoryChip label={item.category} /> : null}
-                  {item.hasVideo ? (
-                    <span className="inline-flex items-center gap-1 bg-navy px-2 py-1 text-[10px] font-black tracking-[0.14em] text-navy-foreground uppercase">
-                      <Play className="size-3 fill-current" aria-hidden="true" />
-                      {t.video}
-                    </span>
-                  ) : null}
-                </span>
-
-                <Link
-                  to="/story/$slug"
-                  params={{ slug: item.slug }}
-                  tabIndex={isActive ? 0 : -1}
-                  {...textAttrs}
-                  className={cn(
-                    "line-clamp-3 font-display text-[clamp(1.5rem,3vw,2.6rem)] leading-[1.08] font-bold text-balance text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white",
-                    urdu && URDU_DISPLAY_CLASS,
-                  )}
-                >
-                  {item.title}
-                </Link>
-
-                <span className="flex flex-wrap items-center gap-3">
-                  <span className="text-[11px] font-bold tracking-[0.06em] text-white/75 uppercase">
-                    <time dateTime={item.publishedAt}>{timeAgo(item.publishedAt)}</time>
-                  </span>
-                  <Link
-                    to="/story/$slug"
-                    params={{ slug: item.slug }}
-                    tabIndex={isActive ? 0 : -1}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 bg-card px-3.5 py-2 text-[11px] font-black tracking-[0.1em] text-navy uppercase transition-colors hover:bg-brand-blue hover:text-brand-blue-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
-                      urdu && URDU_TITLE_CLASS,
-                    )}
-                  >
-                    {t.readMore}
-                    <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-                  </Link>
-                </span>
-              </span>
-            </span>
           </div>
         );
       })}
 
-      {/* Dots, top-right, clear of the copy. */}
+      {/* Dots, top-right. */}
       {count > 1 ? (
         <div className="absolute top-3 end-3 z-20 flex items-center gap-1.5">
           {items.map((item, position) => (
@@ -210,15 +163,17 @@ export function HeroSlider({ stories, className }: { stories: Story[]; className
               aria-label={item.title}
               aria-current={position === active}
               className={cn(
-                "size-2 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
-                position === active ? "w-5 bg-white" : "bg-white/50 hover:bg-white/80",
+                /* With no scrim behind them any more, the dots need their own edge
+                   so they stay visible on a light poster. */
+                "size-2 rounded-full ring-1 ring-black/30 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
+                position === active ? "w-5 bg-white" : "bg-white/60 hover:bg-white/85",
               )}
             />
           ))}
         </div>
       ) : null}
 
-      {/* Arrows, right edge, clear of the copy. */}
+      {/* Arrows, right edge. */}
       {count > 1 ? (
         <div className="absolute end-3 top-1/2 z-20 hidden -translate-y-1/2 flex-col gap-2 lg:flex">
           <button
