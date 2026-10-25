@@ -1,6 +1,8 @@
 /**
- * A design fixture: fourteen English stories across five sections, so the
- * homepage renders as it will in use.
+ * A design fixture, in two languages: a full English set and a full Urdu set, so
+ * either build of the site renders as it will in use. The site publishes one
+ * language per deployment (`SITE_LANG`), so only one set is ever visible at a
+ * time — seed both, then build with `SITE_LANG=ur` to review the Urdu set.
  *
  * Every row is marked twice: the slug begins with "demo-", and the byline reads
  * "Demo Desk". Re-running replaces the whole set rather than adding to it, and
@@ -10,13 +12,14 @@
  *   npm run db:seed-demo -- --clean # remove every demo row
  *
  * Covers are generated, not photographed: each story gets a branded gradient
- * plate with its own headline on it, drawn here with sharp. They are all
- * marked "DEMO" on the plate itself and live under uploads/, which is
- * gitignored — regenerate them by re-running this script (missing files fall
- * back to the bundled artwork).
+ * plate with its section on it, drawn here with sharp. They are written into the
+ * API's upload root (`UPLOAD_DIR`), which is gitignored — regenerate them by
+ * re-running this script (missing files fall back to the bundled artwork).
  *
- * The other published rows are lent a plate too, so no two cards on the review
- * page share a picture. `--clean` takes those plates back off again.
+ * `--lend` additionally plates every other published row that has no cover, so
+ * no two cards on a review page share a picture. It is off by default: it writes
+ * to rows this script does not own, and the plates are stamped "DEMO", so it is
+ * not something to point at a live database.
  */
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
@@ -24,9 +27,13 @@ import { isNull, like, or, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { closePool, db } from "../db/client.js";
 import { stories } from "../db/schema.js";
+import { UPLOAD_ROOT } from "../lib/storage.js";
 
 const DEMO_PREFIX = "demo-";
-const COVER_DIR = "uploads/2026/demo";
+/** Covers are written into the upload root the API actually serves, not a local
+ *  `uploads/` next to this script: on a server those are different directories,
+ *  and a cover written to the wrong one is a broken image on every card. */
+const COVER_DIR = path.join(UPLOAD_ROOT, "2026", "demo");
 const PLATE_PREFIX = "demo-plate-";
 /** Matches the path the API serves uploads from. */
 const COVER_URL_DIR = "/uploads/2026/demo";
@@ -73,6 +80,25 @@ const PHOTO_SLOTS: Record<string, number> = {
   "archive-radio-tapes": 1,
   // the single opinion card
   "opinion-economy-decade": 2,
+  // ---- the Urdu set, spent the same way ----
+  // hero: the lead frame, then the slide rail
+  "ur-rail-freight": 1,
+  "ur-handloom": 2,
+  "ur-trade-lane": 3,
+  "ur-summit": 4,
+  "ur-aid": 1,
+  // the video band, left to right
+  "ur-schools": 2,
+  "ur-dal-lake": 3,
+  "ur-craft": 4,
+  "ur-opinion-reporting": 1,
+  // the lead card at the top of each section block
+  "ur-saffron": 2,
+  "ur-power-grid": 3,
+  "ur-shipping": 4,
+  "ur-archive": 1,
+  // the single opinion card
+  "ur-opinion-economy": 2,
 };
 
 /**
@@ -162,6 +188,14 @@ type DemoStory = {
   featured?: boolean;
   video?: number;
   body?: string;
+  /** Defaults to "en". An Urdu story renders right-to-left on the site. */
+  language?: "en" | "ur";
+  /**
+   * Latin text for the generated plate. The plate is drawn by sharp, which has
+   * no Urdu face to fall back on, so an Urdu story still passes its section's
+   * English name here rather than a string that would render as blanks.
+   */
+  kicker?: string;
 };
 
 /**
@@ -408,6 +442,215 @@ const STORIES: DemoStory[] = [
   },
 ];
 
+/**
+ * The Urdu set. Same shape and running order as the English list, written in
+ * Urdu and filed under the Urdu section names the site already maps
+ * (کشمیر, پاکستان, دنیا, رائے, سیاحت, کھیل, ورثہ, کتب خانہ). Plate numbers
+ * start at 29 so they never overwrite an English plate.
+ */
+const STORIES_UR: DemoStory[] = [
+  {
+    slug: "ur-rail-freight",
+    category: "کشمیر",
+    kicker: "KASHMIR",
+    title: "برہ پورہ کی نئی ریل لائن نے شمالی سڑک کا ایک گھنٹہ بچا لیا",
+    summary: "چار سردیوں کے کام کے بعد پل کھل گیا اور باغبانوں کا حساب بدل گیا۔",
+    image: 29,
+    minutesAgo: 12,
+    featured: true,
+    language: "ur",
+    body: "سوپور کے آس پاس کے باغبانوں کے لیے فرق گھنٹوں میں ناپا جاتا ہے۔ جو پھل پہلے فیری کی قطار میں سردی میں بیٹھا رہتا تھا، اب صبح ٹھنڈی رہتے ہوئے شاہراہ تک پہنچ جاتا ہے۔\n\n## چار سردیوں کا کام\n\nپل ٹکڑوں میں ڈھالا گیا اور ہر ٹکڑا موسم نے روکا۔ انجینئروں نے پالے کے دنوں کا کیلنڈر رکھا اور دوسری سردی تقریباً پوری ضائع ہوئی۔\n\n> ہم نے موسم کو نہیں ہرایا۔ ہم نے اس کے گرد کام کرنا سیکھا۔\n\nاصل سوال یہ ہے کہ سڑک آگے کیا لاتی ہے۔ جنوبی راستے پر دو پٹرول پمپ اور ایک کولڈ اسٹور کے لیے سروے ہو چکا ہے۔",
+  },
+  {
+    slug: "ur-handloom",
+    category: "کشمیر",
+    kicker: "KASHMIR",
+    title: "ہتھ کڑھائی کے دستکاروں کو ایک دہائی بعد پہلا برآمدی آرڈر ملا",
+    summary: "تین گاؤں کے چالیس گھرانے اگلی بہار یورپی خریدار کو مال بھیجیں گے۔",
+    image: 30,
+    minutesAgo: 25,
+    language: "ur",
+  },
+  {
+    slug: "ur-saffron",
+    category: "کشمیر",
+    kicker: "KASHMIR",
+    title: "زعفران کے کاشتکار مختصر اور تیز فصل کی طرف دیکھ رہے ہیں",
+    summary: "گرم خزاں نے چنائی کا وقت دس دن آگے بڑھا دیا ہے۔",
+    image: 31,
+    minutesAgo: 140,
+    language: "ur",
+  },
+  {
+    slug: "ur-schools",
+    category: "کشمیر",
+    kicker: "KASHMIR",
+    title: "برف باری کے بعد بلند علاقوں کے اسکول دوبارہ کھل گئے",
+    summary: "تقریباً نو سو طلبہ کلاسوں میں واپس آئے، سڑکیں صاف کر دی گئی ہیں۔",
+    image: 32,
+    minutesAgo: 75,
+    video: 1,
+    language: "ur",
+  },
+  {
+    slug: "ur-trade-lane",
+    category: "پاکستان",
+    kicker: "PAKISTAN",
+    title: "شمالی راستے پر تجارتی گلیارے کی دوسری لین کھل گئی",
+    summary: "سڑک کی مرمت کے بعد مال بردار گاڑیوں کی تعداد دوگنی ہو گئی۔",
+    image: 33,
+    minutesAgo: 40,
+    language: "ur",
+  },
+  {
+    slug: "ur-power-grid",
+    category: "پاکستان",
+    kicker: "PAKISTAN",
+    title: "شمالی پٹی کے لیے دوسرا گرڈ لنک بجلی مستحکم کرے گا",
+    summary: "انجینئروں نے دو نئی ٹرانسمیشن لائنوں میں سے پہلی چالو کر دی۔",
+    image: 34,
+    minutesAgo: 170,
+    language: "ur",
+  },
+  {
+    slug: "ur-markets",
+    category: "پاکستان",
+    kicker: "PAKISTAN",
+    title: "مارکیٹیں ہفتے بھر کے اتار چڑھاؤ کے بعد مستحکم ہو گئیں",
+    summary: "شپنگ بحال ہونے پر توانائی کی قیمتوں نے ابتدائی نقصان پورا کر لیا۔",
+    image: 35,
+    minutesAgo: 230,
+    language: "ur",
+  },
+  {
+    slug: "ur-summit",
+    category: "دنیا",
+    kicker: "WORLD",
+    title: "موسمیاتی اجلاس محتاط ٹائم ٹیبل پر ختم ہوا",
+    summary: "وفود نے جائزے کا طریقہ طے کر لیا، مالی معاملہ کھلا رہ گیا۔",
+    image: 36,
+    minutesAgo: 48,
+    language: "ur",
+  },
+  {
+    slug: "ur-shipping",
+    category: "دنیا",
+    kicker: "WORLD",
+    title: "آبنائے میں رکاوٹ کے باعث شپنگ کمپنیوں نے راستے بدل لیے",
+    summary: "دو کمپنیوں نے جنوبی راستے کے شیڈول میں ایک ہفتہ بڑھا دیا۔",
+    image: 37,
+    minutesAgo: 200,
+    language: "ur",
+  },
+  {
+    slug: "ur-aid",
+    category: "دنیا",
+    kicker: "WORLD",
+    title: "سیلابی پٹی میں امدادی اداروں نے کام بڑھا دیا",
+    summary: "تین اضلاع اب بھی کٹے ہوئے ہیں اور سڑک کا موقع تنگ ہو رہا ہے۔",
+    image: 38,
+    minutesAgo: 60,
+    language: "ur",
+  },
+  {
+    slug: "ur-opinion-reporting",
+    category: "رائے",
+    kicker: "OPINION",
+    title: "رائے: مقامی صحافت اب بھی اپنی کمائی سے مہنگی ہے",
+    summary: "اچھی صحافت ایک عوامی خدمت ہے جس کی قیمت یہاں کوئی مارکیٹ ادا نہیں کرتی۔",
+    image: 39,
+    minutesAgo: 110,
+    video: 4,
+    language: "ur",
+  },
+  {
+    slug: "ur-opinion-economy",
+    category: "رائے",
+    kicker: "OPINION",
+    title: "رائے: وادی کی معیشت کو ایک موسم نہیں، ایک دہائی چاہیے",
+    summary: "چھوٹی مداخلتیں وہ افق بار بار چوک دیتی ہیں جو سرمایہ کاری کو درکار ہے۔",
+    image: 40,
+    minutesAgo: 260,
+    language: "ur",
+  },
+  {
+    slug: "ur-dal-lake",
+    category: "سیاحت",
+    kicker: "TOURISM",
+    title: "ڈل جھیل، شہر کے بیدار ہونے سے پہلے",
+    summary: "کشتی والوں، سبزی اگانے والوں اور تاجروں کے ساتھ صبح کی ایک سفر۔",
+    image: 41,
+    minutesAgo: 88,
+    video: 2,
+    language: "ur",
+  },
+  {
+    slug: "ur-gardens",
+    category: "سیاحت",
+    kicker: "TOURISM",
+    title: "مغل باغات میں بہار کا پہلا ہفتہ",
+    summary: "درختوں پر پھول کھل گئے اور شہر نے اپنا پرانا میلہ یاد کیا۔",
+    image: 42,
+    minutesAgo: 300,
+    language: "ur",
+  },
+  {
+    slug: "ur-cricket",
+    category: "کھیل",
+    kicker: "SPORTS",
+    title: "خواتین کرکٹ لیگ ضلع بھر میں پھیل گئی",
+    summary: "نئے کلب اور کوچ اسکول کے میدانوں سے آگے راستے بنا رہے ہیں۔",
+    image: 43,
+    minutesAgo: 340,
+    language: "ur",
+  },
+  {
+    slug: "ur-football",
+    category: "کھیل",
+    kicker: "SPORTS",
+    title: "پہاڑی فٹبال کی نسل آگے بڑھ رہی ہے",
+    summary: "نوجوان کھلاڑی دور دراز کے میدانوں کو آزمائش کی جگہ بنا رہے ہیں۔",
+    image: 44,
+    minutesAgo: 380,
+    language: "ur",
+  },
+  {
+    slug: "ur-craft",
+    category: "ورثہ",
+    kicker: "HERITAGE",
+    title: "کشمیر کی زندہ دستکاری کو زندہ رکھنے والے ہاتھ",
+    summary: "ان کارگاہوں کے اندر جہاں صبر، یاد اور مہارت ہر گرہ بناتی ہے۔",
+    image: 45,
+    minutesAgo: 96,
+    video: 3,
+    language: "ur",
+  },
+  {
+    slug: "ur-archive",
+    category: "کتب خانہ",
+    kicker: "LIBRARY",
+    title: "محفوظات سے: ریڈیو کے وہ ٹیپ جو اپنے اسٹیشن سے زیادہ جیے",
+    summary: "ایک ضلعی دفتر میں ملے ریل ٹیپ صاف اور فہرست بند کیے جا رہے ہیں۔",
+    image: 46,
+    minutesAgo: 420,
+    language: "ur",
+    body: "نو گتے کے ڈبے، بری طرح رکھے ہوئے، ایک ایسے اسٹیشن کی چار دہائیاں سمیٹے ہوئے تھے جو اب نہیں ہے۔ ٹیپ نازک تھے اور لیبل تین مختلف ہاتھوں میں لکھے گئے تھے۔\n\n## ٹیپ پر کیا بچا\n\nمجموعے میں خبریں بھی ہیں اور ایک موسیقی کا پروگرام بھی جس کا میزبان اب دادا ہے۔ محافظین ہر ریل کو صاف، ڈیجیٹل اور فہرست بند کر رہے ہیں۔\n\nاسٹیشن کو یاد رکھنے والے سامعین نے پہلے ہی فہرست میں تصحیح کے لیے خط لکھ دیے ہیں۔",
+  },
+  {
+    slug: "ur-reading-room",
+    category: "کتب خانہ",
+    kicker: "LIBRARY",
+    title: "بارہ ہزار کتابوں کے ساتھ پڑھنے کا کمرہ دوبارہ کھل گیا",
+    summary: "ستر کی دہائی میں دیا گیا نجی ذخیرہ آخرکار فہرست بند ہو کر کھل گیا۔",
+    image: 47,
+    minutesAgo: 470,
+    language: "ur",
+  },
+];
+
+/** Both sets, so one pass seeds whichever language the build will show. */
+const ALL_STORIES: DemoStory[] = [...STORIES, ...STORIES_UR];
+
 function bodyFor(story: DemoStory): string {
   return (
     story.body ??
@@ -432,17 +675,22 @@ async function main(): Promise<void> {
     return;
   }
 
+  const lendPlates = process.argv.includes("--lend");
+
   // The clips are pre-recorded; the covers are drawn below.
   const missing = [1, 2, 3, 4].map(clipFile).filter((file) => !existsSync(file));
 
   if (missing.length > 0) {
-    console.warn(`[seed-demo] note: ${missing.length} demo clip(s) missing from uploads/.`);
+    console.warn(
+      `[seed-demo] note: ${missing.length} demo clip(s) missing from ${COVER_DIR} — ` +
+        `the video stories will still render, but their players will not play.`,
+    );
   }
 
   // Replace rather than accumulate, so the fixture is always exactly this set.
   await clean();
 
-  for (const story of STORIES) {
+  for (const story of ALL_STORIES) {
     const shot = PHOTO_SLOTS[story.slug];
     await db.insert(stories).values({
       id: crypto.randomUUID(),
@@ -450,7 +698,7 @@ async function main(): Promise<void> {
       category: story.category,
       title: story.title,
       summary: story.summary,
-      language: "en",
+      language: story.language ?? "en",
       body: bodyFor(story),
       author: "Demo Desk",
       imageKey: "lead",
@@ -469,48 +717,64 @@ async function main(): Promise<void> {
   }
 
   // Draw one branded plate per demo story, replacing whatever was there.
-  for (const story of STORIES) {
+  for (const story of ALL_STORIES) {
     await renderCover(thumbFile(story.image), {
-      kicker: story.category,
+      kicker: story.kicker ?? story.category,
       index: story.image - 1,
     });
   }
 
-  /*
-   * Every other published row is lent a plate as well, so the review page never
-   * shows the same bundled photograph twice. Existing covers are left alone.
-   */
-  const others = await db
-    .select({
-      id: stories.id,
-      slug: stories.slug,
-      category: stories.category,
-      heroImageUrl: stories.heroImageUrl,
-    })
-    .from(stories)
-    .where(or(isNull(stories.heroImageUrl), eq(stories.heroImageUrl, "")));
-
   let lent = 0;
-  for (const [position, row] of others.entries()) {
-    const key = row.slug.replace(/[^a-z0-9-]/gi, "").slice(0, 60) || `row-${position}`;
-    await renderCover(plateFile(key), {
-      kicker: row.category,
-      index: position + STORIES.length,
-    });
-    await db
-      .update(stories)
-      .set({ heroImageUrl: plate(key) })
-      .where(eq(stories.id, row.id));
-    lent += 1;
+  if (lendPlates) {
+    /*
+     * `--lend` only. Plates every other published row that has no cover, so a
+     * review page never shows the same bundled photograph twice. It writes to
+     * rows this script does not own, and the plates are stamped "DEMO", so it
+     * stays opt-in rather than something a plain run does to a live database.
+     */
+    const others = await db
+      .select({
+        id: stories.id,
+        slug: stories.slug,
+        category: stories.category,
+        heroImageUrl: stories.heroImageUrl,
+      })
+      .from(stories)
+      .where(or(isNull(stories.heroImageUrl), eq(stories.heroImageUrl, "")));
+
+    for (const [position, row] of others.entries()) {
+      const key = row.slug.replace(/[^a-z0-9-]/gi, "").slice(0, 60) || `row-${position}`;
+      await renderCover(plateFile(key), {
+        kicker: row.category,
+        index: position + ALL_STORIES.length,
+      });
+      await db
+        .update(stories)
+        .set({ heroImageUrl: plate(key) })
+        .where(eq(stories.id, row.id));
+      lent += 1;
+    }
   }
 
-  const sections = [...new Set(STORIES.map((s) => s.category))].sort();
+  const english = ALL_STORIES.filter((story) => (story.language ?? "en") === "en");
+  const urdu = ALL_STORIES.filter((story) => story.language === "ur");
+  const sections = [...new Set(english.map((story) => story.category))].sort();
+
   console.log(
-    `[seed-demo] inserted ${STORIES.length} demo stories ` +
-      `(${STORIES.filter((s) => s.video).length} with video) across ${sections.join(", ")}`,
+    `[seed-demo] inserted ${english.length} English stories ` +
+      `(${english.filter((story) => story.video).length} with video) ` +
+      `across ${sections.join(", ")}`,
   );
   console.log(
-    `[seed-demo] drew ${STORIES.length + lent} branded covers (${lent} lent to other rows)`,
+    `[seed-demo] inserted ${urdu.length} Urdu stories ` +
+      `(${urdu.filter((story) => story.video).length} with video)`,
+  );
+  console.log(
+    `[seed-demo] drew ${ALL_STORIES.length + lent} branded covers (${lent} lent to other rows)`,
+  );
+  console.log(
+    `[seed-demo] the site shows one language per build: review the Urdu set with ` +
+      `SITE_LANG=ur npm run build`,
   );
   console.log(`[seed-demo] remove them with: npm run db:seed-demo -- --clean`);
 }
