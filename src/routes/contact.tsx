@@ -78,11 +78,11 @@ function ContactPage() {
       <SiteHeader settings={settings} />
 
       <main className="page-shell py-12 lg:py-16">
-        <div className="border-b-2 border-foreground pb-4">
-          <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+        <div className="border-b border-border pb-4">
+          <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
             Get in touch
           </p>
-          <h1 className="mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
+          <h1 className="mt-1 font-sans text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
             Contact
           </h1>
           <p className="mt-4 max-w-prose text-base leading-relaxed text-muted-foreground">
@@ -96,7 +96,7 @@ function ContactPage() {
               const Icon = item.Icon;
               const body = (
                 <>
-                  <Icon className="size-5 text-primary" aria-hidden="true" />
+                  <Icon className="size-5 text-brand-blue" aria-hidden="true" />
                   <p className="text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase">
                     {item.label}
                   </p>
@@ -110,14 +110,14 @@ function ContactPage() {
                   href={item.href}
                   target={item.href.startsWith("http") ? "_blank" : undefined}
                   rel={item.href.startsWith("http") ? "noreferrer" : undefined}
-                  className="grid content-start gap-3 border-2 border-foreground bg-card p-6 transition-colors hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  className="grid content-start gap-3 rounded-card border border-border bg-card p-6 shadow-card transition-colors hover:bg-navy hover:text-navy-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 >
                   {body}
                 </a>
               ) : (
                 <div
                   key={item.key}
-                  className="grid content-start gap-3 border-2 border-foreground bg-card p-6"
+                  className="grid content-start gap-3 rounded-card border border-border bg-card p-6 shadow-card"
                 >
                   {body}
                 </div>
@@ -125,8 +125,8 @@ function ContactPage() {
             })}
           </div>
         ) : (
-          <div className="mt-10 grid justify-items-start gap-3 border-2 border-foreground bg-card px-5 py-12">
-            <h2 className="font-display text-3xl">Contact details coming soon</h2>
+          <div className="mt-10 grid justify-items-start gap-3 rounded-card border border-border bg-card px-5 py-12 shadow-card">
+            <h2 className="font-sans text-3xl">Contact details coming soon</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
               Our contact details have not been published yet. Please check back shortly.
             </p>
@@ -134,8 +134,8 @@ function ContactPage() {
         )}
 
         {social.length > 0 ? (
-          <div className="mt-12 border-t-2 border-foreground pt-8">
-            <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+          <div className="mt-12 border-t border-border pt-8">
+            <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
               Follow us
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
@@ -148,9 +148,9 @@ function ContactPage() {
                     target="_blank"
                     rel="noreferrer"
                     className={cn(
-                      "inline-flex items-center gap-2 border-2 border-foreground px-4 py-3",
+                      "inline-flex items-center gap-2 border border-border px-4 py-3",
                       "text-[11px] font-black tracking-[0.12em] uppercase transition-colors",
-                      "hover:bg-foreground hover:text-background",
+                      "hover:bg-navy hover:text-navy-foreground",
                       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     )}
                   >

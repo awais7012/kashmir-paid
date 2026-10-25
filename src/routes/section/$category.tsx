@@ -61,9 +61,9 @@ function SectionPage() {
       <SiteHeader settings={settings} />
 
       <main className="page-shell py-8 lg:py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-3">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-3">
           <div>
-            <p className="text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
+            <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
               Section
             </p>
             <h1
@@ -71,7 +71,7 @@ function SectionPage() {
               className={cn(
                 // A section name is editor-supplied and can be long or a single
                 // unbroken word, so it wraps rather than overflowing the page.
-                "mt-1 font-display text-3xl leading-[1.2] font-bold break-words sm:text-4xl",
+                "mt-1 text-[clamp(1.75rem,5vw,2.5rem)] leading-tight font-extrabold tracking-tight break-words",
                 urduLabel && URDU_TEXT_CLASS,
               )}
             >
@@ -108,7 +108,7 @@ function SectionPage() {
           )
         ) : (
           <div className="mt-6 grid justify-items-start gap-3 rounded-card border border-border bg-card px-5 py-8 shadow-card">
-            <h2 className="font-display text-xl font-bold">Nothing filed here yet</h2>
+            <h2 className="text-xl font-extrabold tracking-tight">Nothing filed here yet</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
               There is no published story in {label} so far. Stories appear here as soon as they are
               published in this category.
@@ -116,13 +116,13 @@ function SectionPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/news"
-                className="rounded-sm bg-primary px-4 py-2.5 text-xs font-black tracking-[0.12em] text-primary-foreground uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="rounded-sm bg-navy px-4 py-2.5 text-xs font-black tracking-[0.12em] text-navy-foreground uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 All stories
               </Link>
               <Link
                 to="/"
-                className="rounded-sm px-4 py-2.5 text-xs font-black tracking-[0.12em] uppercase hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="rounded-sm px-4 py-2.5 text-xs font-black tracking-[0.12em] uppercase hover:text-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 Go home
               </Link>

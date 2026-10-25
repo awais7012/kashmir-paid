@@ -22,11 +22,12 @@ export const STORY_LANGUAGE_OPTIONS: { value: StoryLanguage; label: string }[] =
 export const URDU_TEXT_CLASS = "font-urdu tracking-normal normal-case not-italic leading-[1.7]";
 
 /**
- * Card and list titles. Naskh again, but tighter leading, and the caller adds
- * `line-clamp-3` so a long headline cannot stretch a card.
+ * Card and list titles. Naskh again, but with the generous leading Urdu needs
+ * (1.6–1.8), and the caller adds `line-clamp` so a long headline cannot stretch
+ * a card.
  */
 export const URDU_TITLE_CLASS =
-  "urdu-title font-urdu tracking-normal normal-case not-italic leading-[1.5] line-clamp-3";
+  "urdu-title font-urdu tracking-normal normal-case not-italic leading-[1.7] line-clamp-3";
 
 /**
  * Display headlines only — the hero, the masthead wordmark and the closing

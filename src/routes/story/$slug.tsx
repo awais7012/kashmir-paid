@@ -4,12 +4,13 @@ import { ArrowLeft, ArrowRight, Download, Play } from "lucide-react";
 import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
+import { BrandedFallback } from "@/components/story/branded-fallback";
 import { StoryCard } from "@/components/story/story-card";
 import { VideoPlayer } from "@/components/story/video-player";
 import { formatDate, timeAgo } from "@/lib/format";
 import { publicStories } from "@/lib/home-feed";
 import { Markdown } from "@/lib/markdown";
-import { mediaUrl, storyCoverUrl } from "@/lib/media";
+import { mediaUrl } from "@/lib/media";
 import { siteSettingsQueryOptions, slugifyLabel } from "@/lib/site-settings";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import {
@@ -69,7 +70,7 @@ function StoryPage() {
   if (!story && isError) return <StoryNotFound />;
   if (!settings || !story) return <PageShimmer />;
 
-  const cover = storyCoverUrl(story);
+  const cover = mediaUrl(story.hero_image_url);
   const sectionSlug = slugifyLabel(story.category);
   // Related stories obey the same rules as every other list: site language, no
   // test copy, and never the story you are already reading.
@@ -104,17 +105,23 @@ function StoryPage() {
         </div>
       ) : (
         <div className="relative h-[clamp(240px,38vh,460px)] w-full overflow-hidden bg-muted">
-          <img
-            src={cover}
-            alt={story.title}
-            width={1536}
-            height={864}
-            className="h-full w-full object-cover"
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-foreground/45 via-transparent to-transparent"
-            aria-hidden="true"
-          />
+          {cover ? (
+            <>
+              <img
+                src={cover}
+                alt={story.title}
+                width={1536}
+                height={864}
+                className="h-full w-full object-cover"
+              />
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-foreground/45 via-transparent to-transparent"
+                aria-hidden="true"
+              />
+            </>
+          ) : (
+            <BrandedFallback category={story.category} />
+          )}
         </div>
       )}
 
@@ -127,7 +134,7 @@ function StoryPage() {
             params={{ category: sectionSlug }}
             {...textAttrs}
             className={cn(
-              "inline-flex items-center gap-2 text-[11px] font-black tracking-[0.12em] uppercase hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+              "inline-flex items-center gap-2 text-[11px] font-black tracking-[0.12em] text-brand-blue uppercase hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue",
               urdu && URDU_TEXT_CLASS,
             )}
           >
@@ -139,7 +146,7 @@ function StoryPage() {
             <span
               {...textAttrs}
               className={cn(
-                "bg-primary px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-primary-foreground uppercase",
+                "bg-navy px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-navy-foreground uppercase",
                 urdu && URDU_TEXT_CLASS,
               )}
             >
@@ -156,7 +163,7 @@ function StoryPage() {
           <h1
             {...textAttrs}
             className={cn(
-              "mt-7 font-display text-[clamp(2rem,3.6vw,3rem)] leading-[1.15] font-bold break-words",
+              "mt-6 text-[clamp(2.25rem,3.4vw,2.75rem)] leading-[1.15] font-extrabold tracking-tight break-words",
               urdu && URDU_TEXT_CLASS,
             )}
           >
@@ -166,7 +173,7 @@ function StoryPage() {
           <p
             {...textAttrs}
             className={cn(
-              "mt-8 font-display text-xl leading-snug text-muted-foreground italic sm:text-2xl",
+              "mt-6 text-lg leading-relaxed text-muted-foreground sm:text-xl",
               urdu && URDU_TEXT_CLASS,
             )}
           >
@@ -208,11 +215,11 @@ function StoryPage() {
             </div>
           ) : null}
 
-          <div className="mt-16 border-t-2 border-foreground pt-6">
+          <div className="mt-16 border-t border-border pt-6">
             <Link
               to="/section/$category"
               params={{ category: sectionSlug }}
-              className="inline-flex items-center gap-2 text-xs font-black tracking-[0.12em] uppercase hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="inline-flex items-center gap-2 text-xs font-black tracking-[0.12em] text-brand-blue uppercase hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
             >
               More from {story.category}
               <ArrowRight className="size-4" />
@@ -222,7 +229,7 @@ function StoryPage() {
 
         {related.length > 0 ? (
           <section className="page-shell border-t border-border py-8">
-            <h2 className="font-display text-2xl font-bold">More stories</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight">More stories</h2>
             <div className="mt-6 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((item) => (
                 <StoryCard key={item.id} story={item} />
@@ -241,19 +248,19 @@ function StoryMessage({ heading, body }: { heading: string; body: string }) {
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4 text-foreground">
       <div className="max-w-md">
-        <p className="font-display text-6xl leading-none">404</p>
-        <h1 className="mt-4 font-display text-3xl">{heading}</h1>
+        <p className="text-6xl leading-none font-black">404</p>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight">{heading}</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             to="/"
-            className="bg-foreground px-4 py-3 text-xs font-black tracking-[0.12em] text-background uppercase hover:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="rounded-sm bg-navy px-4 py-3 text-xs font-black tracking-[0.12em] text-navy-foreground uppercase hover:bg-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
           >
             Go home
           </Link>
           <Link
             to="/news"
-            className="border-2 border-foreground px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="rounded-sm border border-border px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-navy hover:text-navy-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
           >
             All stories
           </Link>

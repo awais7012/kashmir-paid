@@ -39,13 +39,13 @@ function NewsIndex() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
 
-      <main className="page-shell py-12 lg:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-4">
+      <main className="page-shell py-8 lg:py-10">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+            <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
               The desk
             </p>
-            <h1 className="mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
+            <h1 className="mt-1 text-[clamp(1.75rem,5vw,2.75rem)] leading-tight font-extrabold tracking-tight">
               News
             </h1>
           </div>
@@ -54,7 +54,7 @@ function NewsIndex() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {stories.map((story) => (
             <StoryCard key={story.id} story={story} variant="large" />
           ))}

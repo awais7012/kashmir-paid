@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { Motif } from "@/components/site/motif";
 import { BRAND_LOGO } from "@/lib/brand";
 import { t } from "@/lib/i18n";
 import { publicStories } from "@/lib/home-feed";
@@ -21,11 +20,12 @@ const QUICK_LINKS = [
   { to: "/contact", labelKey: "contact" },
 ] as const;
 
+/** The shared footer: solid navy, with the brand, sections, contact and social. */
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const { data: stories = [] } = useQuery(storiesQueryOptions);
   const social = socialLinks(settings);
 
-  // Sections are free-text on a story, so the counts come from the feed rather
+  // Sections are free text on a story, so the counts come from the feed rather
   // than a fixed list, and a section with nothing in it is never shown.
   const sections = (() => {
     const counts = new Map<string, number>();
@@ -44,10 +44,9 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
   ].filter((item) => item.value.trim() !== "");
 
   return (
-    <footer className="surface-navy relative text-navy-foreground">
-      <Motif />
-      <div className="page-shell section-pad relative z-10">
-        <div className="grid gap-10 border-b border-navy-foreground/15 pb-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+    <footer className="bg-navy text-navy-foreground">
+      <div className="page-shell section-pad">
+        <div className="grid gap-10 border-b border-navy-foreground/15 pb-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div>
             <Link
               to="/"
@@ -57,11 +56,11 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               <img
                 src={BRAND_LOGO}
                 alt=""
-                width={1254}
-                height={1254}
-                className="size-14 rounded-full bg-white object-cover"
+                width={160}
+                height={160}
+                className="size-12 rounded-full bg-white object-cover"
               />
-              <span className="font-display text-3xl leading-[0.95] font-black uppercase sm:text-4xl">
+              <span className="font-display text-2xl leading-[0.95] font-black uppercase sm:text-3xl">
                 Global Kashmir <span className="text-sky">TV</span>
               </span>
             </Link>

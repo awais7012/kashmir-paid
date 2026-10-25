@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
+import { BreakingStrip } from "@/components/site/breaking-strip";
 import { LiveButton } from "@/components/site/live-button";
 import { UtilityBar } from "@/components/site/utility-bar";
+import { CategoryChip } from "@/components/story/category-chip";
 import { BRAND_LOGO } from "@/lib/brand";
 import { publicStories } from "@/lib/home-feed";
 import { t } from "@/lib/i18n";
@@ -14,11 +16,11 @@ import { storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEM_CLASS =
-  "relative py-2 text-[12px] font-black tracking-[0.1em] uppercase text-navy-foreground/85 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky";
+  "relative py-2 text-[12px] font-bold tracking-[0.06em] uppercase text-navy-foreground/85 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky";
 
 /** The active section is marked with the brand green, not just a colour change. */
 const NAV_ACTIVE_CLASS =
-  "text-white after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:bg-green";
+  "text-white after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-green";
 
 const NAV_LINKS = [
   { to: "/schedule", labelKey: "schedule" },
@@ -27,7 +29,7 @@ const NAV_LINKS = [
   { to: "/contact", labelKey: "contact" },
 ] as const;
 
-/** Scroll past this and the masthead sheds the utility bar and shrinks. */
+/** Scroll past this and the masthead sheds the utility bar and tightens up. */
 const COMPACT_AT_PX = 12;
 
 export function SiteHeader({ settings }: { settings: SiteSettings }) {
@@ -41,8 +43,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 
   // Shares the cache key with the homepage loader, so this usually costs nothing.
   const { data: fetched = [] } = useQuery(storiesQueryOptions);
-  // The masthead obeys the same rule as the page: no test copy. Otherwise the
-  // ticker would announce a story the page hides.
+  // The masthead obeys the same rule as the page: one language, no test copy.
   const stories = useMemo(() => publicStories(fetched), [fetched]);
 
   useEffect(() => {
@@ -52,8 +53,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // A drawer that swallows Escape or leaves focus behind is a trap, so both
-  // are handled here rather than left to the browser.
+  // A drawer that swallows Escape or leaves focus behind is a trap, so both are
+  // handled here rather than left to the browser.
   useEffect(() => {
     if (!drawerOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -98,135 +99,59 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const navLinks = NAV_LINKS.map((link) => ({ to: link.to, label: t[link.labelKey] }));
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 bg-card shadow-header">
+      {/* 1. Top bar — the tagline, the desk's contact details and social links. */}
       <UtilityBar
-        stories={stories.slice(0, 5)}
+        tagline={t.brandTagline}
+        phone={settings.contact.phone}
+        email={settings.contact.email}
         social={social}
         className={cn(
           "overflow-hidden transition-all duration-300 motion-reduce:transition-none",
-          compact ? "max-h-0 opacity-0" : "max-h-12 opacity-100",
+          compact ? "max-h-0 opacity-0" : "max-h-10 opacity-100",
         )}
       />
 
-      <div
-        className={cn(
-          "bg-navy text-navy-foreground transition-shadow duration-300 motion-reduce:transition-none",
-          compact && "shadow-header",
-        )}
-      >
+      {/* 2. Brand row — white: logo, tagline, search and WATCH LIVE. */}
+      <div className="border-b border-border bg-card">
         <div className="page-shell flex items-center gap-4 py-2.5">
           <Link
             to="/"
             aria-label="Global Kashmir TV, home"
-            className="flex min-w-0 shrink-0 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky"
+            className="flex min-w-0 shrink-0 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
           >
             <img
               src={BRAND_LOGO}
               alt=""
-              width={1254}
-              height={1254}
+              width={160}
+              height={160}
               className={cn(
                 "rounded-full bg-white object-cover transition-all duration-300 motion-reduce:transition-none",
                 compact ? "size-9" : "size-10 sm:size-12",
               )}
             />
-            <span
-              className={cn(
-                "hidden font-display leading-none font-black tracking-tight whitespace-nowrap uppercase transition-all duration-300 motion-reduce:transition-none sm:block",
-                compact ? "text-lg" : "text-xl lg:text-2xl",
-              )}
-            >
-              Global Kashmir <span className="text-sky">TV</span>
+            <span className="min-w-0">
+              <span
+                className={cn(
+                  "block font-display leading-none font-black tracking-tight whitespace-nowrap uppercase transition-all duration-300 motion-reduce:transition-none",
+                  compact ? "text-lg" : "text-xl lg:text-2xl",
+                )}
+              >
+                Global Kashmir <span className="text-brand-blue">TV</span>
+              </span>
+              <span className="mt-0.5 hidden text-[11px] font-semibold text-muted-foreground lg:block">
+                {t.brandTagline}
+              </span>
             </span>
           </Link>
 
-          <nav
-            aria-label="Main navigation"
-            className="hidden min-w-0 flex-1 items-center justify-center gap-7 lg:flex"
-          >
-            <Link to="/" className={cn(NAV_ITEM_CLASS, pathname === "/" && NAV_ACTIVE_CLASS)}>
-              {t.home}
-            </Link>
-
-            <div
-              className="relative"
-              onMouseEnter={() => setNewsOpen(true)}
-              onMouseLeave={() => setNewsOpen(false)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") setNewsOpen(false);
-              }}
-            >
-              <button
-                type="button"
-                aria-expanded={newsOpen}
-                aria-haspopup="true"
-                onClick={() => setNewsOpen((open) => !open)}
-                className={cn(
-                  NAV_ITEM_CLASS,
-                  "inline-flex items-center gap-1.5",
-                  newsActive && NAV_ACTIVE_CLASS,
-                )}
-              >
-                {t.news}
-                <ChevronDown
-                  aria-hidden="true"
-                  className={cn("size-3.5 transition-transform", newsOpen && "rotate-180")}
-                />
-              </button>
-
-              {newsOpen ? (
-                <div className="absolute top-full start-0 z-50 grid w-60 border border-border bg-card py-1 text-foreground shadow-lift">
-                  <Link
-                    to="/news"
-                    onClick={() => setNewsOpen(false)}
-                    className="px-4 py-2.5 text-start text-[11px] font-black tracking-[0.1em] uppercase hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
-                  >
-                    {t.allNews}
-                  </Link>
-                  {categories.map((name) => (
-                    <Link
-                      key={name}
-                      to="/section/$category"
-                      params={{ category: slugifyLabel(name) }}
-                      onClick={() => setNewsOpen(false)}
-                      className={cn(
-                        "px-4 py-2.5 text-start text-[11px] font-bold tracking-[0.08em] uppercase hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
-                        looksUrdu(name) && URDU_TEXT_CLASS,
-                      )}
-                    >
-                      {name}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <Link
-              to="/section/$category"
-              params={{ category: "videos" }}
-              className={cn(NAV_ITEM_CLASS, pathname === "/section/videos" && NAV_ACTIVE_CLASS)}
-            >
-              {t.videos}
-            </Link>
-
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={cn(NAV_ITEM_CLASS, pathname === link.to && NAV_ACTIVE_CLASS)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="ms-auto flex shrink-0 items-center gap-2 lg:ms-0">
+          <div className="ms-auto flex shrink-0 items-center gap-2">
             <button
               type="button"
               aria-label={t.search}
               aria-expanded={searchOpen}
               onClick={() => setSearchOpen((open) => !open)}
-              className="grid size-10 place-items-center rounded-sm text-navy-foreground transition-colors hover:bg-navy-foreground/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+              className="grid size-10 place-items-center rounded-sm text-navy transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
             >
               <Search className="size-4" />
             </button>
@@ -238,7 +163,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               aria-label={t.openMenu}
               aria-expanded={drawerOpen}
               onClick={() => setDrawerOpen(true)}
-              className="grid size-10 place-items-center rounded-sm bg-navy-foreground/10 text-navy-foreground transition-colors hover:bg-navy-foreground/20 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky lg:hidden"
+              className="grid size-10 place-items-center rounded-sm bg-secondary text-navy transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue lg:hidden"
             >
               <Menu className="size-5" />
             </button>
@@ -246,7 +171,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         </div>
 
         {searchOpen ? (
-          <div className="border-t border-navy-foreground/15 bg-navy-deep">
+          <div className="border-t border-border bg-background">
             <div className="page-shell py-4">
               <label className="sr-only" htmlFor="site-search">
                 {t.searchStories}
@@ -259,19 +184,19 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className="min-w-0 rounded-sm border border-navy-foreground/25 bg-navy px-4 py-2.5 text-sm text-white placeholder:text-navy-foreground/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  className="min-w-0 rounded-sm border border-border bg-card px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 />
                 <button
                   type="button"
                   onClick={() => setSearchOpen(false)}
                   aria-label={t.closeSearch}
-                  className="grid size-11 place-items-center rounded-sm bg-navy-foreground/10 text-navy-foreground hover:bg-navy-foreground/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
+                  className="grid size-11 place-items-center rounded-sm bg-secondary text-navy hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
                 >
                   <X className="size-5" />
                 </button>
               </div>
               {query.trim() ? (
-                <div className="mt-2 grid overflow-hidden rounded-sm border border-border bg-card text-foreground">
+                <div className="mt-2 grid overflow-hidden rounded-card border border-border bg-card text-foreground shadow-card">
                   {matches.length > 0 ? (
                     matches.map((story) => (
                       <Link
@@ -279,17 +204,9 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                         to="/story/$slug"
                         params={{ slug: story.slug }}
                         onClick={() => setSearchOpen(false)}
-                        className="grid grid-cols-[auto_minmax(0,1fr)] gap-4 border-b border-border p-3 last:border-b-0 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+                        className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b border-border p-3 last:border-b-0 hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
                       >
-                        <span
-                          {...storyTextAttrs(story.language)}
-                          className={cn(
-                            "text-[10px] font-black text-green uppercase",
-                            looksUrdu(story.category) && URDU_TEXT_CLASS,
-                          )}
-                        >
-                          {story.category}
-                        </span>
+                        <CategoryChip label={story.category} />
                         <span
                           {...storyTextAttrs(story.language)}
                           className={cn(
@@ -311,6 +228,98 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
         ) : null}
       </div>
 
+      {/* 3. Nav bar — navy, with a green underline on the active item. */}
+      <div className="bg-navy text-navy-foreground">
+        <nav
+          aria-label="Main navigation"
+          className="page-shell hidden items-center gap-7 py-1.5 lg:flex"
+        >
+          <Link to="/" className={cn(NAV_ITEM_CLASS, pathname === "/" && NAV_ACTIVE_CLASS)}>
+            {t.home}
+          </Link>
+
+          <div
+            className="relative"
+            onMouseEnter={() => setNewsOpen(true)}
+            onMouseLeave={() => setNewsOpen(false)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setNewsOpen(false);
+            }}
+          >
+            <button
+              type="button"
+              aria-expanded={newsOpen}
+              aria-haspopup="true"
+              onClick={() => setNewsOpen((open) => !open)}
+              className={cn(
+                NAV_ITEM_CLASS,
+                "inline-flex items-center gap-1.5",
+                newsActive && NAV_ACTIVE_CLASS,
+              )}
+            >
+              {t.news}
+              <ChevronDown
+                aria-hidden="true"
+                className={cn("size-3.5 transition-transform", newsOpen && "rotate-180")}
+              />
+            </button>
+
+            {newsOpen ? (
+              <div className="absolute top-full start-0 z-50 grid w-60 rounded-card border border-border bg-card py-1 text-foreground shadow-lift">
+                <Link
+                  to="/news"
+                  onClick={() => setNewsOpen(false)}
+                  className="px-4 py-2.5 text-start text-[11px] font-black tracking-[0.1em] uppercase hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring"
+                >
+                  {t.allNews}
+                </Link>
+                {categories.map((name) => (
+                  <Link
+                    key={name}
+                    to="/section/$category"
+                    params={{ category: slugifyLabel(name) }}
+                    onClick={() => setNewsOpen(false)}
+                    className={cn(
+                      "px-4 py-2.5 text-start text-[11px] font-bold tracking-[0.06em] uppercase hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
+                      looksUrdu(name) && URDU_TEXT_CLASS,
+                    )}
+                  >
+                    {name}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <Link
+            to="/section/$category"
+            params={{ category: "videos" }}
+            className={cn(NAV_ITEM_CLASS, pathname === "/section/videos" && NAV_ACTIVE_CLASS)}
+          >
+            {t.videos}
+          </Link>
+
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={cn(NAV_ITEM_CLASS, pathname === link.to && NAV_ACTIVE_CLASS)}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      {/* 4. Breaking strip — solid red, only when there is something to run. */}
+      {stories.length > 0 ? (
+        <div className="bg-live">
+          <div className="page-shell flex items-center">
+            <BreakingStrip stories={stories.slice(0, 5)} label={settings.ticker.label} />
+          </div>
+        </div>
+      ) : null}
+
       <MobileDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
@@ -325,9 +334,8 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
 }
 
 /**
- * The small-screen menu. It slides in from the edge the page reads towards —
- * the right in English, the left in Urdu — so it feels like it belongs to the
- * page. The WATCH LIVE button stays pinned at the top, where the thumb sits.
+ * The small-screen menu. It slides in from the edge the page reads towards. The
+ * WATCH LIVE button stays pinned at the top, where the thumb sits.
  */
 function MobileDrawer({
   open,
@@ -353,7 +361,7 @@ function MobileDrawer({
   }, [open]);
 
   const itemClass =
-    "border-b border-border py-3 text-start text-sm font-bold text-foreground transition-colors hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+    "border-b border-border py-3 text-start text-sm font-bold text-foreground transition-colors hover:text-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
   return (
     <div className={cn("lg:hidden", !open && "pointer-events-none")}>
@@ -376,19 +384,19 @@ function MobileDrawer({
         /* inert keeps the off-screen links out of the tab order while closed. */
         inert={!open}
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-sm flex-col overflow-y-auto border-l border-border bg-card shadow-lift transition-transform duration-300 motion-reduce:transition-none",
+          "fixed inset-y-0 right-0 z-50 flex w-[85%] max-w-sm flex-col overflow-y-auto border-s border-border bg-card shadow-lift transition-transform duration-300 motion-reduce:transition-none",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between gap-3 border-b-2 border-foreground p-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border p-4">
           <span className="font-display text-xl font-black uppercase">
-            Global Kashmir <span className="text-primary">TV</span>
+            Global Kashmir <span className="text-brand-blue">TV</span>
           </span>
           <button
             type="button"
             aria-label={t.closeMenu}
             onClick={onClose}
-            className="grid size-9 place-items-center rounded-sm border border-border hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="grid size-9 place-items-center rounded-sm border border-border hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <X className="size-5" />
           </button>
@@ -402,7 +410,7 @@ function MobileDrawer({
           <Link
             to="/"
             onClick={onClose}
-            className={cn(itemClass, pathname === "/" && "text-primary")}
+            className={cn(itemClass, pathname === "/" && "text-brand-blue")}
           >
             {t.home}
           </Link>
@@ -414,7 +422,7 @@ function MobileDrawer({
             className={cn(
               itemClass,
               "inline-flex items-center justify-between gap-2",
-              newsActive && "text-primary",
+              newsActive && "text-brand-blue",
             )}
           >
             {t.news}
@@ -429,7 +437,7 @@ function MobileDrawer({
               <Link
                 to="/news"
                 onClick={onClose}
-                className="px-3 py-2.5 text-start text-xs font-black tracking-[0.1em] uppercase hover:text-primary"
+                className="px-3 py-2.5 text-start text-xs font-black tracking-[0.1em] uppercase hover:text-brand-blue"
               >
                 {t.allNews}
               </Link>
@@ -440,7 +448,7 @@ function MobileDrawer({
                   params={{ category: slugifyLabel(name) }}
                   onClick={onClose}
                   className={cn(
-                    "px-3 py-2.5 text-start text-xs font-bold tracking-[0.06em] uppercase hover:text-primary",
+                    "px-3 py-2.5 text-start text-xs font-bold tracking-[0.06em] uppercase hover:text-brand-blue",
                     looksUrdu(name) && URDU_TEXT_CLASS,
                   )}
                 >
@@ -454,7 +462,7 @@ function MobileDrawer({
             to="/section/$category"
             params={{ category: "videos" }}
             onClick={onClose}
-            className={cn(itemClass, pathname === "/section/videos" && "text-primary")}
+            className={cn(itemClass, pathname === "/section/videos" && "text-brand-blue")}
           >
             {t.videos}
           </Link>
@@ -464,7 +472,7 @@ function MobileDrawer({
               key={link.to}
               to={link.to}
               onClick={onClose}
-              className={cn(itemClass, pathname === link.to && "text-primary")}
+              className={cn(itemClass, pathname === link.to && "text-brand-blue")}
             >
               {link.label}
             </Link>

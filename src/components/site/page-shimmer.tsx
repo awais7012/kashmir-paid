@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 
 function Bar({ className }: { className?: string }) {
-  return <div className={cn("shimmer", className)} />;
+  return <div className={cn("shimmer rounded-sm", className)} />;
 }
 
 /**
  * Stands in for a public page while its data is on the way. It is also what a
- * visitor sees when the API is slow or down: the queries keep retrying behind
- * it and the real page replaces it the moment they answer.
+ * visitor sees when the API is slow or down: the queries keep retrying behind it
+ * and the real page replaces it the moment they answer.
  */
 export function PageShimmer() {
   return (
@@ -19,33 +19,40 @@ export function PageShimmer() {
     >
       <span className="sr-only">Loading…</span>
 
-      <div className="bg-card">
+      <div className="bg-navy-deep py-2">
         <div className="page-shell">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b-4 border-foreground py-5 sm:py-7">
-            <div className="min-w-0">
-              <Bar className="h-10 w-4/5 max-w-xl sm:h-16" />
-              <Bar className="mt-3 h-3 w-56 max-w-full" />
-            </div>
-            <Bar className="size-10" />
-          </div>
-          <div className="hidden items-center justify-between border-b border-border py-3 lg:flex">
-            {Array.from({ length: 8 }, (_, index) => (
-              <Bar key={index} className="h-3 w-16" />
-            ))}
-          </div>
+          <Bar className="h-3 w-52 bg-navy-foreground/20" />
+        </div>
+      </div>
+
+      <div className="border-b border-border bg-card">
+        <div className="page-shell flex items-center justify-between gap-4 py-3">
+          <Bar className="h-10 w-52" />
+          <Bar className="h-9 w-32" />
+        </div>
+      </div>
+
+      <div className="bg-navy py-2">
+        <div className="page-shell flex items-center gap-6">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Bar key={index} className="h-3 w-16 bg-navy-foreground/20" />
+          ))}
         </div>
       </div>
 
       <div className="page-shell py-8">
-        <Bar className="min-h-[320px] w-full sm:min-h-[460px]" />
+        <div className="flex items-end justify-between border-b border-border pb-4">
+          <Bar className="h-10 w-64 max-w-[60%]" />
+          <Bar className="h-4 w-24" />
+        </div>
 
-        <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index}>
-              <Bar className="aspect-[16/10] w-full" />
-              <Bar className="mt-4 h-3 w-24" />
-              <Bar className="mt-3 h-7 w-11/12" />
-              <Bar className="mt-2 h-7 w-2/3" />
+            <div key={index} className="grid gap-3">
+              <Bar className="aspect-video w-full" />
+              <Bar className="h-4 w-11/12" />
+              <Bar className="h-4 w-2/3" />
+              <Bar className="h-3 w-24" />
             </div>
           ))}
         </div>
