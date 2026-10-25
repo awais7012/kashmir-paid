@@ -192,7 +192,18 @@ export function StoryCard({
           {story.has_video ? <CategoryChip label={t.video} tone="navy" /> : null}
         </span>
         {story.has_video ? <PlayBadge className="z-10" /> : null}
-        <span className="absolute inset-x-0 bottom-0 z-10 grid gap-2 p-4 pb-5 sm:p-5">
+        {/*
+          The small overlay (the video band) is short — a 16:9 card four to a row
+          is 173px tall — so the centred play badge leaves room for two lines of
+          title and nothing else. The byline is dropped there so the text can
+          never ride up under the badge.
+        */}
+        <span
+          className={cn(
+            "absolute inset-x-0 bottom-0 z-10 grid gap-2",
+            titleSize === "sm" ? "p-3.5 pb-4 sm:p-4" : "p-4 pb-5 sm:p-5",
+          )}
+        >
           <Title
             {...textAttrs}
             className={cn(
@@ -205,7 +216,7 @@ export function StoryCard({
           >
             {story.title}
           </Title>
-          <Byline story={story} tone="light" />
+          {titleSize === "sm" ? null : <Byline story={story} tone="light" />}
         </span>
         <GreenBar />
       </Link>
