@@ -38,6 +38,8 @@ export type StoryVideo = {
 export type StoryDetail = Story & {
   body: string | null;
   video: StoryVideo | null;
+  /** An attached PDF, served from the API; null when there is none. */
+  document_url: string | null;
 };
 
 export type StoryListPage = {
@@ -130,17 +132,26 @@ export async function primeQuery<TData, TKey extends QueryKey>(
   }
 }
 
+/**
+ * The API caps a single page at 100 rows and has no language filter, so the
+ * feed is fetched as one window and filtered in the browser. Asking for the
+ * cap keeps a bilingual archive readable; past 100 published stories this
+ * needs a server-side section or language parameter.
+ */
+const FEED_LIMIT = 100;
+
 /** The homepage feed: every published story. */
 export const storiesQueryOptions = queryOptions({
   queryKey: ["stories", "published"],
-  queryFn: async (): Promise<Story[]> => (await getJson<StoryListPage>("/api/stories")).data,
+  queryFn: async (): Promise<Story[]> =>
+    (await getJson<StoryListPage>(`/api/stories?limit=${FEED_LIMIT}`)).data,
   ...waitForApi,
 });
 
 /** The full index at /news. */
 export const allStoriesQueryOptions = queryOptions({
   queryKey: ["stories", "index"],
-  queryFn: (): Promise<StoryListPage> => getJson<StoryListPage>("/api/stories?limit=60"),
+  queryFn: (): Promise<StoryListPage> => getJson<StoryListPage>(`/api/stories?limit=${FEED_LIMIT}`),
   ...waitForApi,
 });
 
@@ -148,7 +159,9 @@ export function storiesByCategoryQueryOptions(category: string) {
   return queryOptions({
     queryKey: ["stories", "category", category],
     queryFn: (): Promise<StoryListPage> =>
-      getJson<StoryListPage>(`/api/stories?limit=60&category=${encodeURIComponent(category)}`),
+      getJson<StoryListPage>(
+        `/api/stories?limit=${FEED_LIMIT}&category=${encodeURIComponent(category)}`,
+      ),
     ...waitForApi,
   });
 }

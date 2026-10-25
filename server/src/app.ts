@@ -7,6 +7,7 @@ import { env } from "./env.js";
 import { UPLOAD_ROOT } from "./lib/storage.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { adminDocumentsRouter } from "./modules/documents/documents.routes.js";
 import { adminMediaRouter } from "./modules/media/media.routes.js";
 import { adminSettingsRouter, settingsRouter } from "./modules/settings/settings.routes.js";
 import { adminStoriesRouter, storiesRouter } from "./modules/stories/stories.routes.js";
@@ -58,6 +59,7 @@ export function createApp() {
   app.use("/api/stories", storiesRouter);
   app.use("/api/admin/stories", adminStoriesRouter);
   app.use("/api/admin/media", adminMediaRouter);
+  app.use("/api/admin/documents", adminDocumentsRouter);
   app.use("/api/admin/settings", adminSettingsRouter);
 
   app.use(notFoundHandler);

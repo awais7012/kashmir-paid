@@ -51,6 +51,8 @@ export type StoryDto = {
 export type StoryDetailDto = StoryDto & {
   body: string | null;
   video: StoryVideoDto | null;
+  /** An attached PDF, served from /uploads; null when there is none. */
+  document_url: string | null;
 };
 
 function buildVideo(row: StoryRow): StoryVideoDto | null {
@@ -97,6 +99,7 @@ export function toStoryDetailDto(
     ...toStoryDto(row, heroThumbUrl),
     body: row.body,
     video: buildVideo(row),
+    document_url: row.documentUrl,
   };
 }
 
@@ -281,6 +284,7 @@ export async function createStory(input: CreateStoryInput): Promise<StoryRow> {
     imageKey: input.image_key,
     heroImageUrl: textOrNull(input.hero_image_url),
     videoTitle: textOrNull(input.video_title),
+    documentUrl: textOrNull(input.document_url),
     featured: input.featured,
     displayOrder: input.display_order,
     ...videoColumns(input.video_url),
@@ -317,6 +321,7 @@ export async function updateStory(id: string, input: UpdateStoryInput): Promise<
   if (input.image_key !== undefined) patch.imageKey = input.image_key;
   if (input.hero_image_url !== undefined) patch.heroImageUrl = textOrNull(input.hero_image_url);
   if (input.video_title !== undefined) patch.videoTitle = textOrNull(input.video_title);
+  if (input.document_url !== undefined) patch.documentUrl = textOrNull(input.document_url);
   if (input.featured !== undefined) patch.featured = input.featured;
   if (input.display_order !== undefined) patch.displayOrder = input.display_order;
   if (input.published_at !== undefined) patch.publishedAt = input.published_at;

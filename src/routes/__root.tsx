@@ -13,6 +13,10 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+/* Source Serif 4 for headlines, Inter for everything else. */
+const FONTS_HREF =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap";
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -91,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Noto+Nastaliq+Urdu:wght@400;700&family=Work+Sans:wght@400;500;600;700;800;900&display=swap",
+        href: FONTS_HREF,
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
@@ -119,6 +123,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Marks the root once JS is running. Scroll-reveal only hides its blocks when
+  // this class is present, so the page never depends on JS to be readable.
+  useEffect(() => {
+    document.documentElement.classList.add("js");
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

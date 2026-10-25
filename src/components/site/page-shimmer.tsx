@@ -20,7 +20,7 @@ export function PageShimmer() {
       <span className="sr-only">Loading…</span>
 
       <div className="bg-card">
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-8 lg:px-12">
+        <div className="page-shell">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b-4 border-foreground py-5 sm:py-7">
             <div className="min-w-0">
               <Bar className="h-10 w-4/5 max-w-xl sm:h-16" />
@@ -36,7 +36,7 @@ export function PageShimmer() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
+      <div className="page-shell py-8">
         <Bar className="min-h-[320px] w-full sm:min-h-[460px]" />
 
         <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

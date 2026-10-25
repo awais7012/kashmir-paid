@@ -36,11 +36,11 @@ function LivePage() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
 
-      <main className="mx-auto max-w-[1100px] px-4 py-12 sm:px-8 lg:py-16">
+      <main className="page-shell py-12 lg:py-16">
         <div className="flex flex-wrap items-center gap-3">
           {live.isLive ? (
-            <span className="inline-flex items-center gap-2 bg-primary px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-primary-foreground uppercase">
-              <span className="signal-pulse size-2 rounded-full bg-primary-foreground" />
+            <span className="inline-flex items-center gap-2 bg-live px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-live-foreground uppercase">
+              <span className="signal-pulse size-2 rounded-full bg-live-foreground" />
               {startedAt ? `Live since ${startedAt}` : "Live now"}
             </span>
           ) : (

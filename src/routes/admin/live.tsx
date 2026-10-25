@@ -113,7 +113,7 @@ function liveStatus(settings: SiteSettings): LiveStatus {
 }
 
 const TONE_STYLES: Record<LiveStatus["tone"], string> = {
-  live: "border-primary bg-primary/10 text-primary",
+  live: "border-live bg-live/10 text-live",
   off: "border-border bg-muted/40 text-muted-foreground",
   warn: "border-destructive bg-destructive/10 text-destructive",
 };
@@ -269,7 +269,7 @@ function LivePanel({ settings }: { settings: SiteSettings }) {
               aria-hidden="true"
               className={`size-2.5 shrink-0 ${
                 status.tone === "live"
-                  ? "signal-pulse bg-primary"
+                  ? "signal-pulse bg-live"
                   : status.tone === "warn"
                     ? "bg-destructive"
                     : "border-2 border-foreground"

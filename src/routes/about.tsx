@@ -234,8 +234,8 @@ function AboutPage() {
         </section>
 
         <section className="border-y-2 border-foreground bg-foreground text-background">
-          <div className="mx-auto max-w-[1100px] px-4 py-14 text-center sm:px-8 lg:py-20">
-            <p className="text-[11px] font-black tracking-[0.18em] text-primary uppercase">
+          <div className="page-shell py-14 text-center lg:py-20">
+            <p className="text-[11px] font-black tracking-[0.18em] text-sky uppercase">
               Our guiding purpose
             </p>
             <blockquote className="mx-auto mt-5 max-w-[50ch] font-display text-3xl leading-tight sm:text-5xl">
@@ -245,7 +245,7 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
+        <section className="page-shell py-14 lg:py-20">
           <Eyebrow>Our core values</Eyebrow>
           <SectionTitle>What we hold to</SectionTitle>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
@@ -262,7 +262,7 @@ function AboutPage() {
         </section>
 
         <section className="border-y-2 border-foreground bg-card">
-          <div className="mx-auto grid max-w-[1100px] gap-10 px-4 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
+          <div className="page-shell grid gap-10 py-14 lg:grid-cols-2 lg:py-20">
             <div>
               <Eyebrow>Our editorial philosophy</Eyebrow>
               <SectionTitle>Journalism earns its value</SectionTitle>
@@ -309,7 +309,7 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
+        <section className="page-shell py-14 lg:py-20">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="border-2 border-foreground bg-card p-6 sm:p-8">
               <Eyebrow>Our promise to our audience</Eyebrow>
@@ -361,7 +361,7 @@ function AboutPage() {
         </section>
 
         <section className="border-t-2 border-foreground bg-foreground text-background">
-          <div className="mx-auto grid max-w-[1100px] gap-10 px-4 py-14 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:py-20">
+          <div className="page-shell grid gap-10 py-14 lg:grid-cols-[20rem_minmax(0,1fr)] lg:py-20">
             <figure className="grid content-start gap-4">
               <img
                 src={CEO_PORTRAIT}
@@ -372,12 +372,12 @@ function AboutPage() {
               />
               <figcaption className="text-[11px] font-black tracking-[0.16em] uppercase">
                 Raja Ejaz Ahmed Khan
-                <span className="mt-1 block font-bold text-primary">Chief Executive Officer</span>
+                <span className="mt-1 block font-bold text-sky">Chief Executive Officer</span>
               </figcaption>
             </figure>
 
             <div>
-              <p className="text-[11px] font-black tracking-[0.18em] text-primary uppercase">
+              <p className="text-[11px] font-black tracking-[0.18em] text-sky uppercase">
                 Message from the CEO
               </p>
               <h2 className="mt-2 font-display text-4xl leading-none sm:text-5xl">
@@ -393,7 +393,7 @@ function AboutPage() {
                 Chief Executive Officer
                 <span className="mt-1 block text-background/60">Global Kashmir TV</span>
               </p>
-              <p className="mt-8 border-t border-background/20 pt-6 font-display text-xl text-primary italic">
+              <p className="mt-8 border-t border-background/20 pt-6 font-display text-xl text-sky italic">
                 Bringing Kashmir’s news to the world.
               </p>
             </div>

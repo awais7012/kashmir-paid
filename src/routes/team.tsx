@@ -56,7 +56,7 @@ function TeamPage() {
       <SiteHeader settings={settings} />
 
       <main>
-        <section className="mx-auto max-w-[1100px] px-4 pt-12 pb-12 sm:px-8 lg:pt-16 lg:pb-16">
+        <section className="page-shell pt-12 pb-12 lg:pt-16 lg:pb-16">
           <div className="grid gap-8 border-b-2 border-foreground pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
             <div>
               <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
@@ -76,7 +76,7 @@ function TeamPage() {
         </section>
 
         {empty ? (
-          <section className="mx-auto max-w-[1100px] px-4 pb-16 sm:px-8">
+          <section className="page-shell pb-16">
             <div className="grid justify-items-start gap-3 border-2 border-foreground bg-card px-6 py-14">
               <h2 className="font-display text-3xl">The team is being put together</h2>
               <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
@@ -87,7 +87,7 @@ function TeamPage() {
         ) : null}
 
         {members.length > 0 ? (
-          <section className="mx-auto max-w-[1100px] px-4 pb-16 sm:px-8">
+          <section className="page-shell pb-16">
             <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-foreground pb-3">
               <div>
                 <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
@@ -176,7 +176,7 @@ function TeamPage() {
 
         {structure.length > 0 ? (
           <section className="border-y-2 border-foreground bg-card">
-            <div className="mx-auto max-w-[1100px] px-4 py-14 sm:px-8 lg:py-20">
+            <div className="page-shell py-14 lg:py-20">
               <div className="border-b-2 border-foreground pb-3">
                 <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
                   How we are organised
