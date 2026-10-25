@@ -57,15 +57,15 @@ function TeamPage() {
 
       <main>
         <section className="page-shell pt-12 pb-12 lg:pt-16 lg:pb-16">
-          <div className="grid gap-8 border-b-2 border-foreground pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
+          <div className="grid gap-8 border-b border-border pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
             <div>
-              <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+              <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
                 Who we are
               </p>
-              <h1 className="mt-2 font-display text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
+              <h1 className="mt-2 font-sans text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
                 Team
               </h1>
-              <p className="mt-4 font-display text-xl text-primary italic sm:text-2xl">
+              <p className="mt-4 font-sans text-xl text-brand-blue italic sm:text-2xl">
                 Bridging the Valley and the World
               </p>
             </div>
@@ -77,8 +77,8 @@ function TeamPage() {
 
         {empty ? (
           <section className="page-shell pb-16">
-            <div className="grid justify-items-start gap-3 border-2 border-foreground bg-card px-6 py-14">
-              <h2 className="font-display text-3xl">The team is being put together</h2>
+            <div className="grid justify-items-start gap-3 border border-border bg-card px-6 py-14">
+              <h2 className="font-sans text-3xl">The team is being put together</h2>
               <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
                 Team profiles have not been published yet. Please check back shortly.
               </p>
@@ -88,14 +88,12 @@ function TeamPage() {
 
         {members.length > 0 ? (
           <section className="page-shell pb-16">
-            <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-foreground pb-3">
+            <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
               <div>
-                <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+                <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
                   Leadership
                 </p>
-                <h2 className="mt-1 font-display text-3xl leading-none sm:text-4xl">
-                  Our leadership
-                </h2>
+                <h2 className="mt-1 font-sans text-3xl leading-none sm:text-4xl">Our leadership</h2>
               </div>
               <p className="text-xs text-muted-foreground">
                 {members.length} {members.length === 1 ? "person" : "people"}
@@ -115,7 +113,7 @@ function TeamPage() {
                 return (
                   <article
                     key={member.id || `${member.name}-${index}`}
-                    className="group grid content-start border-2 border-foreground bg-card"
+                    className="group grid content-start border border-border bg-card"
                   >
                     <div className="aspect-[4/5] overflow-hidden bg-muted">
                       {photo ? (
@@ -127,18 +125,18 @@ function TeamPage() {
                         />
                       ) : (
                         <div aria-hidden="true" className="grid h-full place-items-center">
-                          <span className="grid size-28 place-items-center rounded-full border-2 border-foreground bg-background font-display text-4xl text-primary">
+                          <span className="grid size-28 place-items-center rounded-full border border-border bg-background font-sans text-4xl text-brand-blue">
                             {initials(member.name)}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <div className="grid gap-2 border-t-2 border-foreground px-5 py-5 sm:px-6">
+                    <div className="grid gap-2 border-t border-border px-5 py-5 sm:px-6">
                       <h3
                         {...storyTextAttrs(nameUrdu ? "ur" : "en")}
                         className={cn(
-                          "font-display text-2xl leading-tight font-bold break-words",
+                          "font-sans text-2xl leading-tight font-bold break-words",
                           nameUrdu && URDU_TEXT_CLASS,
                         )}
                       >
@@ -148,7 +146,7 @@ function TeamPage() {
                         <p
                           {...storyTextAttrs(roleUrdu ? "ur" : "en")}
                           className={cn(
-                            "text-[10px] font-black tracking-[0.14em] text-primary uppercase break-words",
+                            "text-[10px] font-black tracking-[0.14em] text-brand-blue uppercase break-words",
                             roleUrdu && URDU_TEXT_CLASS,
                           )}
                         >
@@ -175,13 +173,13 @@ function TeamPage() {
         ) : null}
 
         {structure.length > 0 ? (
-          <section className="border-y-2 border-foreground bg-card">
+          <section className="border-y border-border bg-card">
             <div className="page-shell py-14 lg:py-20">
-              <div className="border-b-2 border-foreground pb-3">
-                <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">
+              <div className="border-b border-border pb-3">
+                <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
                   How we are organised
                 </p>
-                <h2 className="mt-1 font-display text-3xl leading-none sm:text-4xl">
+                <h2 className="mt-1 font-sans text-3xl leading-none sm:text-4xl">
                   Organisational structure
                 </h2>
               </div>
@@ -190,17 +188,17 @@ function TeamPage() {
                 {structure.map((section, index) => (
                   <article
                     key={section.id || `${section.title}-${index}`}
-                    className="grid content-start gap-6 border-2 border-foreground bg-background p-6 sm:p-8"
+                    className="grid content-start gap-6 border border-border bg-background p-6 sm:p-8"
                   >
                     <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4">
                       <span
                         aria-hidden="true"
-                        className="font-display text-3xl leading-none text-primary italic sm:text-4xl"
+                        className="font-sans text-3xl leading-none text-brand-blue italic sm:text-4xl"
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
-                        <h3 className="font-display text-2xl leading-tight font-bold break-words">
+                        <h3 className="font-sans text-2xl leading-tight font-bold break-words">
                           {section.title}
                         </h3>
                         {section.description ? (

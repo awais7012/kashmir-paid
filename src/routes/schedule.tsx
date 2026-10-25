@@ -5,6 +5,7 @@ import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { mediaUrl } from "@/lib/media";
+import { t } from "@/lib/i18n";
 import { primeQuery } from "@/lib/stories";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 
@@ -35,11 +36,13 @@ function SchedulePage() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader settings={settings} />
 
-      <main className="page-shell py-12 lg:py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-4">
+      <main className="page-shell py-10 lg:py-14">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">On air</p>
-            <h1 className="mt-1 font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
+            <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
+              {t.onAir}
+            </p>
+            <h1 className="mt-1 text-[clamp(1.75rem,5vw,2.5rem)] leading-tight font-extrabold tracking-tight">
               {schedule.title || "Programme Schedule"}
             </h1>
           </div>
@@ -56,7 +59,7 @@ function SchedulePage() {
               href={image}
               target="_blank"
               rel="noreferrer"
-              className="block border-2 border-foreground bg-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              className="block overflow-hidden rounded-card border border-border bg-card shadow-card focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
             >
               {/* Capped to the viewport so a tall schedule does not force a long
                   scroll; the whole picture still opens at full size on tap. */}
@@ -74,9 +77,9 @@ function SchedulePage() {
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid justify-items-start gap-4 border-2 border-foreground bg-card px-5 py-12">
-            <CalendarDays className="size-8 text-primary" aria-hidden="true" />
-            <h2 className="font-display text-3xl">The schedule is not up yet</h2>
+          <div className="mt-8 grid justify-items-start gap-4 rounded-card border border-border bg-card px-5 py-12 shadow-card">
+            <CalendarDays className="size-8 text-brand-blue" aria-hidden="true" />
+            <h2 className="text-2xl font-extrabold tracking-tight">The schedule is not up yet</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
               The programme schedule has not been published. In the meantime, the latest reporting
               is still worth your time.
@@ -84,13 +87,13 @@ function SchedulePage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/news"
-                className="bg-foreground px-4 py-3 text-xs font-black tracking-[0.12em] text-background uppercase hover:bg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="rounded-sm bg-navy px-4 py-3 text-xs font-black tracking-[0.12em] text-navy-foreground uppercase hover:bg-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
               >
                 Read the latest
               </Link>
               <Link
                 to="/live"
-                className="border-2 border-foreground px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-foreground hover:text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="rounded-sm border border-border px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-navy hover:text-navy-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
               >
                 Watch live
               </Link>
@@ -99,7 +102,7 @@ function SchedulePage() {
         )}
 
         {schedule.note ? (
-          <p className="mt-8 max-w-prose border-t-2 border-foreground pt-6 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-8 max-w-prose border-t border-border pt-6 text-sm leading-relaxed text-muted-foreground">
             {schedule.note}
           </p>
         ) : null}

@@ -2,6 +2,11 @@
 @source "../src";
 @import "tw-animate-css";
 
+/*
+ * The dark variant is defined so `dark:` utilities in the shadcn primitives
+ * still compile, but nothing ever applies the `dark` class: the site is
+ * light-only and there is no dark block of values.
+ */
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -10,17 +15,15 @@
  * The @theme inline block maps CSS custom properties to Tailwind utility
  * classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * The :root block defines the actual colour values using oklch. All colours
+ * MUST use oklch format; components never carry a hex, rgb or oklch literal.
  *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * The site is light-only: there is no dark block and nothing applies a `dark`
+ * class.
  *
- * Brand: the logo carries navy, green, red and light blue. Navy leads the
- * furniture (header, footer, primary buttons). Red is reserved for LIVE and
- * BREAKING so those marks keep their meaning. Green is a small accent for
- * active navigation and chips. Status colours stay separate from the brand.
+ * Brand: navy leads the chrome (top bar, nav, footer, primary buttons). Brand
+ * blue carries links and section accents, green marks the active state, and red
+ * is reserved for LIVE and BREAKING so those marks keep their meaning.
  */
 
 @theme inline {
@@ -31,7 +34,7 @@
   --font-urdu: var(--urdu-font);
   --font-urdu-display: var(--urdu-display-font);
 
-  --radius-card: 0.5rem;
+  --radius-card: 0.625rem;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -40,12 +43,11 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  --container-page: 90rem;
+  --container-page: 82.5rem;
 
-  --shadow-card:
-    0 1px 2px 0 oklch(0.19 0.01 258 / 0.06), 0 1px 3px 0 oklch(0.19 0.01 258 / 0.08);
-  --shadow-lift: 0 14px 30px -10px oklch(0.19 0.01 258 / 0.28);
-  --shadow-header: 0 6px 20px -12px oklch(0.19 0.01 258 / 0.35);
+  --shadow-card: 0 1px 2px 0 oklch(0.29 0.12 264 / 0.06), 0 1px 3px 0 oklch(0.29 0.12 264 / 0.08);
+  --shadow-lift: 0 14px 30px -12px oklch(0.29 0.12 264 / 0.24);
+  --shadow-header: 0 6px 20px -12px oklch(0.29 0.12 264 / 0.35);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -72,6 +74,8 @@
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
   --color-navy-foreground: var(--navy-foreground);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-blue-foreground: var(--brand-blue-foreground);
   --color-live: var(--live);
   --color-live-foreground: var(--live-foreground);
   --color-breaking: var(--breaking);
@@ -79,18 +83,17 @@
   --color-green-foreground: var(--green-foreground);
   --color-sky: var(--sky);
   --color-sky-foreground: var(--sky-foreground);
-  /* The one place brand red is not the live/breaking mark: the YouTube button. */
-  --color-youtube: var(--youtube);
-  --color-youtube-foreground: var(--youtube-foreground);
-
-  /* Section tints and the thin tone bar each category block carries. */
+  /* The pale blue surface the Editor's Pick panel sits on. */
   --color-tint: var(--tint);
-  --color-band-navy: var(--band-navy);
-  --color-band-green: var(--band-green);
-  --color-band-sky: var(--band-sky);
-  --color-band-live: var(--band-live);
-  --color-band-opinion: var(--band-opinion);
-  --color-band-opinion-foreground: var(--band-opinion-foreground);
+
+  /* Category chips: one token per section, plus a fallback for the rest. */
+  --color-cat-kashmir: var(--cat-kashmir);
+  --color-cat-world: var(--cat-world);
+  --color-cat-politics: var(--cat-politics);
+  --color-cat-business: var(--cat-business);
+  --color-cat-sports: var(--cat-sports);
+  --color-cat-culture: var(--cat-culture);
+  --color-cat-default: var(--cat-default);
 
   /* Status colours, kept apart from the brand accent */
   --color-success: var(--success);
@@ -114,107 +117,87 @@
 }
 
 :root {
-  --radius: 0.25rem;
+  --radius: 0.375rem;
   /*
-   * The page gutter. Every section, the masthead and the footer share it, so
-   * one left margin runs down the whole site. 5rem at desktop puts the content
-   * edge 80px in from a 1440px viewport.
+   * One container for the whole site: 1320px wide with 24px gutters. Every
+   * section, the masthead and the footer use it, so a single margin runs down
+   * the page.
    */
   --page-gutter: 1rem;
-  /* The rhythm between sections. */
-  --section-gap: 3.5rem;
-  /* English: a serif for headlines, Inter for everything else. */
+  /* The tight rhythm between modules. Dense, not airy. */
+  --section-gap: 1.5rem;
+  /* English: Inter for everything, Source Serif 4 for the hero headline only. */
   --display-font: "Source Serif 4", Merriweather, Georgia, serif;
   --ui-font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Naskh is the readable Urdu face; Nastaliq is only for display headlines. */
   --urdu-font: "Noto Naskh Arabic", "Segoe UI", "Noto Nastaliq Urdu", serif;
   --urdu-display-font: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
 
-  /* A very light blue, for bands that sit between the off-white and the white. */
-  --tint: oklch(0.972 0.014 235);
+  /* A very light blue-grey page under crisp white cards. */
+  --background: oklch(0.972 0.008 250);
+  --foreground: oklch(0.21 0.03 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.03 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.03 260);
+  --primary: oklch(0.3 0.13 265);
+  --primary-foreground: oklch(0.99 0.003 262);
+  --secondary: oklch(0.96 0.012 250);
+  --secondary-foreground: oklch(0.21 0.03 260);
+  --muted: oklch(0.955 0.008 250);
+  --muted-foreground: oklch(0.55 0.03 257);
+  /* shadcn uses --accent as a generic hover surface, so it stays neutral. */
+  --accent: oklch(0.955 0.008 250);
+  --accent-foreground: oklch(0.21 0.03 260);
+  --destructive: oklch(0.56 0.22 27);
+  --destructive-foreground: oklch(0.99 0.003 84);
+  --border: oklch(0.925 0.012 255);
+  --input: oklch(0.91 0.012 255);
+  --ring: oklch(0.55 0.17 258);
 
-  /* Section tones: one per category block's top bar, plus the dark opinion band. */
-  --band-navy: oklch(0.29 0.128 264);
-  --band-green: oklch(0.545 0.163 152);
-  --band-sky: oklch(0.682 0.106 235);
-  --band-live: oklch(0.57 0.22 27);
-  --band-opinion: oklch(0.19 0.01 258);
-  --band-opinion-foreground: oklch(0.97 0.004 258);
-
-  /* Brand — navy leads, red is live-only, green is the accent */
-  --navy: oklch(0.29 0.128 264);
-  --navy-deep: oklch(0.215 0.104 264);
+  /* Chrome navy, and a deeper shade for the top bar and footer. */
+  --navy: oklch(0.3 0.13 265);
+  --navy-deep: oklch(0.22 0.1 265);
   --navy-foreground: oklch(0.99 0.003 262);
-  --live: oklch(0.57 0.22 27);
+  /* Brand blue: links and section accents. */
+  --brand-blue: oklch(0.55 0.17 258);
+  --brand-blue-foreground: oklch(0.99 0.003 258);
+  /* Red, and only for LIVE and BREAKING. */
+  --live: oklch(0.56 0.22 27);
   --live-foreground: oklch(0.99 0.003 84);
-  --breaking: oklch(0.57 0.22 27);
-  /* Deep enough that white chip text clears AA on it, unlike the logo's
-     brighter green, which only works as a non-text accent. */
-  --green: oklch(0.545 0.163 152);
+  --breaking: oklch(0.56 0.22 27);
+  /* Green: the active state and small accents. Deep enough for white text. */
+  --green: oklch(0.6 0.15 150);
   --green-foreground: oklch(0.99 0.003 148);
-  --sky: oklch(0.682 0.106 235);
-  --sky-foreground: oklch(0.2 0.02 235);
-  /* YouTube's red, held apart from the live/breaking mark. */
-  --youtube: oklch(0.577 0.217 27);
-  --youtube-foreground: oklch(0.99 0.003 27);
+  --sky: oklch(0.68 0.11 245);
+  --sky-foreground: oklch(0.2 0.02 245);
+  /* The pale blue of the Editor's Pick panel. */
+  --tint: oklch(0.945 0.03 246);
 
   /*
-   * Band gradients. Declared once as tokens so every full-colour band on the
-   * site draws from the same two or three stops rather than inventing its own.
+   * Category chips. Kashmir blue, World teal, Politics green, Business navy,
+   * Sports orange, Culture purple — each dark enough that white chip text
+   * clears AA. `default` carries any category the desk invents.
    */
-  --gradient-navy: linear-gradient(
-    135deg,
-    var(--navy-deep) 0%,
-    var(--navy) 52%,
-    oklch(0.42 0.138 250) 100%
-  );
-  --gradient-blue: linear-gradient(
-    115deg,
-    var(--navy-deep) 0%,
-    oklch(0.34 0.145 258) 55%,
-    oklch(0.47 0.15 248) 100%
-  );
-  --gradient-brand: linear-gradient(
-    120deg,
-    var(--navy-deep) 0%,
-    var(--navy) 45%,
-    var(--green) 100%
-  );
+  --cat-kashmir: oklch(0.52 0.17 258);
+  --cat-world: oklch(0.5 0.1 195);
+  --cat-politics: oklch(0.5 0.13 150);
+  --cat-business: oklch(0.36 0.11 265);
+  --cat-sports: oklch(0.55 0.15 48);
+  --cat-culture: oklch(0.47 0.19 300);
+  --cat-default: oklch(0.45 0.06 258);
 
   /*
-   * The one texture asset: an original chinar-leaf motif drawn as SVG and
-   * embedded here, so bands can repeat it at low opacity without shipping an
-   * image or reaching for a hardcoded colour in a component.
+   * The branded plate: the fallback that stands in for a story with no picture.
+   * A token, so no component invents its own gradient.
    */
-  --pattern-motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M66 16c9 10 14 22 14 34 0 12-5 22-14 34-9-12-14-22-14-34 0-12 5-24 14-34Z'/%3E%3Cpath d='M66 30c4 7 6 13 6 20 0 7-2 13-6 20-4-7-6-13-6-20 0-7 2-13 6-20Z'/%3E%3Cpath d='M66 50v34'/%3E%3Cpath d='M52 44c-6 4-10 10-11 17'/%3E%3Cpath d='M80 44c6 4 10 10 11 17'/%3E%3Ccircle cx='66' cy='108' r='3'/%3E%3Ccircle cx='18' cy='18' r='3'/%3E%3Ccircle cx='114' cy='114' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  --gradient-plate: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 45%, var(--brand-blue) 100%);
 
   /* Status — never used as decoration, so meaning stays intact */
   --success: oklch(0.52 0.15 150);
   --success-foreground: oklch(0.99 0.003 148);
   --warning: oklch(0.75 0.16 75);
   --warning-foreground: oklch(0.22 0.03 75);
-
-  --background: oklch(0.965 0.008 90);
-  --foreground: oklch(0.19 0.01 258);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.01 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.01 258);
-  --primary: oklch(0.29 0.128 264);
-  --primary-foreground: oklch(0.99 0.003 262);
-  --secondary: oklch(0.2 0.01 258);
-  --secondary-foreground: oklch(0.99 0.003 84);
-  --muted: oklch(0.94 0.006 90);
-  --muted-foreground: oklch(0.47 0.012 258);
-  /* Kept neutral on purpose: shadcn uses --accent as a generic hover surface,
-     so the brand green must not take it over. */
-  --accent: oklch(0.94 0.006 90);
-  --accent-foreground: oklch(0.19 0.01 258);
-  --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.99 0.003 84);
-  --border: oklch(0.86 0.008 90);
-  --input: oklch(0.88 0.008 90);
-  --ring: oklch(0.29 0.128 264);
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -232,49 +215,13 @@
 }
 
 /*
- * The gutter steps with the viewport: 16px, then 32px, then 80px — the last one
- * is the 80px left margin the design calls for at 1440px.
+ * The gutter steps with the viewport: 16px, then 24px from tablet up — the
+ * design's 24px margin.
  */
 @media (min-width: 40rem) {
   :root {
-    --page-gutter: 2rem;
+    --page-gutter: 1.5rem;
   }
-}
-@media (min-width: 64rem) {
-  :root {
-    --page-gutter: 5rem;
-  }
-}
-
-/*
- * Defined for completeness. The site ships light-only: nothing applies the
- * `dark` class, so these values are inert until a toggle is wired up.
- */
-.dark {
-  --navy: oklch(0.62 0.11 262);
-  --navy-deep: oklch(0.28 0.05 262);
-  --live: oklch(0.64 0.2 27);
-  --green: oklch(0.7 0.15 148);
-  --sky: oklch(0.74 0.1 235);
-  --background: oklch(0.19 0.02 262);
-  --foreground: oklch(0.97 0.004 262);
-  --card: oklch(0.23 0.025 262);
-  --card-foreground: oklch(0.97 0.004 262);
-  --popover: oklch(0.23 0.025 262);
-  --popover-foreground: oklch(0.97 0.004 262);
-  --primary: oklch(0.62 0.11 262);
-  --primary-foreground: oklch(0.16 0.02 262);
-  --secondary: oklch(0.3 0.03 262);
-  --secondary-foreground: oklch(0.97 0.004 262);
-  --muted: oklch(0.3 0.03 262);
-  --muted-foreground: oklch(0.75 0.02 262);
-  --accent: oklch(0.3 0.03 262);
-  --accent-foreground: oklch(0.97 0.004 262);
-  --destructive: oklch(0.7 0.19 22);
-  --destructive-foreground: oklch(0.97 0.004 262);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.62 0.11 262);
 }
 
 @layer base {
@@ -343,7 +290,7 @@
 
 /*
  * The one page container. Every section, the masthead and the footer use it, so
- * there is a single container width and a single left margin down the page.
+ * there is a single container width and a single margin down the page.
  */
 @utility page-shell {
   margin-inline: auto;
@@ -380,21 +327,9 @@
   }
 }
 
-/* The reusable full-colour bands. One place decides what "a navy band" is. */
-@utility surface-navy {
-  background-image: var(--gradient-navy);
-}
-@utility surface-blue {
-  background-image: var(--gradient-blue);
-}
-@utility surface-brand {
-  background-image: var(--gradient-brand);
-}
-/* The chinar motif, tiled. Bands drop it in at 4–6% opacity. */
-@utility motif {
-  background-image: var(--pattern-motif);
-  background-repeat: repeat;
-  background-size: 132px 132px;
+/* The branded plate behind a story with no picture. */
+@utility surface-plate {
+  background-image: var(--gradient-plate);
 }
 @utility live-wave {
   animation: waveform 1.1s ease-in-out infinite;
@@ -466,8 +401,8 @@
  */
 /*
  * Nastaliq stacks its glyphs well above and below the baseline, so leading has
- * to stay generous, but the old blanket 2.7 broke headlines up. Headlines sit
- * around 1.8, body copy around 1.7, and card titles tighten to 1.5.
+ * to stay generous, but a blanket 2.7 broke headlines up. Headlines sit around
+ * 1.8, body copy around 1.7, and card titles tighten to 1.6.
  *
  * Each selector is written twice so it also matches when the marked element is
  * the heading or paragraph itself, not only one of its children.
@@ -491,7 +426,7 @@
 /* Card titles carry .urdu-title: tighter leading, clamped to three lines. */
 [dir="rtl"] .urdu-title,
 [dir="rtl"]:is(.urdu-title) {
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /*

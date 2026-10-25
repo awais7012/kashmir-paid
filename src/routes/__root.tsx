@@ -12,10 +12,16 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SITE_LANG } from "@/lib/site-lang";
 
-/* Source Serif 4 for headlines, Inter for everything else. */
-const FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap";
+/* Only the fonts this deployment's language needs are fetched.
+   English: Inter everywhere, Source Serif 4 for the hero headline.
+   Urdu: Naskh for cards and body, Nastaliq for the hero, Inter for Latin meta. */
+const FONTS_EN =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap";
+const FONTS_UR =
+  "https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap";
+const FONTS_HREF = SITE_LANG === "ur" ? FONTS_UR : FONTS_EN;
 
 function NotFoundComponent() {
   return (
@@ -109,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={SITE_LANG}>
       <head>
         <HeadContent />
       </head>

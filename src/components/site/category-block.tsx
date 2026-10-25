@@ -1,91 +1,100 @@
-import { Reveal } from "@/components/site/reveal";
-import { SectionHeader, ViewAllSectionLink } from "@/components/site/section-header";
+import { Link } from "@tanstack/react-router";
+import { CategoryChip } from "@/components/story/category-chip";
 import { StoryCard } from "@/components/story/story-card";
+import { StoryThumb } from "@/components/story/story-thumb";
+import { SectionHeader, ViewAllSectionLink } from "@/components/site/section-header";
+import { timeAgo } from "@/lib/format";
+import type { CategorySection } from "@/lib/home-feed";
 import { t } from "@/lib/i18n";
 import { slugifyLabel } from "@/lib/site-settings";
-import type { Story } from "@/lib/stories";
+import { isUrdu, storyTextAttrs, URDU_TITLE_CLASS } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
 
-/** The accent each category block carries. Only the colour differs. */
-export type BlockTone = keyof typeof TONE_BAR;
-
-const TONE_BAR: Record<string, string> = {
-  navy: "bg-band-navy",
-  green: "bg-band-green",
-  sky: "bg-band-sky",
-};
-
 /**
- * One category block, the same shape for every section: a lead card at about
- * 60% width with its title and standfirst below the picture, and a list of up
- * to four stories beside it. The two columns share one height and the list rows
- * are spread across it, so the block always reads as a full rectangle.
- *
- * `inverted` is for the block that sits on the green band: the tone bar is
- * dropped and the copy turns white.
+ * One category column: the section title with its blue underline and a route to
+ * the full section, one 16:9 lead card with its summary, and up to three compact
+ * rows underneath. Every column is the same shape, so a row of four reads as a
+ * single band.
  */
-export function CategoryBlock({
-  title,
-  id,
-  stories,
-  tone = "navy",
-  inverted = false,
-  className,
-}: {
-  title: string;
-  /** Anchor id, so the masthead can link straight to the block. */
-  id: string;
-  stories: Story[];
-  tone?: BlockTone;
-  /** True when the block sits on a full colour band. */
-  inverted?: boolean;
-  className?: string;
-}) {
-  const [lead, ...rest] = stories;
+function Block({ section }: { section: CategorySection }) {
+  const [lead, ...rest] = section.stories;
   if (!lead) return null;
-
-  // The link is built from the category the desk actually typed, so the section
-  // page filters on a name the API will match.
-  const slug = slugifyLabel(lead.category);
-  const list = rest.slice(0, 4);
+  const rows = rest.slice(0, 3);
+  const urdu = isUrdu(lead.language);
 
   return (
-    <section id={id} className={cn("scroll-mt-24", className)} aria-label={title}>
-      {inverted ? null : (
-        <span className={cn("block h-1 w-full rounded-full", TONE_BAR[tone])} aria-hidden="true" />
-      )}
-
+    <section className="flex h-full flex-col" aria-label={section.label}>
       <SectionHeader
-        title={title}
-        tone={inverted ? "dark" : "light"}
-        action={
-          <ViewAllSectionLink slug={slug} label={t.viewAll} tone={inverted ? "dark" : "light"} />
-        }
-        className={inverted ? undefined : "mt-4"}
+        title={section.label}
+        action={<ViewAllSectionLink slug={slugifyLabel(section.label)} label={t.viewAll} />}
       />
 
-      <Reveal>
-        {/* With nothing to list, the lead takes the whole width rather than
-            leaving half the block empty. */}
-        <div
-          className={cn(
-            "mt-6 grid gap-8",
-            list.length > 0 && "lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]",
-          )}
-        >
-          <StoryCard story={lead} variant="large" inverted={inverted} />
-
-          {list.length > 0 ? (
-            <ul className="flex flex-col justify-between gap-5">
-              {list.map((story) => (
-                <li key={story.id}>
-                  <StoryCard story={story} variant="compact" inverted={inverted} />
-                </li>
-              ))}
-            </ul>
+      <Link
+        to="/story/$slug"
+        params={{ slug: lead.slug }}
+        {...storyTextAttrs(lead.language)}
+        className="group mt-3 block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        <div className="relative aspect-video overflow-hidden rounded-card bg-muted shadow-card transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lift motion-reduce:transition-none">
+          <StoryThumb story={lead} />
+          {lead.category ? (
+            <span className="absolute start-2 top-2 z-10">
+              <CategoryChip label={lead.category} />
+            </span>
           ) : null}
         </div>
-      </Reveal>
+        <h3
+          className={cn(
+            "mt-2.5 line-clamp-3 text-[15px] leading-[1.3] font-bold tracking-tight text-balance group-hover:text-brand-blue",
+            urdu && URDU_TITLE_CLASS,
+          )}
+        >
+          {lead.title}
+        </h3>
+        {lead.summary ? (
+          <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">
+            {lead.summary}
+          </p>
+        ) : null}
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <time
+            dateTime={lead.published_at}
+            className="text-[11px] font-semibold text-muted-foreground"
+          >
+            {timeAgo(lead.published_at)}
+          </time>
+          <span className="text-[11px] font-black tracking-[0.08em] text-brand-blue uppercase">
+            {t.readMore}
+          </span>
+        </div>
+      </Link>
+
+      {rows.length > 0 ? (
+        <ul className="mt-4 grid flex-1 content-start gap-3 border-t border-border pt-4">
+          {rows.map((story) => (
+            <li key={story.id}>
+              <StoryCard story={story} variant="compact" titleAs="h4" />
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
+  );
+}
+
+/**
+ * The category blocks: up to four sections side by side, four across on desktop,
+ * two on tablet and one on a phone.
+ */
+export function CategoryBlocks({ categories }: { categories: CategorySection[] }) {
+  const blocks = categories.slice(0, 4);
+  if (blocks.length === 0) return null;
+
+  return (
+    <div className="grid items-stretch gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+      {blocks.map((section) => (
+        <Block key={section.key} section={section} />
+      ))}
+    </div>
   );
 }

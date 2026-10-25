@@ -1,34 +1,21 @@
-import { cn } from "@/lib/utils";
+import { categoryStyle } from "@/lib/category-style";
 import { looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
-
-type ChipTone = "green" | "navy" | "light";
-
-const TONES: Record<ChipTone, string> = {
-  green: "bg-green text-green-foreground",
-  navy: "bg-primary text-primary-foreground",
-  light: "bg-card/90 text-foreground ring-1 ring-border",
-};
+import { cn } from "@/lib/utils";
 
 /**
- * The small category mark that sits on a card. Green is the accent a reader
- * scans for, so it carries section labels; navy is used for the VIDEO mark, and
- * the light chip is for a caption laid on a photograph. Red is never used here
- * — it belongs to the live and breaking marks alone.
+ * The small category label that sits on a card. Its colour comes from the
+ * category itself (see category-style.ts), so a reader scanning the page learns
+ * the section at a glance. Red is never used here — it belongs to LIVE and
+ * BREAKING alone.
  */
-export function CategoryChip({
-  label,
-  tone = "green",
-  className,
-}: {
-  label: string;
-  tone?: ChipTone;
-  className?: string;
-}) {
+export function CategoryChip({ label, className }: { label: string; className?: string }) {
+  const { chipClass } = categoryStyle(label);
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-2 py-1 text-[10px] font-black tracking-[0.14em] uppercase",
-        TONES[tone],
+        "inline-flex items-center px-2 py-1 text-[10px] font-black tracking-[0.08em] text-navy-foreground uppercase",
+        chipClass,
         looksUrdu(label) && URDU_TEXT_CLASS,
         className,
       )}

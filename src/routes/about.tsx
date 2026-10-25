@@ -148,12 +148,14 @@ const CEO_PARAGRAPHS = [
 
 function Eyebrow({ children }: { children: string }) {
   return (
-    <p className="text-[11px] font-black tracking-[0.18em] text-primary uppercase">{children}</p>
+    <p className="text-[11px] font-black tracking-[0.18em] text-brand-blue uppercase">{children}</p>
   );
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return <h2 className="mt-2 font-display text-4xl leading-none sm:text-5xl">{children}</h2>;
+  return (
+    <h2 className="mt-2 font-sans text-3xl leading-tight font-extrabold sm:text-4xl">{children}</h2>
+  );
 }
 
 function AboutPage() {
@@ -166,7 +168,7 @@ function AboutPage() {
 
       <main>
         <section className="mx-auto max-w-[52rem] px-4 py-12 sm:px-8 lg:py-16">
-          <div className="grid gap-8 border-b-2 border-foreground pb-10 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+          <div className="grid gap-8 border-b border-border pb-10 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
             <img
               src={BRAND_LOGO}
               alt="Global Kashmir TV"
@@ -176,10 +178,10 @@ function AboutPage() {
             />
             <div>
               <Eyebrow>About us</Eyebrow>
-              <h1 className="mt-2 font-display text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
+              <h1 className="mt-2 font-sans text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
                 Global Kashmir TV
               </h1>
-              <p className="mt-4 font-display text-2xl text-muted-foreground italic">
+              <p className="mt-4 font-sans text-2xl text-muted-foreground italic">
                 Bringing Kashmir’s news to the world.
               </p>
             </div>
@@ -192,10 +194,10 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="border-y-2 border-foreground bg-card">
+        <section className="border-y border-border bg-card">
           <div className="mx-auto max-w-[48rem] px-4 py-14 sm:px-8 lg:py-20">
             <Eyebrow>Our vision</Eyebrow>
-            <blockquote className="mt-4 max-w-[46ch] font-display text-3xl leading-tight sm:text-4xl">
+            <blockquote className="mt-4 max-w-[46ch] font-sans text-3xl leading-tight sm:text-4xl">
               “To help build an informed, thoughtful and ethical society through truth, research,
               justice and positive change, reporting on Kashmir, Pakistan and the wider world with
               responsibility, integrity and balance.”
@@ -217,11 +219,11 @@ function AboutPage() {
                 key={item.title}
                 className="grid grid-cols-[auto_minmax(0,1fr)] gap-5 bg-background py-6 sm:gap-8"
               >
-                <span className="font-display text-3xl leading-none text-primary italic sm:text-4xl">
+                <span className="font-sans text-3xl leading-none text-brand-blue italic sm:text-4xl">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h3 className="font-display text-2xl leading-tight font-bold sm:text-3xl">
+                  <h3 className="font-sans text-2xl leading-tight font-bold sm:text-3xl">
                     {item.title}
                   </h3>
                   <p className="mt-2 max-w-[65ch] text-sm leading-relaxed text-muted-foreground sm:text-base">
@@ -233,12 +235,12 @@ function AboutPage() {
           </ol>
         </section>
 
-        <section className="border-y-2 border-foreground bg-foreground text-background">
+        <section className="border-y border-border bg-tint text-foreground">
           <div className="page-shell py-14 text-center lg:py-20">
-            <p className="text-[11px] font-black tracking-[0.18em] text-sky uppercase">
+            <p className="text-[11px] font-black tracking-[0.18em] text-brand-blue uppercase">
               Our guiding purpose
             </p>
-            <blockquote className="mx-auto mt-5 max-w-[50ch] font-display text-3xl leading-tight sm:text-5xl">
+            <blockquote className="mx-auto mt-5 max-w-[50ch] font-sans text-3xl leading-tight sm:text-5xl">
               “News that serves society. Research that seeks the truth. Journalism that serves
               humanity.”
             </blockquote>
@@ -250,18 +252,18 @@ function AboutPage() {
           <SectionTitle>What we hold to</SectionTitle>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {VALUES.map((value, index) => (
-              <article key={value.name} className="border-2 border-foreground bg-card p-6">
-                <p className="text-[10px] font-black tracking-[0.16em] text-primary uppercase">
+              <article key={value.name} className="border border-border bg-card p-6">
+                <p className="text-[10px] font-black tracking-[0.16em] text-brand-blue uppercase">
                   Value {String(index + 1).padStart(2, "0")}
                 </p>
-                <h3 className="mt-2 font-display text-2xl leading-tight font-bold">{value.name}</h3>
+                <h3 className="mt-2 font-sans text-2xl leading-tight font-bold">{value.name}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{value.detail}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="border-y-2 border-foreground bg-card">
+        <section className="border-y border-border bg-card">
           <div className="page-shell grid gap-10 py-14 lg:grid-cols-2 lg:py-20">
             <div>
               <Eyebrow>Our editorial philosophy</Eyebrow>
@@ -295,7 +297,7 @@ function AboutPage() {
                 {PRIORITIES.map((priority) => (
                   <li
                     key={priority}
-                    className="border-2 border-foreground px-3 py-1.5 text-[11px] font-black tracking-[0.08em] uppercase"
+                    className="border border-border px-3 py-1.5 text-[11px] font-black tracking-[0.08em] uppercase"
                   >
                     {priority}
                   </li>
@@ -311,9 +313,9 @@ function AboutPage() {
 
         <section className="page-shell py-14 lg:py-20">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="border-2 border-foreground bg-card p-6 sm:p-8">
+            <div className="border border-border bg-card p-6 sm:p-8">
               <Eyebrow>Our promise to our audience</Eyebrow>
-              <h2 className="mt-2 font-display text-3xl leading-tight">
+              <h2 className="mt-2 font-sans text-3xl leading-tight">
                 Your trust must be earned through our work, every day.
               </h2>
               <p className="mt-6 text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase">
@@ -355,12 +357,12 @@ function AboutPage() {
                   measured by the quality of our journalism and the trust of the people we serve.
                 </p>
               </div>
-              <p className="mt-6 font-display text-2xl">Bringing Kashmir’s news to the world.</p>
+              <p className="mt-6 font-sans text-2xl">Bringing Kashmir’s news to the world.</p>
             </div>
           </div>
         </section>
 
-        <section className="border-t-2 border-foreground bg-foreground text-background">
+        <section className="border-t border-border bg-tint text-foreground">
           <div className="page-shell grid gap-10 py-14 lg:grid-cols-[20rem_minmax(0,1fr)] lg:py-20">
             <figure className="grid content-start gap-4">
               <img
@@ -368,32 +370,34 @@ function AboutPage() {
                 alt="Raja Ejaz Ahmed Khan, Chief Executive Officer of Global Kashmir TV"
                 width={941}
                 height={1672}
-                className="aspect-[4/5] w-full border-2 border-background/30 object-cover object-top"
+                className="aspect-[4/5] w-full rounded-card border border-border object-cover object-top"
               />
               <figcaption className="text-[11px] font-black tracking-[0.16em] uppercase">
                 Raja Ejaz Ahmed Khan
-                <span className="mt-1 block font-bold text-sky">Chief Executive Officer</span>
+                <span className="mt-1 block font-bold text-brand-blue">
+                  Chief Executive Officer
+                </span>
               </figcaption>
             </figure>
 
             <div>
-              <p className="text-[11px] font-black tracking-[0.18em] text-sky uppercase">
+              <p className="text-[11px] font-black tracking-[0.18em] text-brand-blue uppercase">
                 Message from the CEO
               </p>
-              <h2 className="mt-2 font-display text-4xl leading-none sm:text-5xl">
+              <h2 className="mt-2 font-sans text-4xl leading-none sm:text-5xl">
                 A message from our chief executive
               </h2>
-              <div className="mt-6 grid gap-4 text-base leading-relaxed text-background/80">
+              <div className="mt-6 grid gap-4 text-base leading-relaxed text-muted-foreground">
                 {CEO_PARAGRAPHS.map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
               </div>
-              <p className="mt-8 font-display text-2xl">Raja Ejaz Ahmed Khan</p>
+              <p className="mt-8 font-sans text-2xl">Raja Ejaz Ahmed Khan</p>
               <p className="mt-1 text-[11px] font-black tracking-[0.16em] uppercase">
                 Chief Executive Officer
-                <span className="mt-1 block text-background/60">Global Kashmir TV</span>
+                <span className="mt-1 block text-muted-foreground">Global Kashmir TV</span>
               </p>
-              <p className="mt-8 border-t border-background/20 pt-6 font-display text-xl text-sky italic">
+              <p className="mt-8 border-t border-border pt-6 font-sans text-xl text-brand-blue italic">
                 Bringing Kashmir’s news to the world.
               </p>
             </div>

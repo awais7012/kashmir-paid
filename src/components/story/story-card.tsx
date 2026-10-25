@@ -1,224 +1,101 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 import { CategoryChip } from "@/components/story/category-chip";
+import { StoryThumb } from "@/components/story/story-thumb";
 import { timeAgo } from "@/lib/format";
-import { t } from "@/lib/i18n";
-import { mediaUrl, storyCoverUrl } from "@/lib/media";
-import {
-  isUrdu,
-  storyTextAttrs,
-  URDU_DISPLAY_CLASS,
-  URDU_TEXT_CLASS,
-  URDU_TITLE_CLASS,
-} from "@/lib/story-language";
+import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS, URDU_TITLE_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
-export type StoryCardVariant = "overlay" | "standard" | "large" | "compact";
-type TitleTag = "h1" | "h2" | "h3";
-
-/** Every thumbnail is the same frame, filled edge to edge. */
-const FRAME_SIZES = "(min-width: 1280px) 33vw, (min-width: 768px) 45vw, 92vw";
-
-function Thumb({
-  story,
-  eager = false,
-  fill = false,
-  className,
-}: {
-  story: Story;
-  eager?: boolean;
-  /** True when the parent owns the height (overlay cards). */
-  fill?: boolean;
-  className?: string;
-}) {
-  const cover = storyCoverUrl(story);
-  const thumb = mediaUrl(story.hero_thumb_url);
-
-  return (
-    <img
-      loading={eager ? "eager" : "lazy"}
-      width={1024}
-      height={576}
-      src={cover}
-      srcSet={thumb ? `${thumb} 800w, ${cover} 1600w` : undefined}
-      sizes={FRAME_SIZES}
-      alt={story.title}
-      className={cn(
-        "story-image h-full w-full object-cover group-hover:scale-105",
-        !fill && "aspect-video",
-        className,
-      )}
-    />
-  );
-}
-
-/** The green bar that slides in along the bottom edge on hover. */
-function GreenBar() {
-  return (
-    <span
-      aria-hidden="true"
-      className="absolute inset-x-0 bottom-0 z-20 h-1 origin-left scale-x-0 bg-green transition-transform duration-300 ease-out group-hover:scale-x-100 group-focus-visible:scale-x-100 rtl:origin-right motion-reduce:transition-none"
-    />
-  );
-}
+export type StoryCardVariant = "standard" | "large" | "compact";
+type TitleTag = "h1" | "h2" | "h3" | "h4";
 
 /**
  * The play mark: a white circle with the navy glyph, centred on the picture. It
- * grows a little on hover. It is never red — red belongs to the live and
- * breaking marks.
+ * is never red — red belongs to the live and breaking marks.
  */
-function PlayBadge({ className }: { className?: string }) {
+function PlayBadge() {
   return (
     <span
       aria-hidden="true"
-      className={cn(
-        "pointer-events-none absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-card text-primary shadow-lift transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none",
-        className,
-      )}
+      className="pointer-events-none absolute top-1/2 left-1/2 z-10 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-card text-primary shadow-lift transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none"
     >
-      <Play className="size-6 fill-current ps-0.5" />
+      <Play className="size-5 fill-current ps-0.5" />
     </span>
   );
 }
 
-function Byline({ story, tone = "muted" }: { story: Story; tone?: "muted" | "light" }) {
-  const urdu = isUrdu(story.language);
+/** The date, under the headline, in muted text. */
+function DateLine({ story, className }: { story: Story; className?: string }) {
   return (
-    <p
-      {...storyTextAttrs(story.language)}
+    <time
+      dateTime={story.published_at}
       className={cn(
-        "flex flex-wrap items-center gap-x-2 text-[11px] font-semibold",
-        tone === "light" ? "text-background/75" : "text-muted-foreground",
-        urdu && URDU_TEXT_CLASS,
+        "block text-[11px] font-semibold text-muted-foreground",
+        isUrdu(story.language) && URDU_TEXT_CLASS,
+        className,
       )}
     >
-      <span>{story.category}</span>
-      <span aria-hidden="true">·</span>
-      <time dateTime={story.published_at}>{timeAgo(story.published_at)}</time>
-    </p>
+      {timeAgo(story.published_at)}
+    </time>
   );
 }
 
 /**
- * A story card. The whole card is a link, so an article opens from every surface
- * that lists stories.
+ * One story, as a card. The whole card is a link.
  *
- * `overlay` puts the title on the picture and fills whatever height its parent
- * gives it — the video band relies on that. The other variants own a 16:9 frame
- * and put the text underneath.
+ * `standard` and `large` own a 16:9 frame with the text underneath; `compact`
+ * is a list row with an 88px thumbnail. Titles are bold sans so a dense page
+ * stays legible; Urdu card titles take Naskh with generous leading.
  */
 export function StoryCard({
   story,
   variant = "standard",
   titleAs = "h3",
-  titleSize = "md",
   eager = false,
-  inverted = false,
+  showCategory = false,
   className,
 }: {
   story: Story;
   variant?: StoryCardVariant;
   titleAs?: TitleTag;
-  /** Only meaningful for `overlay`. */
-  titleSize?: "sm" | "md" | "lg";
   eager?: boolean;
-  /** True when the card sits on a full colour band, so its text turns light. */
-  inverted?: boolean;
+  /** Show the category chip on a compact row (the chip is always on the frame otherwise). */
+  showCategory?: boolean;
   className?: string;
 }) {
   const urdu = isUrdu(story.language);
   const textAttrs = storyTextAttrs(story.language);
   const Title = titleAs;
-  const titleHover = inverted ? "group-hover:text-background" : "group-hover:text-primary";
-  const frame = cn(
-    "relative overflow-hidden rounded-card bg-muted shadow-card transition-all duration-300 motion-reduce:transition-none",
-    "group-hover:-translate-y-0.5 group-hover:shadow-lift",
-  );
+  const frame =
+    "relative aspect-video overflow-hidden rounded-card bg-muted shadow-card transition-all duration-300 motion-reduce:transition-none group-hover:-translate-y-0.5 group-hover:shadow-lift";
+  const titleClass = "line-clamp-3 text-[15px] leading-[1.3] font-bold tracking-tight";
 
   if (variant === "compact") {
     return (
       <Link
         to="/story/$slug"
         params={{ slug: story.slug }}
-        className={cn("group grid grid-cols-[8.75rem_minmax(0,1fr)] items-start gap-3", className)}
+        {...textAttrs}
+        className={cn("group grid grid-cols-[5.5rem_minmax(0,1fr)] items-start gap-3", className)}
       >
         <div className={frame}>
-          <Thumb story={story} />
+          <StoryThumb story={story} />
         </div>
-        <div className="min-w-0" {...textAttrs}>
+        <div className="min-w-0">
           <Title
-            {...textAttrs}
             className={cn(
-              "line-clamp-2 text-[15px] leading-[1.25] font-bold text-balance",
-              titleHover,
+              "line-clamp-2 text-[14px] leading-[1.3] font-bold tracking-tight text-balance group-hover:text-brand-blue",
               urdu && URDU_TITLE_CLASS,
             )}
           >
             {story.title}
           </Title>
-          <p
-            className={cn(
-              "mt-1.5 text-[11px] font-semibold",
-              inverted ? "text-background/75" : "text-muted-foreground",
-            )}
-          >
-            <time dateTime={story.published_at}>{timeAgo(story.published_at)}</time>
-          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            {showCategory && story.category ? <CategoryChip label={story.category} /> : null}
+            <DateLine story={story} />
+          </div>
         </div>
-      </Link>
-    );
-  }
-
-  if (variant === "overlay") {
-    return (
-      <Link
-        to="/story/$slug"
-        params={{ slug: story.slug }}
-        {...textAttrs}
-        className={cn(
-          "group relative block aspect-video overflow-hidden rounded-card bg-foreground shadow-card transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none",
-          "hover:-translate-y-0.5 hover:shadow-lift",
-          className,
-        )}
-      >
-        <Thumb story={story} eager={eager} fill className="opacity-95" />
-        <span
-          className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/45 to-transparent"
-          aria-hidden="true"
-        />
-        <span className="absolute start-3 top-3 z-10 flex flex-wrap gap-2">
-          <CategoryChip label={story.category} tone="light" />
-          {story.has_video ? <CategoryChip label={t.video} tone="navy" /> : null}
-        </span>
-        {story.has_video ? <PlayBadge className="z-10" /> : null}
-        {/*
-          The small overlay (the video band) is short — a 16:9 card four to a row
-          is 173px tall — so the centred play badge leaves room for two lines of
-          title and nothing else. The byline is dropped there so the text can
-          never ride up under the badge.
-        */}
-        <span
-          className={cn(
-            "absolute inset-x-0 bottom-0 z-10 grid gap-2",
-            titleSize === "sm" ? "p-3.5 pb-4 sm:p-4" : "p-4 pb-5 sm:p-5",
-          )}
-        >
-          <Title
-            {...textAttrs}
-            className={cn(
-              "font-display font-bold text-background text-balance",
-              titleSize === "lg" && "text-2xl leading-[1.15] sm:text-3xl",
-              titleSize === "md" && "line-clamp-3 text-lg leading-[1.2]",
-              titleSize === "sm" && "line-clamp-2 text-[15px] leading-[1.2]",
-              urdu && (titleSize === "lg" ? URDU_DISPLAY_CLASS : URDU_TITLE_CLASS),
-            )}
-          >
-            {story.title}
-          </Title>
-          {titleSize === "sm" ? null : <Byline story={story} tone="light" />}
-        </span>
-        <GreenBar />
       </Link>
     );
   }
@@ -235,20 +112,19 @@ export function StoryCard({
       )}
     >
       <div className={frame}>
-        <Thumb story={story} eager={eager} />
-        <span className="absolute start-3 top-3">
-          <CategoryChip label={story.category} tone="light" />
-        </span>
+        <StoryThumb story={story} eager={eager} />
+        {story.category ? (
+          <span className="absolute start-2 top-2 z-10">
+            <CategoryChip label={story.category} />
+          </span>
+        ) : null}
         {story.has_video ? <PlayBadge /> : null}
-        <GreenBar />
       </div>
       <div className="mt-3" {...textAttrs}>
         <Title
-          {...textAttrs}
           className={cn(
-            "line-clamp-3 font-display leading-[1.2] font-bold text-balance",
-            large ? "text-xl sm:text-2xl" : "text-lg",
-            titleHover,
+            titleClass,
+            "text-balance group-hover:text-brand-blue",
             urdu && URDU_TITLE_CLASS,
           )}
         >
@@ -256,19 +132,15 @@ export function StoryCard({
         </Title>
         {large ? (
           <p
-            {...textAttrs}
             className={cn(
-              "mt-2 line-clamp-2 text-sm leading-relaxed",
-              inverted ? "text-background/80" : "text-muted-foreground",
+              "mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground",
               urdu && URDU_TEXT_CLASS,
             )}
           >
             {story.summary}
           </p>
         ) : null}
-        <div className="mt-2">
-          <Byline story={story} tone={inverted ? "light" : "muted"} />
-        </div>
+        <DateLine story={story} className="mt-2" />
       </div>
     </Link>
   );

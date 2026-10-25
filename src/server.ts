@@ -44,12 +44,39 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// The SSR document is largely markup, so it compresses well. Node's node-server
+// serves static assets pre-compressed, but not the rendered response, so it is
+// gzipped here. Only textual responses, only when the client asked for gzip, and
+// never a response that already carries a content-encoding.
+async function maybeCompress(request: Request, response: Response): Promise<Response> {
+  if (response.status < 200 || response.status === 204 || response.status === 304) return response;
+  if (response.headers.has("content-encoding")) return response;
+  if (!response.body) return response;
+
+  const type = response.headers.get("content-type") ?? "";
+  if (!/^(text\/|application\/json|application\/xml|image\/svg)/.test(type)) return response;
+
+  const accept = request.headers.get("accept-encoding") ?? "";
+  if (!/\bgzip\b/i.test(accept)) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("content-encoding", "gzip");
+  headers.delete("content-length");
+  headers.append("vary", "accept-encoding");
+
+  return new Response(response.body.pipeThrough(new CompressionStream("gzip")), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return await maybeCompress(request, await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
