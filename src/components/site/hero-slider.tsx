@@ -172,6 +172,7 @@ export function HeroSlider({ stories, className }: { stories: Story[]; className
                   className={cn(
                     "line-clamp-3 font-display text-[clamp(1.5rem,3vw,2.6rem)] leading-[1.08] font-bold text-balance text-white hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white",
                     urdu && URDU_DISPLAY_CLASS,
+                    urdu && "urdu-hero-title",
                   )}
                 >
                   {item.title}
