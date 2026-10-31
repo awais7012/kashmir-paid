@@ -1,15 +1,6 @@
 import type { StoryLanguage } from "@/lib/story-language";
 
-/**
- * The language this deployment publishes in — one language per deployment, and
- * no switch on the site. Every list reads through `forSiteLang`, so a bilingual
- * archive still renders as a single-language publication.
- *
- * The value is inlined at build time from `SITE_LANG` (see vite.config.ts), so
- * the server and the browser always agree. The runtime environment is also read
- * on the server, so a built server can be pointed at a language without a
- * rebuild.
- */
+/** The default language for first-time visitors, configurable per deployment. */
 declare const __SITE_LANG__: string | undefined;
 
 function readEnv(): string | undefined {
@@ -28,9 +19,10 @@ function parse(value: string | undefined): StoryLanguage {
 
 export const SITE_LANG: StoryLanguage = parse(readEnv());
 
-export const IS_URDU_SITE = SITE_LANG === "ur";
-
-/** Keep only the stories written in this deployment's language. */
-export function forSiteLang<T extends { language: string }>(stories: T[]): T[] {
-  return stories.filter((story) => story.language === SITE_LANG);
+/** Keep only stories written in the visitor's selected language. */
+export function forSiteLang<T extends { language: string }>(
+  stories: T[],
+  language: StoryLanguage = SITE_LANG,
+): T[] {
+  return stories.filter((story) => story.language === language);
 }

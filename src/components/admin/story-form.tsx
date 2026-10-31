@@ -428,7 +428,7 @@ export function StoryForm({
             meta={field(
               "language",
               "Language",
-              "An Urdu story reads right-to-left on the page and appears only on the Urdu site.",
+              "Readers can switch between English and Urdu on the public site.",
             )}
             value={values.language}
             onChange={(next) => update({ language: next as StoryLanguage })}

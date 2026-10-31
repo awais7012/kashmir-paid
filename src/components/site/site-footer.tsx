@@ -2,11 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { BRAND_LOGO } from "@/lib/brand";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { publicStories } from "@/lib/home-feed";
 import { slugifyLabel, type SiteSettings } from "@/lib/site-settings";
 import { socialLinks } from "@/lib/social";
-import { looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { useSiteLanguage } from "@/lib/site-language-context";
+import { localiseCategory, looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -23,13 +24,15 @@ const QUICK_LINKS = [
 /** The shared footer: solid navy, with the brand, sections, contact and social. */
 export function SiteFooter({ settings }: { settings: SiteSettings }) {
   const { data: stories = [] } = useQuery(storiesQueryOptions);
+  const { language } = useSiteLanguage();
+  const t = useTranslations();
   const social = socialLinks(settings);
 
   // Sections are free text on a story, so the counts come from the feed rather
   // than a fixed list, and a section with nothing in it is never shown.
   const sections = (() => {
     const counts = new Map<string, number>();
-    for (const story of publicStories(stories)) {
+    for (const story of publicStories(stories, language)) {
       const name = story.category.trim();
       if (!name) continue;
       counts.set(name, (counts.get(name) ?? 0) + 1);
@@ -122,8 +125,13 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
                       params={{ category: slugifyLabel(name) }}
                       className="flex items-center justify-between gap-3 text-sm text-navy-foreground/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky"
                     >
-                      <span className={cn("truncate", looksUrdu(name) && URDU_TEXT_CLASS)}>
-                        {name}
+                      <span
+                        className={cn(
+                          "truncate",
+                          looksUrdu(localiseCategory(name, language)) && URDU_TEXT_CLASS,
+                        )}
+                      >
+                        {localiseCategory(name, language)}
                       </span>
                       <span className="shrink-0 text-xs text-navy-foreground/55">{count}</span>
                     </Link>

@@ -1,5 +1,6 @@
 import { categoryStyle } from "@/lib/category-style";
-import { looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { localiseCategory, looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import { cn } from "@/lib/utils";
 
 /**
@@ -9,6 +10,8 @@ import { cn } from "@/lib/utils";
  * BREAKING alone.
  */
 export function CategoryChip({ label, className }: { label: string; className?: string }) {
+  const { language } = useSiteLanguage();
+  const displayLabel = localiseCategory(label, language);
   const { chipClass } = categoryStyle(label);
 
   return (
@@ -16,11 +19,11 @@ export function CategoryChip({ label, className }: { label: string; className?: 
       className={cn(
         "inline-flex items-center px-2 py-1 text-[10px] font-black tracking-[0.08em] text-navy-foreground uppercase",
         chipClass,
-        looksUrdu(label) && URDU_TEXT_CLASS,
+        looksUrdu(displayLabel) && URDU_TEXT_CLASS,
         className,
       )}
     >
-      {label}
+      {displayLabel}
     </span>
   );
 }

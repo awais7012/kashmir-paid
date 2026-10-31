@@ -21,7 +21,13 @@ import {
   type FieldErrors,
   type SettingsPatch,
 } from "@/lib/admin-api";
-import type { HeroSlide, SiteSettings, TeamMember, TeamSection } from "@/lib/site-settings";
+import {
+  normaliseTeamStructure,
+  type HeroSlide,
+  type SiteSettings,
+  type TeamMember,
+  type TeamSection,
+} from "@/lib/site-settings";
 import { clearDraft, draftKey, readDraft, saveDraft } from "@/lib/studio-drafts";
 import { cn } from "@/lib/utils";
 
@@ -102,7 +108,7 @@ function SettingsForm({ initial }: { initial: SiteSettings }) {
   const [social, setSocial] = useState(recovered?.social ?? initial.social);
   const [members, setMembers] = useState<TeamMember[]>(recovered?.members ?? initial.team.members);
   const [structure, setStructure] = useState<TeamSection[]>(
-    recovered?.structure ?? initial.team.structure,
+    normaliseTeamStructure(recovered?.structure ?? initial.team.structure),
   );
   const [footer, setFooter] = useState(recovered?.footer ?? initial.footer);
 

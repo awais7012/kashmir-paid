@@ -1,5 +1,6 @@
-import { forSiteLang } from "@/lib/site-lang";
+import { forSiteLang, SITE_LANG } from "@/lib/site-lang";
 import { slugifyLabel } from "@/lib/site-settings";
+import type { StoryLanguage } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 
 /**
@@ -29,12 +30,14 @@ export function isTestStory(story: Pick<Story, "title" | "slug">): boolean {
 }
 
 /**
- * Everything public: no test scaffolding, and only this deployment's language.
- * Every public list on the site reads through here, so a bilingual archive
- * still renders as a single-language publication.
+ * Everything public: no test scaffolding, and only the reader's selected
+ * language. Every public list on the site reads through here.
  */
-export function publicStories(stories: Story[]): Story[] {
-  return forSiteLang(stories.filter((story) => !isTestStory(story)));
+export function publicStories(stories: Story[], language: StoryLanguage = SITE_LANG): Story[] {
+  return forSiteLang(
+    stories.filter((story) => !isTestStory(story)),
+    language,
+  );
 }
 
 /**
@@ -105,8 +108,8 @@ function groupFor(category: string): { key: string; label: string; aliases: stri
   return { key: slugifyLabel(label) || normalise(label), label, aliases: [label] };
 }
 
-export function selectHomeFeed(stories: Story[]): HomeFeed {
-  const pool = publicStories(stories);
+export function selectHomeFeed(stories: Story[], language: StoryLanguage = SITE_LANG): HomeFeed {
+  const pool = publicStories(stories, language);
   const used = new Set<string>();
 
   const takeFrom = (

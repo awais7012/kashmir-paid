@@ -4,6 +4,7 @@ import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
+import { useTranslations } from "@/lib/i18n";
 import { socialLinks } from "@/lib/social";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { primeQuery, storiesQueryOptions } from "@/lib/stories";
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/contact")({
 
 function ContactPage() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const t = useTranslations();
   if (!settings) return <PageShimmer />;
 
   const { contact } = settings;
@@ -39,7 +41,7 @@ function ContactPage() {
       ? {
           key: "address",
           Icon: MapPin,
-          label: "Address",
+          label: t.address,
           value: contact.address,
           href: null,
         }
@@ -48,7 +50,7 @@ function ContactPage() {
       ? {
           key: "phone",
           Icon: Phone,
-          label: "Phone",
+          label: t.phone,
           value: contact.phone,
           href: `tel:${contact.phone.replace(/[^\d+]/g, "")}`,
         }
@@ -57,7 +59,7 @@ function ContactPage() {
       ? {
           key: "email",
           Icon: Mail,
-          label: "Email",
+          label: t.email,
           value: contact.email,
           href: `mailto:${contact.email}`,
         }
@@ -66,7 +68,7 @@ function ContactPage() {
       ? {
           key: "whatsapp",
           Icon: MessageCircle,
-          label: "WhatsApp",
+          label: t.whatsapp,
           value: contact.whatsapp,
           href: `https://wa.me/${whatsapp}`,
         }
@@ -80,13 +82,13 @@ function ContactPage() {
       <main className="page-shell py-12 lg:py-16">
         <div className="border-b border-border pb-4">
           <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
-            Get in touch
+            {t.getInTouchEyebrow}
           </p>
           <h1 className="mt-1 font-sans text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.9] font-black">
-            Contact
+            {t.contact}
           </h1>
           <p className="mt-4 max-w-prose text-base leading-relaxed text-muted-foreground">
-            Newsroom, advertising and general enquiries. We read everything that comes in.
+            {t.contactIntro}
           </p>
         </div>
 
@@ -126,9 +128,9 @@ function ContactPage() {
           </div>
         ) : (
           <div className="mt-10 grid justify-items-start gap-3 rounded-card border border-border bg-card px-5 py-12 shadow-card">
-            <h2 className="font-sans text-3xl">Contact details coming soon</h2>
+            <h2 className="font-sans text-3xl">{t.contactDetailsComingSoon}</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-              Our contact details have not been published yet. Please check back shortly.
+              {t.contactDetailsUnavailable}
             </p>
           </div>
         )}
@@ -136,7 +138,7 @@ function ContactPage() {
         {social.length > 0 ? (
           <div className="mt-12 border-t border-border pt-8">
             <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
-              Follow us
+              {t.followUs}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               {social.map((item) => {

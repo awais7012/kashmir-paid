@@ -13,8 +13,9 @@ import { SiteHeader } from "@/components/site/site-header";
 import { TopStories } from "@/components/site/top-stories";
 import { TwoColumnLists } from "@/components/site/two-column-lists";
 import { selectHomeFeed } from "@/lib/home-feed";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { primeQuery, storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -61,10 +62,12 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
   const { data: stories } = useQuery(storiesQueryOptions);
+  const { language } = useSiteLanguage();
+  const t = useTranslations();
 
   if (!settings || !stories) return <HomeSkeleton />;
 
-  const feed = selectHomeFeed(stories);
+  const feed = selectHomeFeed(stories, language);
   const { live } = settings;
 
   const showTiles = feed.categories.length >= 4;

@@ -13,11 +13,12 @@ const nitroCompression = { compressPublicAssets: { gzip: true, brotli: true } } 
 
 export default defineConfig({
   vite: {
-    // The site's single language, inlined into both the server and the browser
-    // bundle so they agree. Set it on the command line: `SITE_LANG=ur npm run dev`.
-    // Defaults to English. See src/lib/site-lang.ts.
+    // The first-visit language, inlined into both the server and browser bundles.
+    // Readers can switch language at runtime; see src/lib/site-lang.ts.
     define: {
-      __SITE_LANG__: JSON.stringify(process.env["SITE_LANG"] ?? process.env["VITE_SITE_LANG"] ?? "en"),
+      __SITE_LANG__: JSON.stringify(
+        process.env["SITE_LANG"] ?? process.env["VITE_SITE_LANG"] ?? "en",
+      ),
     },
   },
   // Build a plain Node server (`.output/server/index.mjs`) for a VPS instead of

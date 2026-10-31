@@ -1,6 +1,6 @@
 import { SectionHeader, ViewAllSectionLink } from "@/components/site/section-header";
 import { StoryCard } from "@/components/story/story-card";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import type { Story } from "@/lib/stories";
 
 /**
@@ -9,6 +9,7 @@ import type { Story } from "@/lib/stories";
  * the date. Four cards make a row; fewer than four is a stray card, not a shelf.
  */
 export function LatestVideos({ stories, title }: { stories: Story[]; title: string }) {
+  const t = useTranslations();
   const cards = stories.slice(0, 4);
   if (cards.length < 4) return null;
 

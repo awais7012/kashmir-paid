@@ -106,6 +106,12 @@ function AdminHomeRoute() {
 function Home() {
   const stories = useQuery({ queryKey: ["admin", "stories"], queryFn: fetchStories });
   const total = stories.data?.meta.total;
+  const rows = stories.data?.data ?? [];
+  const publishedByLanguage = (language: "en" | "ur") =>
+    rows.filter(
+      (story) =>
+        story.language === language && new Date(story.published_at).getTime() <= Date.now(),
+    ).length;
 
   return (
     <>
@@ -113,8 +119,8 @@ function Home() {
         <p className="text-[10px] font-black tracking-[0.2em] text-primary uppercase">Studio</p>
         <h1 className="mt-1 font-display text-4xl leading-none sm:text-5xl">Welcome back</h1>
         <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
-          Everything you do here appears on the public site straight away. Pick what you want to do
-          from the cards below.
+          Published changes appear on the public site. Stories scheduled for the future stay hidden
+          until their publish time.
         </p>
       </div>
 
@@ -154,6 +160,44 @@ function Home() {
           </div>
         </div>
       </div>
+
+      <section className="mt-6 grid gap-4 border-2 border-foreground bg-card p-5 sm:p-6">
+        <div>
+          <h2 className="font-display text-2xl">English & Urdu coverage</h2>
+          <p className="mt-2 max-w-prose text-sm leading-relaxed text-muted-foreground">
+            The public language switch shows stories already published in that language. English and
+            Urdu stories are separate entries; nothing is translated automatically.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            { language: "en" as const, label: "English" },
+            { language: "ur" as const, label: "Urdu / اردو" },
+          ].map(({ language, label }) => (
+            <div key={language} className="border border-border bg-background px-4 py-3">
+              <p className="font-display text-3xl leading-none">
+                {stories.data ? publishedByLanguage(language) : "—"}
+              </p>
+              <p className="mt-2 text-[10px] font-black tracking-[0.14em] text-muted-foreground uppercase">
+                {label} published
+              </p>
+            </div>
+          ))}
+        </div>
+        {typeof total === "number" && total > rows.length ? (
+          <p className="text-xs text-muted-foreground">
+            Language counts cover the latest {rows.length} stories shown here.
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <Link to="/admin/new" className={adminButton({ variant: "primary", size: "sm" })}>
+            Add an English or Urdu story
+          </Link>
+          <Link to="/admin/stories" className={adminButton({ variant: "outline", size: "sm" })}>
+            Review all stories
+          </Link>
+        </div>
+      </section>
 
       <h2 className="mt-12 border-b-2 border-foreground pb-2 font-display text-2xl">
         What would you like to do?

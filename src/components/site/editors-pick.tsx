@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CategoryChip } from "@/components/story/category-chip";
 import { StoryThumb } from "@/components/story/story-thumb";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS, URDU_TITLE_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
  * the desk has flagged a story, so it needs no empty state.
  */
 export function EditorsPick({ story }: { story: Story | null }) {
+  const t = useTranslations();
   if (!story) return null;
   const urdu = isUrdu(story.language);
 

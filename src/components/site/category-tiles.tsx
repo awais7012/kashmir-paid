@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { categoryStyle } from "@/lib/category-style";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 import { slugifyLabel } from "@/lib/site-settings";
-import { looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { localiseCategory, looksUrdu, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import type { CategorySection } from "@/lib/home-feed";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,8 @@ export function CategoryTiles({
   /** "split" when the live card shares the row, so the tiles read 3-across. */
   layout?: "wide" | "split";
 }) {
+  const t = useTranslations();
+  const { language } = useSiteLanguage();
   const tiles = categories.slice(0, 6);
   if (tiles.length < 4) return null;
 
@@ -54,10 +57,10 @@ export function CategoryTiles({
               <span
                 className={cn(
                   "relative z-10 text-xs font-bold text-white text-balance",
-                  looksUrdu(section.label) && URDU_TEXT_CLASS,
+                  looksUrdu(localiseCategory(section.label, language)) && URDU_TEXT_CLASS,
                 )}
               >
-                {section.label}
+                {localiseCategory(section.label, language)}
               </span>
             </Link>
           );

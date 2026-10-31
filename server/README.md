@@ -137,6 +137,10 @@ endpoints above with a token kept in `localStorage`.
 - `/admin` lists every story, live and scheduled, with search and filters.
 - `/admin/new` creates a story. `/admin/:id` edits or deletes one.
 - Sign in with an account created by `npm run db:seed`.
+- Choose English or Urdu for each story in the editor. Each language needs its
+  own story entry; the public language switch does not translate content.
+- Website settings include profile photos for team members, org-chart blocks,
+  and every role or person listed inside a block.
 
 There is no public link to `/admin`; navigate to it directly. A story's status is
 derived from `published_at`: a future date keeps it hidden from the public API

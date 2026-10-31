@@ -4,6 +4,7 @@ import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { mediaUrl } from "@/lib/media";
+import { useTranslations } from "@/lib/i18n";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { primeQuery, storiesQueryOptions } from "@/lib/stories";
@@ -27,9 +28,6 @@ export const Route = createFileRoute("/team")({
   component: TeamPage,
 });
 
-const INTRO =
-  "Global Kashmir TV operates through an international leadership team, regional management offices, professional editorial departments and a network of bureau chiefs and correspondents across Pakistan, Azad Jammu & Kashmir, the United Kingdom and Saudi Arabia.";
-
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const first = parts[0]?.charAt(0) ?? "";
@@ -46,6 +44,7 @@ function splitRole(role: string): { title: string; note: string } {
 
 function TeamPage() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const t = useTranslations();
   if (!settings) return <PageShimmer />;
 
   const { members, structure } = settings.team;
@@ -60,17 +59,17 @@ function TeamPage() {
           <div className="grid gap-8 border-b border-border pb-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
             <div>
               <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
-                Who we are
+                {t.whoWeAre}
               </p>
               <h1 className="mt-2 font-sans text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
-                Team
+                {t.team}
               </h1>
               <p className="mt-4 font-sans text-xl text-brand-blue italic sm:text-2xl">
-                Bridging the Valley and the World
+                {t.teamTagline}
               </p>
             </div>
             <p className="max-w-[62ch] text-base leading-relaxed text-muted-foreground lg:pb-1">
-              {INTRO}
+              {t.teamIntro}
             </p>
           </div>
         </section>
@@ -78,9 +77,9 @@ function TeamPage() {
         {empty ? (
           <section className="page-shell pb-16">
             <div className="grid justify-items-start gap-3 border border-border bg-card px-6 py-14">
-              <h2 className="font-sans text-3xl">The team is being put together</h2>
+              <h2 className="font-sans text-3xl">{t.teamEmptyTitle}</h2>
               <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-                Team profiles have not been published yet. Please check back shortly.
+                {t.teamEmptyBody}
               </p>
             </div>
           </section>
@@ -91,12 +90,12 @@ function TeamPage() {
             <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
               <div>
                 <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
-                  Leadership
+                  {t.leadership}
                 </p>
                 <h2 className="mt-1 font-sans text-3xl leading-none sm:text-4xl">Our leadership</h2>
               </div>
               <p className="text-xs text-muted-foreground">
-                {members.length} {members.length === 1 ? "person" : "people"}
+                {members.length} {t.teamMembers}
               </p>
             </div>
 
@@ -177,10 +176,10 @@ function TeamPage() {
             <div className="page-shell py-14 lg:py-20">
               <div className="border-b border-border pb-3">
                 <p className="text-[10px] font-black tracking-[0.2em] text-brand-blue uppercase">
-                  How we are organised
+                  {t.howWeAreOrganised}
                 </p>
                 <h2 className="mt-1 font-sans text-3xl leading-none sm:text-4xl">
-                  Organisational structure
+                  {t.organisationalStructure}
                 </h2>
               </div>
 
@@ -197,14 +196,24 @@ function TeamPage() {
                       >
                         {String(index + 1).padStart(2, "0")}
                       </span>
-                      <div className="min-w-0">
-                        <h3 className="font-sans text-2xl leading-tight font-bold break-words">
-                          {section.title}
-                        </h3>
-                        {section.description ? (
-                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                            {section.description}
-                          </p>
+                      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+                        <div className="min-w-0">
+                          <h3 className="font-sans text-2xl leading-tight font-bold break-words">
+                            {section.title}
+                          </h3>
+                          {section.description ? (
+                            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                              {section.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        {mediaUrl(section.photo) ? (
+                          <img
+                            src={mediaUrl(section.photo) ?? ""}
+                            alt={`${section.title} ${t.teamPhotoAlt}`}
+                            loading="lazy"
+                            className="size-16 rounded-full border border-border object-cover"
+                          />
                         ) : null}
                       </div>
                     </div>
@@ -212,13 +221,26 @@ function TeamPage() {
                     {section.roles.length > 0 ? (
                       <ul className="grid gap-4 border-t border-border pt-6">
                         {section.roles.map((role) => {
-                          const { title, note } = splitRole(role);
+                          const { title, note } = splitRole(role.label);
+                          const photo = mediaUrl(role.photo);
                           return (
-                            <li key={role} className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
-                              <span
-                                aria-hidden="true"
-                                className="mt-2.5 h-0.5 w-4 shrink-0 bg-primary"
-                              />
+                            <li
+                              key={role.id || role.label}
+                              className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3"
+                            >
+                              {photo ? (
+                                <img
+                                  src={photo}
+                                  alt={title}
+                                  loading="lazy"
+                                  className="size-12 rounded-full border border-border object-cover"
+                                />
+                              ) : (
+                                <span
+                                  aria-hidden="true"
+                                  className="ms-5 h-0.5 w-4 shrink-0 bg-primary"
+                                />
+                              )}
                               <span className="min-w-0">
                                 <span className="block text-sm leading-snug font-bold break-words">
                                   {title}

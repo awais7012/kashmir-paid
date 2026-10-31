@@ -13,16 +13,15 @@ import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SITE_LANG } from "@/lib/site-lang";
+import { SiteLanguageProvider } from "@/lib/site-language-context";
 
-/* Only the fonts this deployment's language needs are fetched.
+/* Both typefaces are needed because readers can switch language at runtime.
    English: Inter everywhere, Source Serif 4 for the hero headline.
    Urdu: Naskh for cards and body, Nastaliq for the hero, Inter for Latin meta. */
 const FONTS_EN =
   "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap";
 const FONTS_UR =
   "https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap";
-const FONTS_HREF = SITE_LANG === "ur" ? FONTS_UR : FONTS_EN;
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -99,10 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: FONTS_HREF,
-      },
+      { rel: "stylesheet", href: FONTS_EN },
+      { rel: "stylesheet", href: FONTS_UR },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
@@ -138,8 +135,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SiteLanguageProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </SiteLanguageProvider>
       <Toaster />
     </QueryClientProvider>
   );

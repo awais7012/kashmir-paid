@@ -80,6 +80,10 @@ npm run dev                                             # frontend on http://loc
 ```
 
 The frontend reads the API base URL from `VITE_API_URL` (see [`.env.example`](./.env.example)).
+The Studio stores English and Urdu stories as separate entries. Readers can
+switch languages from the public header; the switch only shows content that
+already exists in the selected language and does not translate stories or copy
+data between local and production databases.
 
 This project was built with [Lovable](https://lovable.dev).
 

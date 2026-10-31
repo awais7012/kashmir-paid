@@ -5,13 +5,14 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
 import { publicStories } from "@/lib/home-feed";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import {
   categoryForSlug,
   sectionLabelForSlug,
   siteSettingsQueryOptions,
 } from "@/lib/site-settings";
-import { looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { localiseCategory, looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { primeQuery, storiesByCategoryQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,8 @@ export const Route = createFileRoute("/section/$category")({
 function SectionPage() {
   const { category } = Route.useParams();
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const { language } = useSiteLanguage();
+  const t = useTranslations();
 
   const resolved = settings ? categoryForSlug(settings, category) : "";
   const { data: page } = useQuery({
@@ -49,10 +52,9 @@ function SectionPage() {
 
   if (!settings || !page) return <PageShimmer />;
 
-  // A section lists one language: the one this deployment publishes in.
-  const stories = publicStories(page.data);
+  const stories = publicStories(page.data, language);
   // The display name, not the slug: "top-stories" reads as "Top Stories".
-  const label = sectionLabelForSlug(settings, category);
+  const label = localiseCategory(sectionLabelForSlug(settings, category), language);
   const urduLabel = looksUrdu(label);
   const [lead, ...rest] = stories;
 

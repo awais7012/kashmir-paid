@@ -1,50 +1,8 @@
-import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
 import { adminButton, TextAreaField, TextField } from "@/components/admin/controls";
 import { MediaField } from "@/components/admin/media-field";
-import type { TeamMember, TeamSection } from "@/lib/site-settings";
+import type { TeamMember, TeamRole, TeamSection } from "@/lib/site-settings";
 import { cn } from "@/lib/utils";
-
-/**
- * One role per line. The textarea keeps its own raw text so pressing Enter does
- * not lose the empty line, while the form receives the cleaned list.
- */
-function RolesField({
-  id,
-  sectionId,
-  roles,
-  onChange,
-}: {
-  id: string;
-  sectionId: string;
-  roles: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const [text, setText] = useState(roles.join("\n"));
-
-  // Re-sync only when a different section is shown, so typing is never clobbered.
-  useEffect(() => {
-    setText(roles.join("\n"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sectionId]);
-
-  return (
-    <TextAreaField
-      meta={{ id, label: "Roles and bureaus", hint: "One per line." }}
-      value={text}
-      onChange={(value) => {
-        setText(value);
-        onChange(
-          value
-            .split("\n")
-            .map((line) => line.trim())
-            .filter(Boolean),
-        );
-      }}
-      rows={6}
-    />
-  );
-}
 
 /**
  * The Team page's people, edited as a list. Each row is exactly what a visitor
@@ -95,6 +53,35 @@ export function TeamEditor({
     next[index] = b;
     next[target] = a;
     onStructureChange(next);
+  }
+
+  function updateRoleAt(sectionIndex: number, roleIndex: number, patch: Partial<TeamRole>) {
+    onStructureChange(
+      structure.map((section, index) =>
+        index === sectionIndex
+          ? {
+              ...section,
+              roles: section.roles.map((role, position) =>
+                position === roleIndex ? { ...role, ...patch } : role,
+              ),
+            }
+          : section,
+      ),
+    );
+  }
+
+  function moveRole(sectionIndex: number, roleIndex: number, delta: number) {
+    const target = roleIndex + delta;
+    const section = structure[sectionIndex];
+    if (!section?.roles[roleIndex] || !section.roles[target]) return;
+
+    const roles = [...section.roles];
+    const current = roles[roleIndex];
+    const adjacent = roles[target];
+    if (!current || !adjacent) return;
+    roles[roleIndex] = adjacent;
+    roles[target] = current;
+    updateSectionAt(sectionIndex, { roles });
   }
 
   return (
@@ -261,12 +248,102 @@ export function TeamEditor({
                   value={section.description}
                   onChange={(value) => updateSectionAt(index, { description: value })}
                 />
-                <RolesField
-                  id={`section-roles-${index}`}
-                  sectionId={section.id}
-                  roles={section.roles}
-                  onChange={(roles) => updateSectionAt(index, { roles })}
+                <MediaField
+                  id={`section-photo-${index}`}
+                  kind="image"
+                  label="Block or department photo"
+                  value={section.photo}
+                  onChange={(value) => updateSectionAt(index, { photo: value })}
+                  emptyMessage="Optional. Add a portrait or a photo representing this team."
                 />
+                <div className="grid gap-3">
+                  <div>
+                    <h4 className="text-[10px] font-black tracking-[0.14em] uppercase">
+                      People and positions
+                    </h4>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      Add an optional photo to every person or position in this block.
+                    </p>
+                  </div>
+                  {section.roles.map((role, roleIndex) => (
+                    <div
+                      key={role.id || `role-${roleIndex}`}
+                      className="grid gap-4 border border-border bg-background p-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black tracking-[0.14em] uppercase">
+                          Position {roleIndex + 1}
+                        </span>
+                        <div className="ms-auto flex items-center gap-1">
+                          <button
+                            type="button"
+                            aria-label={`Move position ${roleIndex + 1} up`}
+                            disabled={roleIndex === 0}
+                            onClick={() => moveRole(index, roleIndex, -1)}
+                            className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2")}
+                          >
+                            <ArrowUp className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Move position ${roleIndex + 1} down`}
+                            disabled={roleIndex === section.roles.length - 1}
+                            onClick={() => moveRole(index, roleIndex, 1)}
+                            className={cn(adminButton({ variant: "ghost", size: "sm" }), "px-2")}
+                          >
+                            <ArrowDown className="size-4" />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Remove position ${roleIndex + 1}`}
+                            onClick={() =>
+                              updateSectionAt(index, {
+                                roles: section.roles.filter(
+                                  (_, position) => position !== roleIndex,
+                                ),
+                              })
+                            }
+                            className={cn(adminButton({ variant: "danger", size: "sm" }), "px-2")}
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <TextField
+                        meta={{
+                          id: `section-role-${index}-${roleIndex}`,
+                          label: "Position or person",
+                          hint: "Use an em dash to add a short detail after the title.",
+                        }}
+                        value={role.label}
+                        onChange={(value) => updateRoleAt(index, roleIndex, { label: value })}
+                        placeholder="Director of News — Editorial team"
+                      />
+                      <MediaField
+                        id={`section-role-photo-${index}-${roleIndex}`}
+                        kind="image"
+                        label="Profile photo"
+                        value={role.photo}
+                        onChange={(value) => updateRoleAt(index, roleIndex, { photo: value })}
+                        emptyMessage="Optional. Upload a portrait for this person."
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateSectionAt(index, {
+                        roles: [
+                          ...section.roles,
+                          { id: crypto.randomUUID(), label: "", photo: "" },
+                        ],
+                      })
+                    }
+                    className={adminButton({ variant: "outline", size: "sm" })}
+                  >
+                    Add person or position
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -278,7 +355,7 @@ export function TeamEditor({
             onClick={() =>
               onStructureChange([
                 ...structure,
-                { id: crypto.randomUUID(), title: "", description: "", roles: [] },
+                { id: crypto.randomUUID(), title: "", description: "", photo: "", roles: [] },
               ])
             }
             className={adminButton({ variant: "outline", size: "sm" })}

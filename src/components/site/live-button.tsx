@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -14,6 +14,8 @@ export function LiveButton({
   className?: string;
   compact?: boolean;
 }) {
+  const t = useTranslations();
+
   return (
     <Link
       to="/live"

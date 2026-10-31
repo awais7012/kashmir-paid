@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { CategoryChip } from "@/components/story/category-chip";
 import { timeAgo } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 import { isUrdu, storyTextAttrs, URDU_DISPLAY_CLASS, URDU_TITLE_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
@@ -49,6 +49,7 @@ function toSlides(stories: Story[]): Slide[] {
  * rotates for readers who ask for reduced motion.
  */
 export function HeroSlider({ stories, className }: { stories: Story[]; className?: string }) {
+  const t = useTranslations();
   const items = useMemo(() => toSlides(stories), [stories]);
   const count = items.length;
 

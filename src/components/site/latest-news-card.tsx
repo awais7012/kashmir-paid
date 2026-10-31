@@ -1,5 +1,5 @@
 import { StoryCard } from "@/components/story/story-card";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import type { Story } from "@/lib/stories";
 
 /**
@@ -8,6 +8,7 @@ import type { Story } from "@/lib/stories";
  * fills its grid cell, so it stands exactly as tall as the hero next to it.
  */
 export function LatestNewsCard({ stories }: { stories: Story[] }) {
+  const t = useTranslations();
   const rows = stories.slice(0, 5);
   if (rows.length === 0) return null;
 

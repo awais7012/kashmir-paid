@@ -8,10 +8,11 @@ import { UtilityBar } from "@/components/site/utility-bar";
 import { CategoryChip } from "@/components/story/category-chip";
 import { BRAND_LOGO } from "@/lib/brand";
 import { publicStories } from "@/lib/home-feed";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { slugifyLabel, type SiteSettings } from "@/lib/site-settings";
 import { socialLinks } from "@/lib/social";
-import { looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { useSiteLanguage } from "@/lib/site-language-context";
+import { localiseCategory, looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import { storiesQueryOptions } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -40,11 +41,13 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
   const [compact, setCompact] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
   const { pathname } = useLocation();
+  const { language, toggleLanguage } = useSiteLanguage();
+  const t = useTranslations();
 
   // Shares the cache key with the homepage loader, so this usually costs nothing.
   const { data: fetched = [] } = useQuery(storiesQueryOptions);
   // The masthead obeys the same rule as the page: one language, no test copy.
-  const stories = useMemo(() => publicStories(fetched), [fetched]);
+  const stories = useMemo(() => publicStories(fetched, language), [fetched, language]);
 
   useEffect(() => {
     const onScroll = () => setCompact(window.scrollY > COMPACT_AT_PX);
@@ -118,7 +121,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           <Link
             to="/"
             aria-label="Global Kashmir TV, home"
-            className="flex min-w-0 shrink-0 items-center gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
+            className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-blue"
           >
             <img
               src={BRAND_LOGO}
@@ -134,7 +137,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               <span
                 className={cn(
                   "block font-display leading-none font-black tracking-tight whitespace-nowrap uppercase transition-all duration-300 motion-reduce:transition-none",
-                  compact ? "text-lg" : "text-xl lg:text-2xl",
+                  compact ? "text-[15px] sm:text-lg" : "text-[15px] sm:text-xl lg:text-2xl",
                 )}
               >
                 Global Kashmir <span className="text-brand-blue">TV</span>
@@ -148,10 +151,18 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
           <div className="ms-auto flex shrink-0 items-center gap-2">
             <button
               type="button"
+              onClick={toggleLanguage}
+              aria-label={language === "en" ? "اردو میں دیکھیں" : "Switch to English"}
+              className="min-h-9 rounded-sm border border-border px-2 text-[11px] font-bold text-navy transition-[color,background-color,transform] duration-150 ease-out hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue active:scale-[0.97]"
+            >
+              {language === "en" ? "اردو" : "English"}
+            </button>
+            <button
+              type="button"
               aria-label={t.search}
               aria-expanded={searchOpen}
               onClick={() => setSearchOpen((open) => !open)}
-              className="grid size-10 place-items-center rounded-sm text-navy transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+              className="grid size-9 place-items-center rounded-sm text-navy transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:size-10"
             >
               <Search className="size-4" />
             </button>
@@ -163,7 +174,7 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
               aria-label={t.openMenu}
               aria-expanded={drawerOpen}
               onClick={() => setDrawerOpen(true)}
-              className="grid size-10 place-items-center rounded-sm bg-secondary text-navy transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue lg:hidden"
+              className="grid size-9 place-items-center rounded-sm bg-secondary text-navy transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:size-10 lg:hidden"
             >
               <Menu className="size-5" />
             </button>
@@ -281,10 +292,10 @@ export function SiteHeader({ settings }: { settings: SiteSettings }) {
                     onClick={() => setNewsOpen(false)}
                     className={cn(
                       "px-4 py-2.5 text-start text-[11px] font-bold tracking-[0.06em] uppercase hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
-                      looksUrdu(name) && URDU_TEXT_CLASS,
+                      looksUrdu(localiseCategory(name, language)) && URDU_TEXT_CLASS,
                     )}
                   >
-                    {name}
+                    {localiseCategory(name, language)}
                   </Link>
                 ))}
               </div>
@@ -355,6 +366,8 @@ function MobileDrawer({
   newsActive: boolean;
 }) {
   const [newsOpen, setNewsOpen] = useState(false);
+  const t = useTranslations();
+  const { language } = useSiteLanguage();
 
   useEffect(() => {
     if (!open) setNewsOpen(false);
@@ -449,10 +462,10 @@ function MobileDrawer({
                   onClick={onClose}
                   className={cn(
                     "px-3 py-2.5 text-start text-xs font-bold tracking-[0.06em] uppercase hover:text-brand-blue",
-                    looksUrdu(name) && URDU_TEXT_CLASS,
+                    looksUrdu(localiseCategory(name, language)) && URDU_TEXT_CLASS,
                   )}
                 >
-                  {name}
+                  {localiseCategory(name, language)}
                 </Link>
               ))}
             </div>

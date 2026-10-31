@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
 import { VideoPlayer } from "@/components/story/video-player";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import type { SiteSettings } from "@/lib/site-settings";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
  * embeddable stream it plays here; otherwise the card is just the call to watch.
  */
 export function LiveCard({ live, className }: { live: SiteSettings["live"]; className?: string }) {
+  const t = useTranslations();
   const configured =
     live.title.trim() !== "" || live.streamUrl.trim() !== "" || Boolean(live.video);
   if (!configured) return null;

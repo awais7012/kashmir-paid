@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { VideoPlayer } from "@/components/story/video-player";
 import { formatTime } from "@/lib/format";
+import { useTranslations } from "@/lib/i18n";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { primeQuery } from "@/lib/stories";
 
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/live")({
 
 function LivePage() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const t = useTranslations();
   if (!settings) return <PageShimmer />;
 
   const { live } = settings;
@@ -41,12 +43,12 @@ function LivePage() {
           {live.isLive ? (
             <span className="inline-flex items-center gap-2 bg-live px-2.5 py-1 text-[10px] font-black tracking-[0.16em] text-live-foreground uppercase">
               <span className="signal-pulse size-2 rounded-full bg-live-foreground" />
-              {startedAt ? `Live since ${startedAt}` : "Live now"}
+              {startedAt ? `${t.liveSince} ${startedAt}` : t.liveNow}
             </span>
           ) : (
             <span className="inline-flex items-center gap-2 rounded-sm border border-border px-2.5 py-1 text-[10px] font-black tracking-[0.16em] uppercase">
               <Radio className="size-3.5" />
-              Broadcast
+              {t.broadcast}
             </span>
           )}
         </div>
@@ -68,25 +70,22 @@ function LivePage() {
           </div>
         ) : (
           <div className="mt-8 grid justify-items-start gap-4 rounded-card border border-border bg-card px-6 py-12 shadow-card">
-            <h2 className="text-2xl font-extrabold tracking-tight">
-              Nothing is streaming right now
-            </h2>
+            <h2 className="text-2xl font-extrabold tracking-tight">{t.nothingStreaming}</h2>
             <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-              When the studio goes live, the broadcast plays here. Until then, the latest reporting
-              is still worth your time.
+              {t.liveStandbyBody}
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/news"
                 className="rounded-sm bg-navy px-4 py-3 text-xs font-black tracking-[0.12em] text-navy-foreground uppercase hover:bg-brand-blue focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
               >
-                Read the latest
+                {t.readLatest}
               </Link>
               <Link
                 to="/"
                 className="rounded-sm border border-border px-4 py-3 text-xs font-black tracking-[0.12em] uppercase hover:bg-navy hover:text-navy-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
               >
-                Go home
+                {t.goHome}
               </Link>
             </div>
           </div>

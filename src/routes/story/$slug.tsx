@@ -11,8 +11,9 @@ import { formatDate, timeAgo } from "@/lib/format";
 import { publicStories } from "@/lib/home-feed";
 import { Markdown } from "@/lib/markdown";
 import { mediaUrl } from "@/lib/media";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import { siteSettingsQueryOptions, slugifyLabel } from "@/lib/site-settings";
-import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
+import { isUrdu, localiseCategory, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import {
   primeQuery,
   storiesByCategoryQueryOptions,
@@ -60,6 +61,7 @@ export const Route = createFileRoute("/story/$slug")({
 function StoryPage() {
   const { slug } = Route.useParams();
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const { language } = useSiteLanguage();
   const { data: story, isError } = useQuery(storyQueryOptions(slug));
   const { data: categoryPage } = useQuery({
     ...storiesByCategoryQueryOptions(story?.category ?? ""),
@@ -72,9 +74,10 @@ function StoryPage() {
 
   const cover = mediaUrl(story.hero_image_url);
   const sectionSlug = slugifyLabel(story.category);
+  const categoryLabel = localiseCategory(story.category, story.language);
   // Related stories obey the same rules as every other list: site language, no
   // test copy, and never the story you are already reading.
-  const related = publicStories(categoryPage?.data ?? [])
+  const related = publicStories(categoryPage?.data ?? [], language)
     .filter((item) => item.id !== story.id)
     .slice(0, 3);
   const urdu = isUrdu(story.language);
@@ -139,7 +142,7 @@ function StoryPage() {
             )}
           >
             <ArrowLeft className="size-3.5 rtl:-scale-x-100" />
-            {story.category}
+            {categoryLabel}
           </Link>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -150,7 +153,7 @@ function StoryPage() {
                 urdu && URDU_TEXT_CLASS,
               )}
             >
-              {story.category}
+              {categoryLabel}
             </span>
             <time
               dateTime={story.published_at}

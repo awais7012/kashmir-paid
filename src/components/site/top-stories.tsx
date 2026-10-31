@@ -1,7 +1,7 @@
 import { SectionHeader, ViewAllLink } from "@/components/site/section-header";
 import { EditorsPick } from "@/components/site/editors-pick";
 import { StoryCard } from "@/components/story/story-card";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
  * so the row never leaves an empty half.
  */
 export function TopStories({ stories, pick }: { stories: Story[]; pick: Story | null }) {
+  const t = useTranslations();
   const cards = stories.slice(0, 4);
   if (cards.length === 0 && !pick) return null;
 

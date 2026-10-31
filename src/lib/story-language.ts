@@ -48,6 +48,34 @@ export function looksUrdu(text: string): boolean {
   return /[\u0600-\u06FF\u0750-\u077F]/.test(text);
 }
 
+const URDU_CATEGORY_LABELS: Record<string, string> = {
+  kashmir: "کشمیر",
+  pakistan: "پاکستان",
+  world: "دنیا",
+  global: "دنیا",
+  international: "بین الاقوامی",
+  politics: "سیاست",
+  political: "سیاست",
+  business: "کاروبار",
+  economy: "معیشت",
+  sports: "کھیل",
+  sport: "کھیل",
+  culture: "ثقافت",
+  heritage: "ورثہ",
+  art: "فن",
+  library: "کتب خانہ",
+  opinion: "رائے",
+  people: "عوام",
+  tourism: "سیاحت",
+  shows: "شوز",
+  videos: "ویڈیوز",
+};
+
+export function localiseCategory(category: string, language: StoryLanguage): string {
+  if (language !== "ur" || looksUrdu(category)) return category;
+  return URDU_CATEGORY_LABELS[category.trim().toLowerCase()] ?? category;
+}
+
 /** `dir`/`lang` for a block of story text; inert for English. */
 export function storyTextAttrs(language: string | null | undefined): {
   dir: "rtl" | undefined;

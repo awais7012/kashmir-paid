@@ -48,15 +48,29 @@ const teamMemberSchema = z.object({
   photo: z.string().trim().max(512).default(""),
 });
 
+const teamRoleSchema = z.object({
+  id: z.string().trim().max(64).default(""),
+  label: z.string().trim().min(1).max(300),
+  photo: z.string().trim().max(512).default(""),
+});
+
 /**
- * One block of the published org chart. Roles are plain lines, and a line may
- * carry its own detail after a dash, e.g. "Director of News — editors".
+ * Legacy role strings are upgraded on read so existing settings stay intact.
  */
 const teamSectionSchema = z.object({
   id: z.string().trim().max(64).default(""),
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(400).default(""),
-  roles: z.array(z.string().trim().min(1).max(300)).max(40).default([]),
+  photo: z.string().trim().max(512).default(""),
+  roles: z
+    .array(z.union([z.string().trim().min(1).max(300), teamRoleSchema]))
+    .max(40)
+    .default([])
+    .transform((roles) =>
+      roles.map((role, index) =>
+        typeof role === "string" ? { id: `role-${index}`, label: role, photo: "" } : role,
+      ),
+    ),
 });
 
 export const siteSettingsSchema = z.object({
@@ -136,7 +150,7 @@ export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
 export const navSectionPublicSchema = navSectionSchema;
 
 // Mirrors the copy the site shipped with, so nothing changes until it is edited.
-export const DEFAULT_SETTINGS: SiteSettings = {
+export const DEFAULT_SETTINGS: SiteSettings = siteSettingsSchema.parse({
   hero: {
     slides: [],
   },
@@ -193,6 +207,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         id: "governance",
         title: "Leadership & Governance",
         description: "Institutional governance and strategic oversight.",
+        photo: "",
         roles: ["Governing Body / Board of Directors"],
       },
       {
@@ -200,6 +215,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         title: "Executive Management",
         description:
           "These departments report to the CEO and coordinate operations across all regional offices.",
+        photo: "",
         roles: [
           "Director of News & Editorial — News Editor, Assignment Editor, Fact-Checking and Editorial Team",
           "Director of Programmes & Production — Programme Managers, Producers, Presenters, Researchers and Video Editors",
@@ -214,6 +230,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         title: "International Regional Structure",
         description:
           "Bureau chiefs and correspondents across Pakistan, Azad Jammu & Kashmir, the United Kingdom and Saudi Arabia.",
+        photo: "",
         roles: [
           "Head of Pakistan Operations — Bureau chiefs in Islamabad, Lahore and Karachi; regional reporters and correspondents",
           "Head of Azad Jammu & Kashmir Operations — Bureau chiefs in Muzaffarabad, Mirpur and Rawalakot / Poonch; district correspondents and field reporters",
@@ -226,6 +243,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         title: "Bureau-Level Team Structure",
         description:
           "Every regional bureau follows this reporting structure, adapted to its size and staffing.",
+        photo: "",
         roles: [
           "Regional Head",
           "Bureau Chief",
@@ -246,4 +264,4 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     note: "Independent voices · Global perspective",
     copyright: "© 2026 Global Kashmir TV",
   },
-};
+});

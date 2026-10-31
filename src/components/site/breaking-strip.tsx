@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { looksUrdu, storyTextAttrs, URDU_TEXT_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -17,10 +17,13 @@ import { cn } from "@/lib/utils";
  * working.
  */
 export function BreakingStrip({ stories, label }: { stories: Story[]; label?: string }) {
+  const t = useTranslations();
   const [offset, setOffset] = useState(0);
   if (stories.length === 0) return null;
 
-  const heading = label?.trim() || t.breaking;
+  const configuredLabel = label?.trim();
+  const heading =
+    !configuredLabel || configuredLabel.toLowerCase() === "breaking" ? t.breaking : configuredLabel;
   const count = stories.length;
   const rotated = [...stories.slice(offset), ...stories.slice(0, offset)];
   const loop = [...rotated, ...rotated];

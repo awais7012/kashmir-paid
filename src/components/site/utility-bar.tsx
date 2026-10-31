@@ -1,13 +1,12 @@
 import { Mail, Phone } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import type { SocialLink } from "@/lib/social";
 import { cn } from "@/lib/utils";
 
 /**
  * The slim navy bar above the masthead: the tagline on the left, and the desk's
  * phone, email and social links on the right — each rendered only when the desk
- * has filled it in. There is no language switch; the site publishes in one
- * language per deployment.
+ * has filled it in.
  */
 export function UtilityBar({
   tagline,
@@ -22,6 +21,7 @@ export function UtilityBar({
   social: SocialLink[];
   className?: string;
 }) {
+  const t = useTranslations();
   const hasContact = phone.trim() !== "" || email.trim() !== "";
 
   return (

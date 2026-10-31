@@ -5,9 +5,9 @@ import { StoryThumb } from "@/components/story/story-thumb";
 import { SectionHeader, ViewAllSectionLink } from "@/components/site/section-header";
 import { timeAgo } from "@/lib/format";
 import type { CategorySection } from "@/lib/home-feed";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { slugifyLabel } from "@/lib/site-settings";
-import { isUrdu, storyTextAttrs, URDU_TITLE_CLASS } from "@/lib/story-language";
+import { isUrdu, localiseCategory, storyTextAttrs, URDU_TITLE_CLASS } from "@/lib/story-language";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,15 +17,17 @@ import { cn } from "@/lib/utils";
  * single band.
  */
 function Block({ section }: { section: CategorySection }) {
+  const t = useTranslations();
+  const displayLabel = localiseCategory(section.label, section.stories[0]?.language ?? "en");
   const [lead, ...rest] = section.stories;
   if (!lead) return null;
   const rows = rest.slice(0, 3);
   const urdu = isUrdu(lead.language);
 
   return (
-    <section className="flex h-full flex-col" aria-label={section.label}>
+    <section className="flex h-full flex-col" aria-label={displayLabel}>
       <SectionHeader
-        title={section.label}
+        title={displayLabel}
         action={<ViewAllSectionLink slug={slugifyLabel(section.label)} label={t.viewAll} />}
       />
 

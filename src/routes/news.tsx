@@ -5,7 +5,8 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { StoryCard } from "@/components/story/story-card";
 import { publicStories } from "@/lib/home-feed";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
+import { useSiteLanguage } from "@/lib/site-language-context";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 import { allStoriesQueryOptions, primeQuery } from "@/lib/stories";
 
@@ -29,11 +30,12 @@ export const Route = createFileRoute("/news")({
 function NewsIndex() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
   const { data: page } = useQuery(allStoriesQueryOptions);
+  const { language } = useSiteLanguage();
+  const t = useTranslations();
 
   if (!settings || !page) return <PageShimmer />;
 
-  // The index lists one language: the one this deployment publishes in.
-  const stories = publicStories(page.data);
+  const stories = publicStories(page.data, language);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

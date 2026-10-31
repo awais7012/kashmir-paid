@@ -28,6 +28,13 @@ export type TeamMember = {
   photo: string;
 };
 
+/** A named or vacant position in the published organisation chart. */
+export type TeamRole = {
+  id: string;
+  label: string;
+  photo: string;
+};
+
 /**
  * One block of the published org chart. A role line may carry its own detail
  * after a dash, e.g. "Director of News — editors".
@@ -36,7 +43,8 @@ export type TeamSection = {
   id: string;
   title: string;
   description: string;
-  roles: string[];
+  photo: string;
+  roles: TeamRole[];
 };
 
 export type SiteSettings = {
@@ -115,6 +123,34 @@ function list<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+function teamRole(value: unknown, index: number): TeamRole {
+  if (typeof value === "string") {
+    return { id: `role-${index}`, label: value, photo: "" };
+  }
+  const raw = isRecord(value) ? value : {};
+  return {
+    id: str(raw["id"]) || `role-${index}`,
+    label: str(raw["label"]),
+    photo: str(raw["photo"]),
+  };
+}
+
+function teamSection(value: unknown, index: number): TeamSection {
+  const raw = isRecord(value) ? value : {};
+  const roles = Array.isArray(raw["roles"]) ? raw["roles"] : [];
+  return {
+    id: str(raw["id"]) || `section-${index}`,
+    title: str(raw["title"]),
+    description: str(raw["description"]),
+    photo: str(raw["photo"]),
+    roles: roles.map(teamRole),
+  };
+}
+
+export function normaliseTeamStructure(value: unknown): TeamSection[] {
+  return list<unknown>(value).map(teamSection);
+}
+
 /**
  * Nav entries are used to build links, so an entry that arrives without a label
  * would be a link to nowhere — such entries are dropped rather than rendered.
@@ -189,7 +225,7 @@ export function normaliseSettings(input: unknown): SiteSettings {
     },
     team: {
       members: list<TeamMember>(team["members"]),
-      structure: list<TeamSection>(team["structure"]),
+      structure: normaliseTeamStructure(team["structure"]),
     },
     nav: {
       sections: list<unknown>(nav["sections"])

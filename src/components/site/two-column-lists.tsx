@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { SectionHeader, ViewAllSectionLink } from "@/components/site/section-header";
 import { StoryCard } from "@/components/story/story-card";
 import { timeAgo } from "@/lib/format";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { isUrdu, storyTextAttrs, URDU_TEXT_CLASS, URDU_TITLE_CLASS } from "@/lib/story-language";
 import type { Story } from "@/lib/stories";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,8 @@ function OpinionRow({ story }: { story: Story }) {
 }
 
 function Panel({ title, slug, children }: { title: string; slug: string; children: ReactNode }) {
+  const t = useTranslations();
+
   return (
     <section
       aria-label={title}
@@ -75,6 +77,7 @@ export function TwoColumnLists({
   international: Story[];
   opinion: Story[];
 }) {
+  const t = useTranslations();
   const intl = international.slice(0, 3);
   const op = opinion.slice(0, 3);
   if (intl.length === 0 && op.length === 0) return null;

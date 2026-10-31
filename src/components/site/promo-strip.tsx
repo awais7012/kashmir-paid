@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 
 function useReducedMotion(): boolean {
@@ -23,6 +23,7 @@ export function PromoStrip({
 }: {
   settings: { hero: { slides: { url: string; kind: "image" | "video"; link: string }[] } };
 }) {
+  const t = useTranslations();
   const reduced = useReducedMotion();
   const slides = settings.hero.slides.filter((slide) => slide.url.trim() !== "");
   if (slides.length === 0) return null;

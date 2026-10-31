@@ -5,7 +5,7 @@ import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { mediaUrl } from "@/lib/media";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { primeQuery } from "@/lib/stories";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/schedule")({
 
 function SchedulePage() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const t = useTranslations();
   if (!settings) return <PageShimmer />;
 
   const { schedule } = settings;

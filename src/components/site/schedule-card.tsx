@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { SectionHeader, ViewAllLink } from "@/components/site/section-header";
-import { t } from "@/lib/i18n";
+import { useTranslations } from "@/lib/i18n";
 import { mediaUrl } from "@/lib/media";
 import type { SiteSettings } from "@/lib/site-settings";
 
@@ -10,6 +10,7 @@ import type { SiteSettings } from "@/lib/site-settings";
  * is not drawn.
  */
 export function ScheduleCard({ settings }: { settings: SiteSettings }) {
+  const t = useTranslations();
   const image = mediaUrl(settings.schedule.image);
   if (!image) return null;
 

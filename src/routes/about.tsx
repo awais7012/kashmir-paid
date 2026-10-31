@@ -4,6 +4,7 @@ import { PageShimmer } from "@/components/site/page-shimmer";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { BRAND_LOGO, CEO_PORTRAIT } from "@/lib/brand";
+import { useTranslations } from "@/lib/i18n";
 import { primeQuery } from "@/lib/stories";
 import { siteSettingsQueryOptions } from "@/lib/site-settings";
 
@@ -160,6 +161,7 @@ function SectionTitle({ children }: { children: string }) {
 
 function AboutPage() {
   const { data: settings } = useQuery(siteSettingsQueryOptions);
+  const t = useTranslations();
   if (!settings) return <PageShimmer />;
 
   return (
@@ -171,18 +173,18 @@ function AboutPage() {
           <div className="grid gap-8 border-b border-border pb-10 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
             <img
               src={BRAND_LOGO}
-              alt="Global Kashmir TV"
+              alt={t.globalKashmirTv}
               width={1254}
               height={1254}
               className="size-28 rounded-full bg-white object-cover sm:size-36"
             />
             <div>
-              <Eyebrow>About us</Eyebrow>
+              <Eyebrow>{t.aboutUs}</Eyebrow>
               <h1 className="mt-2 font-sans text-[clamp(2.75rem,7vw,5rem)] leading-[0.88] font-black">
                 Global Kashmir TV
               </h1>
               <p className="mt-4 font-sans text-2xl text-muted-foreground italic">
-                Bringing Kashmir’s news to the world.
+                {t.aboutTagline}
               </p>
             </div>
           </div>
@@ -196,7 +198,7 @@ function AboutPage() {
 
         <section className="border-y border-border bg-card">
           <div className="mx-auto max-w-[48rem] px-4 py-14 sm:px-8 lg:py-20">
-            <Eyebrow>Our vision</Eyebrow>
+            <Eyebrow>{t.ourVision}</Eyebrow>
             <blockquote className="mt-4 max-w-[46ch] font-sans text-3xl leading-tight sm:text-4xl">
               “To help build an informed, thoughtful and ethical society through truth, research,
               justice and positive change, reporting on Kashmir, Pakistan and the wider world with
@@ -211,8 +213,8 @@ function AboutPage() {
         </section>
 
         <section className="mx-auto max-w-[52rem] px-4 py-14 sm:px-8 lg:py-20">
-          <Eyebrow>Our mission</Eyebrow>
-          <SectionTitle>What we set out to do</SectionTitle>
+          <Eyebrow>{t.ourMission}</Eyebrow>
+          <SectionTitle>{t.whatWeSetOutToDo}</SectionTitle>
           <ol className="mt-10 grid gap-px bg-border">
             {MISSION.map((item, index) => (
               <li
@@ -238,7 +240,7 @@ function AboutPage() {
         <section className="border-y border-border bg-tint text-foreground">
           <div className="page-shell py-14 text-center lg:py-20">
             <p className="text-[11px] font-black tracking-[0.18em] text-brand-blue uppercase">
-              Our guiding purpose
+              {t.guidingPurpose}
             </p>
             <blockquote className="mx-auto mt-5 max-w-[50ch] font-sans text-3xl leading-tight sm:text-5xl">
               “News that serves society. Research that seeks the truth. Journalism that serves
@@ -248,13 +250,13 @@ function AboutPage() {
         </section>
 
         <section className="page-shell py-14 lg:py-20">
-          <Eyebrow>Our core values</Eyebrow>
-          <SectionTitle>What we hold to</SectionTitle>
+          <Eyebrow>{t.coreValues}</Eyebrow>
+          <SectionTitle>{t.whatWeHoldTo}</SectionTitle>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {VALUES.map((value, index) => (
               <article key={value.name} className="border border-border bg-card p-6">
                 <p className="text-[10px] font-black tracking-[0.16em] text-brand-blue uppercase">
-                  Value {String(index + 1).padStart(2, "0")}
+                  {t.value} {String(index + 1).padStart(2, "0")}
                 </p>
                 <h3 className="mt-2 font-sans text-2xl leading-tight font-bold">{value.name}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{value.detail}</p>
@@ -266,8 +268,8 @@ function AboutPage() {
         <section className="border-y border-border bg-card">
           <div className="page-shell grid gap-10 py-14 lg:grid-cols-2 lg:py-20">
             <div>
-              <Eyebrow>Our editorial philosophy</Eyebrow>
-              <SectionTitle>Journalism earns its value</SectionTitle>
+              <Eyebrow>{t.editorialPhilosophy}</Eyebrow>
+              <SectionTitle>{t.journalismEarnsValue}</SectionTitle>
               <div className="mt-6 grid gap-4 text-base leading-relaxed text-muted-foreground">
                 <p>
                   Journalism earns its value through the understanding it gives people. Global
@@ -287,8 +289,8 @@ function AboutPage() {
             </div>
 
             <div>
-              <Eyebrow>Our priorities</Eyebrow>
-              <SectionTitle>What we cover</SectionTitle>
+              <Eyebrow>{t.priorities}</Eyebrow>
+              <SectionTitle>{t.whatWeCover}</SectionTitle>
               <p className="mt-6 max-w-[60ch] text-base leading-relaxed text-muted-foreground">
                 Our coverage will focus on the issues that shape everyday life and long-term
                 opportunity.
@@ -314,12 +316,10 @@ function AboutPage() {
         <section className="page-shell py-14 lg:py-20">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="border border-border bg-card p-6 sm:p-8">
-              <Eyebrow>Our promise to our audience</Eyebrow>
-              <h2 className="mt-2 font-sans text-3xl leading-tight">
-                Your trust must be earned through our work, every day.
-              </h2>
+              <Eyebrow>{t.audiencePromise}</Eyebrow>
+              <h2 className="mt-2 font-sans text-3xl leading-tight">{t.trustMustBeEarned}</h2>
               <p className="mt-6 text-[10px] font-black tracking-[0.16em] text-muted-foreground uppercase">
-                We commit to
+                {t.weCommitTo}
               </p>
               <ul className="mt-4 grid gap-3">
                 {PROMISE.map((item) => (
@@ -335,8 +335,8 @@ function AboutPage() {
             </div>
 
             <div>
-              <Eyebrow>Our identity</Eyebrow>
-              <SectionTitle>Where we are going</SectionTitle>
+              <Eyebrow>{t.identity}</Eyebrow>
+              <SectionTitle>{t.whereWeAreGoing}</SectionTitle>
               <div className="mt-6 grid gap-4 text-base leading-relaxed text-muted-foreground">
                 <p>
                   Global Kashmir TV aims to be a trusted meeting place for news, knowledge,
@@ -357,7 +357,7 @@ function AboutPage() {
                   measured by the quality of our journalism and the trust of the people we serve.
                 </p>
               </div>
-              <p className="mt-6 font-sans text-2xl">Bringing Kashmir’s news to the world.</p>
+              <p className="mt-6 font-sans text-2xl">{t.aboutTagline}</p>
             </div>
           </div>
         </section>
@@ -367,7 +367,7 @@ function AboutPage() {
             <figure className="grid content-start gap-4">
               <img
                 src={CEO_PORTRAIT}
-                alt="Raja Ejaz Ahmed Khan, Chief Executive Officer of Global Kashmir TV"
+                alt={`${t.chiefExecutiveOfficer}: Raja Ejaz Ahmed Khan`}
                 width={941}
                 height={1672}
                 className="aspect-[4/5] w-full rounded-card border border-border object-cover object-top"
@@ -375,17 +375,17 @@ function AboutPage() {
               <figcaption className="text-[11px] font-black tracking-[0.16em] uppercase">
                 Raja Ejaz Ahmed Khan
                 <span className="mt-1 block font-bold text-brand-blue">
-                  Chief Executive Officer
+                  {t.chiefExecutiveOfficer}
                 </span>
               </figcaption>
             </figure>
 
             <div>
               <p className="text-[11px] font-black tracking-[0.18em] text-brand-blue uppercase">
-                Message from the CEO
+                {t.messageFromCeo}
               </p>
               <h2 className="mt-2 font-sans text-4xl leading-none sm:text-5xl">
-                A message from our chief executive
+                {t.ceoMessageTitle}
               </h2>
               <div className="mt-6 grid gap-4 text-base leading-relaxed text-muted-foreground">
                 {CEO_PARAGRAPHS.map((paragraph) => (
@@ -394,7 +394,7 @@ function AboutPage() {
               </div>
               <p className="mt-8 font-sans text-2xl">Raja Ejaz Ahmed Khan</p>
               <p className="mt-1 text-[11px] font-black tracking-[0.16em] uppercase">
-                Chief Executive Officer
+                {t.chiefExecutiveOfficer}
                 <span className="mt-1 block text-muted-foreground">Global Kashmir TV</span>
               </p>
               <p className="mt-8 border-t border-border pt-6 font-sans text-xl text-brand-blue italic">
