@@ -424,7 +424,8 @@
 }
 
 /* Nastaliq needs room for its tall joins; keep hero headlines to two lines. */
-[dir="rtl"] .urdu-hero-title {
+[dir="rtl"] .urdu-hero-title,
+[dir="rtl"].urdu-hero-title {
   font-size: clamp(1.125rem, 2.4vw, 1.5rem);
   line-height: 2.1;
   -webkit-line-clamp: 2;
